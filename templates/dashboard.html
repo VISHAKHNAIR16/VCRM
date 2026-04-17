@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIKRAM — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #16161f;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.15);
+      --accent: #e8c547;
+      --accent-dim: rgba(232,197,71,0.12);
+      --accent-dim2: rgba(232,197,71,0.06);
+      --text: #f0ede8;
+      --muted: #6b6880;
+      --muted2: #3d3b4a;
+      --success-bg: rgba(52,211,153,0.08);
+      --success-border: rgba(52,211,153,0.25);
+      --success-text: #34d399;
+      --error-bg: rgba(255,80,80,0.08);
+      --error-border: rgba(255,80,80,0.25);
+      --error-text: #ff8080;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(232,197,71,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,197,71,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ── */
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+    }
+
+    .logo-row { display: flex; align-items: center; gap: 12px; }
+
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 15px;
+      color: #0a0a0f;
+      letter-spacing: -1px;
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 18px;
+      letter-spacing: 0.08em;
+    }
+    .logo-text span { color: var(--accent); }
+
+    .logout-btn {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .logout-btn:hover { color: var(--text); border-color: var(--border-hover); }
+
+    /* ── Page title ── */
+    .page-header { margin-bottom: 40px; }
+    .page-header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 8px;
+    }
+    .page-header h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .page-header p { font-size: 15px; color: var(--muted); }
+
+    /* ── Step labels ── */
+    .step-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-label::before {
+      content: attr(data-n);
+      width: 20px; height: 20px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(232,197,71,0.3);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* ── Section block ── */
+    .section { margin-bottom: 32px; }
+
+    /* ── Page selector ── */
+    .page-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .page-option {
+      position: relative;
+      cursor: pointer;
+    }
+    .page-option input[type="radio"] {
+      position: absolute; opacity: 0; pointer-events: none;
+    }
+    .page-option .card-face {
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      background: var(--surface);
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .page-option:hover .card-face {
+      border-color: var(--border-hover);
+      background: var(--surface2);
+    }
+    .page-option input:checked + .card-face {
+      border-color: var(--accent);
+      background: var(--accent-dim2);
+    }
+    .page-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: var(--accent-dim);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .page-info .page-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+    .page-info .page-desc { font-size: 12px; color: var(--muted); }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border: 2px dashed var(--muted2);
+      border-radius: 16px;
+      padding: 48px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      background: var(--surface);
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-dim2);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon {
+      font-size: 40px; margin-bottom: 14px;
+      display: block;
+    }
+    .drop-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 16px;
+      margin-bottom: 6px;
+    }
+    .drop-sub { font-size: 13px; color: var(--muted); }
+    .drop-types {
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-top: 12px;
+    }
+    .file-preview.visible { display: flex; }
+    .file-thumb {
+      width: 56px; height: 56px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--muted2);
+      flex-shrink: 0;
+    }
+    .file-thumb-video {
+      width: 56px; height: 56px;
+      border-radius: 8px;
+      background: var(--accent-dim);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .file-info .file-name { font-size: 14px; font-weight: 500; word-break: break-all; }
+    .file-info .file-size { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .remove-file {
+      margin-left: auto;
+      background: none; border: none;
+      color: var(--muted); cursor: pointer;
+      font-size: 20px;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .remove-file:hover { color: var(--error-text); }
+
+    /* ── Caption ── */
+    .caption-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .caption-input::placeholder { color: var(--muted); }
+    .caption-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    /* ── Submit ── */
+    .submit-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #0a0a0f;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .submit-btn:hover:not(:disabled) { opacity: 0.88; }
+    .submit-btn:active:not(:disabled) { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Spinner */
+    .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(10,10,15,0.3);
+      border-top-color: #0a0a0f;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast / Result ── */
+    .result {
+      display: none;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 14px;
+      margin-top: 16px;
+      align-items: flex-start;
+      gap: 12px;
+      animation: fadeUp 0.3s ease;
+    }
+    .result.visible { display: flex; }
+    .result.success {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success-text);
+    }
+    .result.error {
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error-text);
+    }
+    .result-icon { font-size: 18px; flex-shrink: 0; }
+    .result-msg { font-weight: 500; }
+    .result-sub { font-size: 12px; margin-top: 4px; opacity: 0.8; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      display: none;
+      margin-top: 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .progress-wrap.visible { display: block; }
+    .progress-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .progress-bar-bg {
+      height: 5px;
+      background: var(--muted2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 36px 0;
+    }
+
+    /* ── Info strip ── */
+    .info-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent-dim2);
+      border: 1px solid rgba(232,197,71,0.15);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .info-strip svg { flex-shrink: 0; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-row">
+      <div class="logo-mark">VI</div>
+      <div class="logo-text">VIK<span>RAM</span></div>
+    </div>
+    <a href="/logout" class="logout-btn">Sign out</a>
+  </header>
+
+  <div class="shell">
+    <div class="page-header">
+      <h1>Publish <em>Content</em></h1>
+      <p>Upload images or videos. They go live on your website automatically.</p>
+    </div>
+
+    <!-- Step 1: Choose page -->
+    <div class="section">
+      <div class="step-label" data-n="1">Choose a page</div>
+      <div class="page-grid">
+        {% for key, page in pages.items() %}
+        <label class="page-option">
+          <input type="radio" name="page_key" value="{{ key }}" {% if loop.first %}checked{% endif %}>
+          <div class="card-face">
+            <div class="page-icon">
+              {% if key == 'news' %}📰{% elif key == 'attractions' %}🏛️{% else %}📄{% endif %}
+            </div>
+            <div class="page-info">
+              <div class="page-name">{{ page.label }}</div>
+              <div class="page-desc">{{ page.file }}</div>
+            </div>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Step 2: Upload -->
+    <div class="section">
+      <div class="step-label" data-n="2">Upload your file</div>
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept="image/*,video/*">
+        <span class="drop-icon">📁</span>
+        <div class="drop-title">Drop your file here</div>
+        <div class="drop-sub">or click to browse</div>
+        <div class="drop-types">JPG · PNG · WebP · GIF · MP4 · WebM · Max 50 MB</div>
+      </div>
+      <div class="file-preview" id="filePreview">
+        <div id="thumbContainer"></div>
+        <div class="file-info">
+          <div class="file-name" id="fileName">—</div>
+          <div class="file-size" id="fileSize">—</div>
+        </div>
+        <button class="remove-file" id="removeFile" type="button">✕</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Caption -->
+    <div class="section">
+      <div class="step-label" data-n="3">Add a caption <span style="color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;font-weight:400;margin-left:4px;">optional</span></div>
+      <input class="caption-input" id="captionInput" type="text" placeholder="e.g. Diwali celebration 2025 at the main hall">
+    </div>
+
+    <hr class="divider">
+
+    <!-- Publish -->
+    <div class="info-strip" style="margin-bottom:20px;">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 5.5h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      After publishing, your website will update in about <strong style="color:var(--text);margin:0 3px;">60 seconds</strong> via Cloudflare.
+    </div>
+
+    <button class="submit-btn" id="publishBtn" disabled>
+      <div class="spinner" id="spinner"></div>
+      <span id="btnText">Publish to Website →</span>
+    </button>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-label">
+        <span id="progressLabel">Uploading…</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="result" id="result">
+      <div class="result-icon" id="resultIcon"></div>
+      <div>
+        <div class="result-msg" id="resultMsg"></div>
+        <div class="result-sub" id="resultSub"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput    = document.getElementById('fileInput');
+    const dropZone     = document.getElementById('dropZone');
+    const filePreview  = document.getElementById('filePreview');
+    const thumbContainer = document.getElementById('thumbContainer');
+    const fileName     = document.getElementById('fileName');
+    const fileSize     = document.getElementById('fileSize');
+    const removeFile   = document.getElementById('removeFile');
+    const captionInput = document.getElementById('captionInput');
+    const publishBtn   = document.getElementById('publishBtn');
+    const spinner      = document.getElementById('spinner');
+    const btnText      = document.getElementById('btnText');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressFill');
+    const progressLabel= document.getElementById('progressLabel');
+    const progressPct  = document.getElementById('progressPct');
+    const result       = document.getElementById('result');
+    const resultIcon   = document.getElementById('resultIcon');
+    const resultMsg    = document.getElementById('resultMsg');
+    const resultSub    = document.getElementById('resultSub');
+
+    let selectedFile = null;
+
+    function fmtSize(bytes) {
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    function setFile(file) {
+      selectedFile = file;
+      fileName.textContent = file.name;
+      fileSize.textContent = fmtSize(file.size);
+      thumbContainer.innerHTML = '';
+      if (file.type.startsWith('image/')) {
+        const img = document.createElement('img');
+        img.className = 'file-thumb';
+        img.src = URL.createObjectURL(file);
+        thumbContainer.appendChild(img);
+      } else {
+        const d = document.createElement('div');
+        d.className = 'file-thumb-video';
+        d.textContent = '🎬';
+        thumbContainer.appendChild(d);
+      }
+      dropZone.style.display = 'none';
+      filePreview.classList.add('visible');
+      publishBtn.disabled = false;
+      result.classList.remove('visible');
+    }
+
+    function clearFile() {
+      selectedFile = null;
+      fileInput.value = '';
+      dropZone.style.display = '';
+      filePreview.classList.remove('visible');
+      publishBtn.disabled = true;
+      result.classList.remove('visible');
+      progressWrap.classList.remove('visible');
+    }
+
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+    removeFile.addEventListener('click', clearFile);
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+    });
+
+    function getSelectedPage() {
+      return document.querySelector('input[name="page_key"]:checked')?.value;
+    }
+
+    publishBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+
+      // UI: loading state
+      spinner.style.display = 'block';
+      btnText.textContent = 'Publishing…';
+      publishBtn.disabled = true;
+      result.classList.remove('visible');
+      progressWrap.classList.add('visible');
+      progressFill.style.width = '0%';
+      progressLabel.textContent = 'Uploading file to storage…';
+      progressPct.textContent = '0%';
+
+      // Simulate progress (real upload tracked via XHR below)
+      const fd = new FormData();
+      fd.append('page_key', getSelectedPage());
+      fd.append('caption', captionInput.value.trim());
+      fd.append('file', selectedFile);
+
+      // Use XHR for upload progress
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/upload');
+
+      xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 70); // 0-70% = upload
+          progressFill.style.width = pct + '%';
+          progressPct.textContent = pct + '%';
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        // 70-100%: GitHub update animation
+        progressLabel.textContent = 'Updating website…';
+        let pct = 70;
+        const interval = setInterval(() => {
+          pct = Math.min(pct + 5, 95);
+          progressFill.style.width = pct + '%';
+          progressPct.textContent = pct + '%';
+        }, 120);
+
+        setTimeout(() => {
+          clearInterval(interval);
+          progressFill.style.width = '100%';
+          progressPct.textContent = '100%';
+
+          spinner.style.display = 'none';
+          btnText.textContent = 'Publish to Website →';
+          publishBtn.disabled = false;
+
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.ok) {
+              result.className = 'result visible success';
+              resultIcon.textContent = '✅';
+              resultMsg.textContent = `Published to ${data.page}!`;
+              resultSub.textContent = 'Your website will update in about 60 seconds via Cloudflare.';
+              clearFile();
+              captionInput.value = '';
+            } else {
+              result.className = 'result visible error';
+              resultIcon.textContent = '❌';
+              resultMsg.textContent = 'Something went wrong.';
+              resultSub.textContent = data.error || 'Please try again.';
+            }
+          } catch {
+            result.className = 'result visible error';
+            resultIcon.textContent = '❌';
+            resultMsg.textContent = 'Unexpected error.';
+            resultSub.textContent = 'Please try again.';
+          }
+          progressWrap.classList.remove('visible');
+        }, 800);
+      });
+
+      xhr.addEventListener('error', () => {
+        spinner.style.display = 'none';
+        btnText.textContent = 'Publish to Website →';
+        publishBtn.disabled = false;
+        progressWrap.classList.remove('visible');
+        result.className = 'result visible error';
+        resultIcon.textContent = '❌';
+        resultMsg.textContent = 'Network error. Please check your connection.';
+        resultSub.textContent = '';
+      });
+
+      xhr.send(fd);
+    });
+  </script>
+</body>
+</html>
