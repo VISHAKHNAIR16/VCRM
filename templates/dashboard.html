@@ -395,6 +395,44 @@
       color: var(--muted);
     }
     .info-strip svg { flex-shrink: 0; color: var(--accent); }
+
+    /* ── Attraction Location Selector ── */
+    .location-selector {
+      display: none;
+      margin-top: 16px;
+      gap: 12px;
+    }
+    .location-selector.visible { display: flex; }
+    .location-select {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6880' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+    .location-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .location-select option { background: #16161f; color: var(--text); }
+    .location-select:disabled { opacity: 0.4; cursor: not-allowed; }
+    .location-label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .location-field { flex: 1; display: flex; flex-direction: column; }
   </style>
 </head>
 <body>
@@ -431,6 +469,25 @@
         </label>
         {% endfor %}
       </div>
+
+    <!-- Attraction Location Selector (shown only when Attractions is selected) -->
+    <div class="location-selector" id="locationSelector">
+      <div class="location-field">
+        <div class="location-label">Country</div>
+        <select class="location-select" id="countrySelect">
+          <option value="">— Select country —</option>
+          {% for country_key, country in attractions_countries.items() %}
+          <option value="{{ country_key }}">{{ country.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="location-field">
+        <div class="location-label">City</div>
+        <select class="location-select" id="citySelect" disabled>
+          <option value="">— Select city —</option>
+        </select>
+      </div>
+    </div>
     </div>
 
     <!-- Step 2: Upload -->
@@ -564,9 +621,54 @@
       if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
     });
 
+    // ── Attraction locations data (mirrors ATTRACTIONS_COUNTRIES in main.py) ──
+    const attractionCities = {
+      {% for country_key, country in attractions_countries.items() %}
+      "{{ country_key }}": {
+        label: "{{ country.label }}",
+        cities: { {% for city_key, city_label in country.cities.items() %}"{{ city_key }}": "{{ city_label }}"{% if not loop.last %}, {% endif %}{% endfor %} }
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    };
+
+    const locationSelector = document.getElementById('locationSelector');
+    const countrySelect    = document.getElementById('countrySelect');
+    const citySelect       = document.getElementById('citySelect');
+
     function getSelectedPage() {
       return document.querySelector('input[name="page_key"]:checked')?.value;
     }
+
+    // Show/hide location selector when page radio changes
+    document.querySelectorAll('input[name="page_key"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        const isAttractions = getSelectedPage() === 'attractions';
+        locationSelector.classList.toggle('visible', isAttractions);
+        // Reset selects when switching away
+        if (!isAttractions) {
+          countrySelect.value = '';
+          citySelect.innerHTML = '<option value="">— Select city —</option>';
+          citySelect.disabled = true;
+        }
+      });
+    });
+
+    // Populate city dropdown when country changes
+    countrySelect.addEventListener('change', () => {
+      const country = countrySelect.value;
+      citySelect.innerHTML = '<option value="">— Select city —</option>';
+      if (country && attractionCities[country]) {
+        const cities = attractionCities[country].cities;
+        Object.entries(cities).forEach(([key, label]) => {
+          const opt = document.createElement('option');
+          opt.value = key; opt.textContent = label;
+          citySelect.appendChild(opt);
+        });
+        citySelect.disabled = false;
+      } else {
+        citySelect.disabled = true;
+      }
+    });
 
     publishBtn.addEventListener('click', async () => {
       if (!selectedFile) return;
@@ -585,6 +687,8 @@
       const fd = new FormData();
       fd.append('page_key', getSelectedPage());
       fd.append('caption', captionInput.value.trim());
+      fd.append('country_key', countrySelect ? countrySelect.value : '');
+      fd.append('city_key', citySelect ? citySelect.value : '');
       fd.append('file', selectedFile);
 
       // Use XHR for upload progress
@@ -623,10 +727,15 @@
             if (data.ok) {
               result.className = 'result visible success';
               resultIcon.textContent = '✅';
-              resultMsg.textContent = `Published to ${data.page}!`;
+              const loc = (data.country && data.city) ? ` → ${data.country} / ${data.city}` : '';
+              resultMsg.textContent = `Published to ${data.page}${loc}!`;
               resultSub.textContent = 'Your website will update in about 60 seconds via Cloudflare.';
               clearFile();
               captionInput.value = '';
+              countrySelect.value = '';
+              citySelect.innerHTML = '<option value="">— Select city —</option>';
+              citySelect.disabled = true;
+              locationSelector.classList.remove('visible');
             } else {
               result.className = 'result visible error';
               resultIcon.textContent = '❌';
