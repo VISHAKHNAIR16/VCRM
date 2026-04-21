@@ -1,0 +1,416 @@
+/* Base Styles */
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f8f9fa;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  color: #333;
+  line-height: 1.4;
+  font-size: 12px;
+}
+
+/* Voucher Container */
+.voucher {
+  background-color: white;
+  border-radius: 8px;
+  width: 700px;
+  margin: 0 1px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: none;
+  max-height: 1120px;
+  box-sizing: border-box;
+  padding: 20px;
+  border: 3px solid #4f3966;
+}
+
+/* Page break avoidance */
+.emergency-contact-section,
+.meeting-points-section,
+.policy-box,
+.voucher-header,
+.voucher-footer,
+.voucher-body,
+.signature-policy-container,
+.main-details-container {
+  page-break-inside: avoid;
+}
+
+/* Header */
+.voucher-header {
+  text-align: center;
+  padding: 10px 0;
+  border-bottom: 1.5px solid #4f3866;
+}
+
+.voucher-header h1, .voucher-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.booking-purple { color: #D4AF37; }
+.subtitle {
+  margin-top: 5px;
+  font-size: 11px;
+  color: #003366;
+}
+
+/* Body */
+.voucher-body { flex: 1; padding: 10px 0; }
+
+/* Main Details */
+.main-details-container { margin-bottom: 10px; }
+.main-details { display: flex; gap: 12px; }
+.left-column { flex: 1; }
+.right-column { flex: 0 0 250px; }
+
+.booking-info {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.booking-info td {
+  padding: 4px 0;
+  vertical-align: top;
+}
+
+.booking-info td:first-child {
+  width: 40%;
+  font-weight: 600;
+  color: #555;
+  padding-right: 10px;
+  white-space: nowrap;
+}
+
+.booking-info td:last-child { word-break: break-word; }
+
+/* Room Details */
+.room-details-box {
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.room-detail-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.room-detail-item span:first-child { color: #666; flex: 1; }
+.room-detail-item span:last-child { font-weight: 600; text-align: right; }
+
+/* Signature and Policy */
+.signature-policy-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.policy-box {
+  flex: 1;
+  background-color: #f5f7fa;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.policy-box h3 { font-size: 14px; margin: 0 0 8px; }
+.policy-box p { font-size: 11px; margin: 0; }
+
+.signature-section { flex: 0 0 140px; }
+.company-stamp {
+  width: 140px;
+  height: 90px;
+  border: 1px dashed #ccc;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.stamp-image {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Tables */
+.book-payable, .stay-dates {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+}
+
+.book-payable td, .stay-dates td { padding: 4px 0; }
+.stay-dates td:first-child { font-weight: 600; width: 30%; white-space: nowrap; }
+
+/* Footer */
+.voucher-footer {
+  background-color: #2b1f36;
+  color: white;
+  padding: 15px;
+  border-radius: 6px;
+  font-size: 12px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.footer-logo {
+  width: 90px;
+  height: 75px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.company-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+}
+
+.footer-info { 
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.company-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.contact-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+.contact-item { font-size: 12px; }
+.contact-separator { color: #bdc3c7; }
+.address { font-size: 10px; color: #ecf0f1; }
+
+/* Meeting Points Section */
+.meeting-points-section {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  min-height: 150px;
+  overflow: visible;
+}
+
+/* Header Row for Meeting Section */
+.meeting-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.meeting-section-header h3 {
+  color: #4a148c;
+  margin: 0;
+  font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0; 
+}
+
+/* Placard Instruction Box */
+.placard-instruction {
+  border: 1.5px solid #4a148c; /* Purple border */
+  border-radius: 30px; /* Rounded pill shape */
+  padding: 5px 12px;
+  background-color: transparent; /* Blank inside */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-grow: 1; 
+  max-width: fit-content;
+}
+
+.placard-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placard-icon-img {
+  height: 30px; /* Force image to be small */
+  width: auto;
+  display: block;
+}
+
+.placard-placeholder {
+    width: 18px;
+    height: 18px;
+}
+
+.placard-text {
+  font-size: 10px;
+  color: #333;
+  line-height: 1;
+  font-weight: 500;
+  white-space: nowrap; /* Ensures text stays on one line */
+}
+
+/* Centered Bangkok Card */
+.centered-card {
+  width: 60% !important;
+  max-width: 280px !important;
+  margin: 0 auto 8px auto !important;
+  text-align: center !important;
+  padding: 8px 10px !important;
+  min-height: auto;
+}
+
+.centered-card .meeting-header { 
+  justify-content: center; 
+}
+.centered-card .meeting-body { 
+  text-align: center; 
+}
+
+/* Meeting Grid - Compact */
+.meeting-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Meeting Cards - Compact */
+.meeting-location-card {
+  border: 0.5px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 50px;
+  overflow: visible;
+}
+
+.meeting-header {
+  font-size: 10px;
+  font-weight: 600;
+  color: #4a148c;
+  display: flex;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.location-icon {
+  margin-right: 3px;
+  font-size: 0.7em;
+}
+
+.meeting-body p {
+  margin: 2px 0;
+  font-size: 9px;
+  color: #333;
+  line-height: 1.3;
+  word-wrap: break-word;
+  overflow: visible;
+}
+
+/* Emergency Section - Compact */
+.emergency-contact-section {
+  margin: 12px auto;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.emergency-header {
+  background: #f4f4f4;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #ddd;
+}
+
+.phone-icon { font-size: 1em; }
+
+/* Pill Grid - Compact */
+.pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 12px;
+}
+
+.pill-card {
+  flex: 0 1 48%;
+  max-width: 48%;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  box-sizing: border-box;
+}
+
+.pill-card img {
+  width: 20px;
+  height: 14px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.contact-number {
+  color: #000;
+  font-weight: 500;
+}
+
+/* Print Styles */
+@media print {
+  .meeting-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .voucher { transform: scale(0.97); transform-origin: top center; }
+}
+
+@media print {
+  .scale-wrapper {
+    transform: scale(0.95);
+    transform-origin: top center;
+    width: 100%;
+    height: auto;
+    page-break-inside: avoid;
+  }
+}
+
+.pill-card, .meeting-location-card {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

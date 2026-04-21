@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIKRAM — Tour Voucher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --surface2: #16161f;
+      --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.15);
+      --accent: #e8c547; --accent-dim: rgba(232,197,71,0.12); --accent-dim2: rgba(232,197,71,0.06);
+      --text: #f0ede8; --muted: #6b6880;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(232,197,71,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(232,197,71,0.025) 1px, transparent 1px);
+      background-size: 60px 60px; pointer-events: none; z-index: 0;
+    }
+    header {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 48px; border-bottom: 1px solid var(--border);
+    }
+    .logo-row { display: flex; align-items: center; gap: 12px; }
+    .logo-mark { width: 36px; height: 36px; background: var(--accent); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: #0a0a0f; }
+    .logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 0.08em; }
+    .logo-text span { color: var(--accent); }
+    .nav-links { display: flex; gap: 12px; }
+    .nav-link { font-size: 13px; color: var(--muted); text-decoration: none; padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; }
+    .nav-link:hover { color: var(--text); border-color: var(--border-hover); }
+    .shell { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+    .page-header { margin-bottom: 40px; }
+    .page-header h1 { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; margin-bottom: 6px; }
+    .page-header h1 em { font-style: normal; color: var(--accent); }
+    .page-header p { font-size: 14px; color: var(--muted); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .form-input, .form-textarea, .form-select {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s; width: 100%;
+      appearance: none;
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--muted); }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6880' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+    .form-select option { background: #16161f; color: var(--text); }
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-title::before { content: ''; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; }
+    .submit-btn {
+      width: 100%; background: var(--accent); color: #0a0a0f; border: none; border-radius: 12px;
+      padding: 16px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+      letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 32px;
+    }
+    .submit-btn:hover { opacity: 0.88; }
+    .submit-btn:active { transform: scale(0.98); }
+    .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(10,10,15,0.3); border-top-color: #0a0a0f; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .info-strip { display: flex; align-items: center; gap: 10px; background: var(--accent-dim2); border: 1px solid rgba(232,197,71,0.15); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .info-strip svg { flex-shrink: 0; color: var(--accent); }
+    .disabled-input { opacity: 0.4; pointer-events: none; }
+    @media (max-width: 640px) { .form-grid, .form-grid.three { grid-template-columns: 1fr; } .form-group.full { grid-column: 1; } header { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-row">
+      <div class="logo-mark">VI</div>
+      <div class="logo-text">VIK<span>RAM</span></div>
+    </div>
+    <div class="nav-links">
+      <a href="/voucher" class="nav-link">← Vouchers</a>
+      <a href="/logout" class="nav-link">Sign out</a>
+    </div>
+  </header>
+
+  <div class="shell">
+    <div class="page-header">
+      <h1>Tour / Transfer <em>Voucher</em></h1>
+      <p>Fill in the tour details and click Generate — the PDF will open in a new browser tab.</p>
+    </div>
+
+    <div class="info-strip">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 5.5h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      PDF opens in a new tab. Use your browser's print dialog to save or print.
+    </div>
+
+    <form id="tourForm" method="POST" action="/voucher/tour/pdf" target="_blank">
+
+      <!-- Booking -->
+      <div class="section-title">Booking Details</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Service Date</label>
+          <input class="form-input" type="text" name="service_date" placeholder="e.g. 15 Jan, 2025" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Booking ID</label>
+          <input class="form-input" type="text" name="booking_number" placeholder="e.g. BK-20250101" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tour Name</label>
+          <input class="form-input" type="text" name="tour_name" placeholder="e.g. Pattaya City Tour" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tour Package Name</label>
+          <input class="form-input" type="text" name="package_name" placeholder="e.g. VIP Deluxe Package">
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Guest -->
+      <div class="section-title">Guest Details</div>
+      <div class="form-grid three">
+        <div class="form-group">
+          <label class="form-label">Guest Name</label>
+          <input class="form-input" type="text" name="guest_name" placeholder="Full name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Guest Mobile No.</label>
+          <input class="form-input" type="text" name="guest_mobile_no" placeholder="+91 xxxxx xxxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Service Type</label>
+          <select class="form-select" name="service_type" id="serviceType" onchange="togglePickup()">
+            <option value="Private Transfer">Private Transfer</option>
+            <option value="Sharing Transfer">Sharing Transfer</option>
+            <option value="Ticket Only">Ticket Only</option>
+            <option value="Transfer with Ticket">Transfer with Ticket</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Adults</label>
+          <input class="form-input" type="number" name="num_adults" placeholder="2" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Children</label>
+          <input class="form-input" type="number" name="num_children" placeholder="0" min="0">
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Pickup / Drop -->
+      <div class="section-title">Transfer Details</div>
+      <div class="form-grid three">
+        <div class="form-group" id="pickupGroup">
+          <label class="form-label">Pick Up From</label>
+          <input class="form-input" type="text" name="pickup_from" id="pickupFrom" placeholder="e.g. Suvarnabhumi Airport">
+        </div>
+        <div class="form-group" id="dropGroup">
+          <label class="form-label">Drop To</label>
+          <input class="form-input" type="text" name="drop_to" id="dropTo" placeholder="e.g. Hotel X, Pattaya">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pick Up Time</label>
+          <input class="form-input" type="text" name="pick_time" placeholder="e.g. 08:30 AM">
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Policy -->
+      <div class="section-title">Terms & Billing</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Terms & Conditions / Remarks</label>
+          <textarea class="form-textarea" name="cancellation_policy" placeholder="Cancellation policy and any remarks..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Booked & Payable By</label>
+          <input class="form-input" type="text" name="book_payable_by" placeholder="e.g. VayoAura">
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" onclick="showSpinner()">
+        <div class="spinner" id="spinner"></div>
+        <span id="btnText">Generate Tour Voucher PDF →</span>
+      </button>
+    </form>
+  </div>
+
+  <script>
+    function togglePickup() {
+      const type = document.getElementById('serviceType').value;
+      const disabled = type === 'Ticket Only';
+      document.getElementById('pickupFrom').disabled = disabled;
+      document.getElementById('dropTo').disabled    = disabled;
+      document.getElementById('pickupGroup').style.opacity = disabled ? '0.4' : '1';
+      document.getElementById('dropGroup').style.opacity   = disabled ? '0.4' : '1';
+    }
+
+    function showSpinner() {
+      document.getElementById('spinner').style.display = 'block';
+      document.getElementById('btnText').textContent   = 'Generating PDF…';
+      setTimeout(() => {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('btnText').textContent   = 'Generate Tour Voucher PDF →';
+      }, 4000);
+    }
+
+    // Set initial state
+    togglePickup();
+  </script>
+</body>
+</html>

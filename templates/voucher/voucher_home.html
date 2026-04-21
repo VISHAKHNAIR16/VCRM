@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIKRAM — Voucher Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --surface2: #16161f;
+      --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.15);
+      --accent: #e8c547; --accent-dim: rgba(232,197,71,0.12);
+      --text: #f0ede8; --muted: #6b6880;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(232,197,71,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(232,197,71,0.025) 1px, transparent 1px);
+      background-size: 60px 60px; pointer-events: none; z-index: 0;
+    }
+    header {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 48px; border-bottom: 1px solid var(--border);
+    }
+    .logo-row { display: flex; align-items: center; gap: 12px; }
+    .logo-mark {
+      width: 36px; height: 36px; background: var(--accent); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: #0a0a0f;
+    }
+    .logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 0.08em; }
+    .logo-text span { color: var(--accent); }
+    .nav-links { display: flex; gap: 16px; align-items: center; }
+    .nav-link { font-size: 13px; color: var(--muted); text-decoration: none; padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; }
+    .nav-link:hover { color: var(--text); border-color: var(--border-hover); }
+    .shell { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 60px 24px 80px; }
+    .page-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent-dim); border: 1px solid rgba(232,197,71,0.25);
+      border-radius: 99px; padding: 5px 14px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 24px;
+    }
+    h1 { font-family: 'Syne', sans-serif; font-size: clamp(32px,5vw,48px); font-weight: 800; line-height: 1.1; margin-bottom: 14px; }
+    h1 em { font-style: normal; color: var(--accent); }
+    .subtitle { font-size: 16px; color: var(--muted); max-width: 520px; line-height: 1.65; margin-bottom: 52px; }
+    .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .voucher-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .voucher-card {
+      display: block; text-decoration: none;
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: 18px;
+      padding: 32px 28px; transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden;
+    }
+    .voucher-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 40%, rgba(232,197,71,0.07), transparent 60%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .voucher-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+    .voucher-card:hover::before { opacity: 1; }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .card-icon { width: 52px; height: 52px; border-radius: 14px; background: var(--accent-dim); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+    .badge-live { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); color: #34d399; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .card-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    .card-cta { margin-top: 24px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--accent); transition: gap 0.2s; }
+    .voucher-card:hover .card-cta { gap: 10px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; text-decoration: none; margin-bottom: 40px; }
+    .back-link:hover { color: var(--text); }
+    @media (max-width: 600px) { .voucher-grid { grid-template-columns: 1fr; } header { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-row">
+      <div class="logo-mark">VI</div>
+      <div class="logo-text">VIK<span>RAM</span></div>
+    </div>
+    <div class="nav-links">
+      <a href="/home" class="nav-link">← Home</a>
+      <a href="/logout" class="nav-link">Sign out</a>
+    </div>
+  </header>
+  <div class="shell">
+    <div class="page-eyebrow">
+      <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+      Voucher Generator
+    </div>
+    <h1>Generate <em>Vouchers</em></h1>
+    <p class="subtitle">Fill the form, click Generate — your PDF opens instantly in a new tab, ready to print or share.</p>
+    <div class="section-label">Choose voucher type</div>
+    <div class="voucher-grid">
+      <a href="/voucher/hotel" class="voucher-card">
+        <div class="card-top">
+          <div class="card-icon">🏨</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="card-title">Hotel Voucher</div>
+        <div class="card-desc">Generate a hotel booking confirmation with room details, check-in/check-out dates, cancellation policy and company stamp.</div>
+        <div class="card-cta">
+          Open Form
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </a>
+      <a href="/voucher/tour" class="voucher-card">
+        <div class="card-top">
+          <div class="card-icon">🚌</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="card-title">Tour / Transfer Voucher</div>
+        <div class="card-desc">Generate a tour or transfer confirmation with pickup/drop details, meeting points, contact numbers and emergency info.</div>
+        <div class="card-cta">
+          Open Form
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

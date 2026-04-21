@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booking Confirmation</title>
+  <style>
+    /* Embedded CSS to ensure styles are applied */
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+  </style>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="voucher">
+    <header class="voucher-header">
+      <h1><span class="booking-purple">Booking</span> Confirmation</h1>
+      <p class="subtitle">
+        “This Isn't Just a Voucher. It's a Vibe Check.” Show this booking
+        confirmation (phone or paper) at check-in and unlock more than just a
+        room — unlock your getaway story. Your adventure starts right at the
+        reception desk.
+      </p>
+      <h2>Hotel Voucher</h2>
+    </header>
+
+    <div class="voucher-body">
+      <div class="main-details-container">
+        <div class="main-details">
+          <div class="left-column">
+            <table class="booking-info">
+              <tr>
+                <td>Booking ID:</td>
+                <td>{{booking_number}}</td>
+              </tr>
+              <tr>
+                <td>Hotel Confirmation No.:</td>
+                <td>{{hotel_cfn}}</td>
+              </tr>
+              <tr>
+                <td>Guest Name:</td>
+                <td>{{guest_name}}</td>
+              </tr>
+              <tr>
+                <td>Country of Residence:</td>
+                <td>{{country}}</td>
+              </tr>
+              <tr>
+                <td>Hotel Name:</td>
+                <td>{{hotel_name}}</td>
+              </tr>
+              <tr>
+                <td>Address:</td>
+                <td class="secondary-text">{{address}}</td>
+              </tr>
+              <tr>
+                <td class="highlight">Property Contact Number:</td>
+                <td class="highlight">{{contact_number}}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="right-column">
+            <div class="room-details-box">
+              <h3>Room Details</h3>
+              <div class="room-detail-item">
+                <span>No. of Rooms:</span>
+                <span>{{num_rooms}}</span>
+              </div>
+              <div class="room-detail-item">
+                <span>No. of Extra Beds:</span>
+                <span>{{extra_beds}}</span>
+              </div>
+              <div class="room-detail-item">
+                <span>No. of Adults:</span>
+                <span>{{num_adults}}</span>
+              </div>
+              <div class="room-detail-item">
+                <span>No. of Children:</span>
+                <span>{{num_children}}</span>
+              </div>
+              <div class="room-detail-item">
+                <span>Room Type:</span>
+                <span>{{room_type}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table class="stay-dates">
+        <tr>
+          <td>Check In:</td>
+          <td>{{check_in}}</td>
+          <td><strong>Check Out:</strong></td>
+          <td>{{check_out}}</td>
+        </tr>
+      </table>
+
+      <div class="signature-policy-container">
+        <div class="policy-box">
+          <h3>Terms & Conditions:</h3>
+          <p>{{cancellation_policy}}</p>
+        </div>
+        <div class="signature-section">
+          <div class="company-stamp">
+            {% if stamp_path %}
+            <img src="{{ stamp_path }}" alt="Company Stamp" class="stamp-image"
+              onerror="this.parentElement.innerHTML='<div class=\'stamp-image\'></div>'" />
+            {% else %}
+            <div class="stamp-image"></div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <table class="book-payable">
+        <tr>
+          <td><strong>Booked And Payable By:</strong></td>
+          <td>{{book_payable_by}}</td>
+        </tr>
+      </table>
+
+      <div class="remarks-box">
+        <h3>Remarks:</h3>
+        <div class="remarks-content">{{remarks}}</div>
+      </div>
+    </div>
+
+    <div class="emergency-contact-section">
+      <div class="emergency-header">
+        <i class="phone-icon">📞</i> Emergency Numbers
+      </div>
+
+      <div class="pill-grid">
+        <!-- Thailand full-row pill -->
+        <div class="pill-card">
+          <img src="{{ thailand_path }}" alt="Thailand" />
+          <div>
+            <strong>Thailand:</strong>
+            <span class="contact-number">+66 960 877 457</span>
+          </div>
+        </div>
+
+        <!-- Vietnam -->
+        <div class="pill-card">
+          <img src="{{ vietnam_path }}" alt="Vietnam" />
+          <div>
+            <strong>Vietnam:</strong>
+            <span class="contact-number">+66 960 877 457</span>
+          </div>
+        </div>
+
+        <!-- Japan -->
+        <div class="pill-card">
+          <img src="{{ japan_path }}" alt="Japan" />
+          <div>
+            <strong>Japan:</strong>
+            <span class="contact-number">+66 960 877 457</span>
+          </div>
+        </div>
+
+        <!-- Indonesia -->
+        <div class="pill-card">
+          <img src="{{ indonesia_path }}" alt="Indonesia" />
+          <div>
+            <strong>Indonesia:</strong>
+            <span class="contact-number">+66 960 877 457</span>
+          </div>
+        </div>  
+      </div>
+    </div>
+
+    <footer class="voucher-footer">
+      <div class="footer-content">
+        <div class="footer-logo">
+          {% if logo_path %}
+          <img src="{{ logo_path }}" alt="Vayo Aura Logo" class="company-logo"
+            onerror="this.parentElement.innerHTML='<div class=\'company-logo\'></div>'" />
+          {% else %}
+          <div class="company-logo"></div>
+          {% endif %}
+        </div>
+        <div class="footer-info">
+          <div class="company-name">
+            Vayo Aura - Explore Unseen Wonders <br />
+            Thailand | Vietnam | Indonesia
+          </div>
+          <div class="contact-line">
+            <span class="contact-item">Contact Number: +66 960 877 457</span>
+            <span class="contact-separator">|</span>
+            <span class="contact-item">Mail: info@vayoaura.com</span>
+          </div>
+          <div class="footer-row address">
+            30th Floor, Singha Complex, Unit 3001-3003,3009-3014, Bangkapi,
+            Huaikhwang, Bangkok 10310
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+
+</html>

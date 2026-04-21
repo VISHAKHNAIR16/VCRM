@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIKRAM — Hotel Voucher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --surface2: #16161f;
+      --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.15);
+      --accent: #e8c547; --accent-dim: rgba(232,197,71,0.12); --accent-dim2: rgba(232,197,71,0.06);
+      --text: #f0ede8; --muted: #6b6880; --muted2: #3d3b4a;
+      --success-bg: rgba(52,211,153,0.08); --success-border: rgba(52,211,153,0.25); --success-text: #34d399;
+      --error-bg: rgba(255,80,80,0.08); --error-border: rgba(255,80,80,0.25); --error-text: #ff8080;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(232,197,71,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(232,197,71,0.025) 1px, transparent 1px);
+      background-size: 60px 60px; pointer-events: none; z-index: 0;
+    }
+    header {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 48px; border-bottom: 1px solid var(--border);
+    }
+    .logo-row { display: flex; align-items: center; gap: 12px; }
+    .logo-mark { width: 36px; height: 36px; background: var(--accent); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: #0a0a0f; }
+    .logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 0.08em; }
+    .logo-text span { color: var(--accent); }
+    .nav-links { display: flex; gap: 12px; }
+    .nav-link { font-size: 13px; color: var(--muted); text-decoration: none; padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; }
+    .nav-link:hover { color: var(--text); border-color: var(--border-hover); }
+
+    .shell { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+    .page-header { margin-bottom: 40px; }
+    .page-header h1 { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; margin-bottom: 6px; }
+    .page-header h1 em { font-style: normal; color: var(--accent); }
+    .page-header p { font-size: 14px; color: var(--muted); }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .form-input, .form-textarea {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--muted); }
+    .form-input:focus, .form-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+    .form-textarea { resize: vertical; min-height: 80px; }
+
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-title::before { content: ''; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; }
+
+    .submit-btn {
+      width: 100%; background: var(--accent); color: #0a0a0f; border: none; border-radius: 12px;
+      padding: 16px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+      letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 32px;
+    }
+    .submit-btn:hover { opacity: 0.88; }
+    .submit-btn:active { transform: scale(0.98); }
+
+    .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(10,10,15,0.3); border-top-color: #0a0a0f; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .info-strip { display: flex; align-items: center; gap: 10px; background: var(--accent-dim2); border: 1px solid rgba(232,197,71,0.15); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .info-strip svg { flex-shrink: 0; color: var(--accent); }
+
+    @media (max-width: 640px) { .form-grid, .form-grid.three { grid-template-columns: 1fr; } .form-group.full { grid-column: 1; } header { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-row">
+      <div class="logo-mark">VI</div>
+      <div class="logo-text">VIK<span>RAM</span></div>
+    </div>
+    <div class="nav-links">
+      <a href="/voucher" class="nav-link">← Vouchers</a>
+      <a href="/logout" class="nav-link">Sign out</a>
+    </div>
+  </header>
+
+  <div class="shell">
+    <div class="page-header">
+      <h1>Hotel <em>Voucher</em></h1>
+      <p>Fill in the booking details and click Generate — the PDF will open in a new browser tab.</p>
+    </div>
+
+    <div class="info-strip">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 5.5h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      PDF opens in a new tab. Use your browser's print dialog to save or print.
+    </div>
+
+    <form id="hotelForm" method="POST" action="/voucher/hotel/pdf" target="_blank">
+
+      <!-- Guest & Booking -->
+      <div class="section-title">Booking Details</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Booking ID</label>
+          <input class="form-input" type="text" name="booking_number" placeholder="e.g. BK-20250101" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hotel Confirmation No.</label>
+          <input class="form-input" type="text" name="hotel_cfn" placeholder="e.g. CFN123456">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Guest Name</label>
+          <input class="form-input" type="text" name="guest_name" placeholder="Full name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country of Residence</label>
+          <input class="form-input" type="text" name="country" placeholder="e.g. India">
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Hotel Info -->
+      <div class="section-title">Hotel Information</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Hotel Name</label>
+          <input class="form-input" type="text" name="hotel_name" placeholder="Hotel name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Property Contact Number</label>
+          <input class="form-input" type="text" name="contact_number" placeholder="+66 xx xxx xxxx">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Address</label>
+          <input class="form-input" type="text" name="address" placeholder="Full hotel address">
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Stay Dates -->
+      <div class="section-title">Stay Details</div>
+      <div class="form-grid three">
+        <div class="form-group">
+          <label class="form-label">Check In</label>
+          <input class="form-input" type="text" name="check_in" placeholder="e.g. 15 Jan, 2025">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Check Out</label>
+          <input class="form-input" type="text" name="check_out" placeholder="e.g. 20 Jan, 2025">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Room Type</label>
+          <input class="form-input" type="text" name="room_type" placeholder="e.g. Deluxe Double">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Rooms</label>
+          <input class="form-input" type="number" name="num_rooms" placeholder="1" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Extra Beds</label>
+          <input class="form-input" type="number" name="extra_beds" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Adults</label>
+          <input class="form-input" type="number" name="num_adults" placeholder="2" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Children</label>
+          <input class="form-input" type="number" name="num_children" placeholder="0" min="0">
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Policy & Remarks -->
+      <div class="section-title">Policy & Remarks</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Cancellation Policy</label>
+          <textarea class="form-textarea" name="cancellation_policy" placeholder="Cancellation terms..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Booked & Payable By</label>
+          <input class="form-input" type="text" name="book_payable_by" placeholder="e.g. VayoAura">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Remarks</label>
+          <input class="form-input" type="text" name="remarks" placeholder="Any additional notes">
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn" onclick="showSpinner()">
+        <div class="spinner" id="spinner"></div>
+        <span id="btnText">Generate Hotel Voucher PDF →</span>
+      </button>
+    </form>
+  </div>
+
+  <script>
+    function showSpinner() {
+      document.getElementById('spinner').style.display = 'block';
+      document.getElementById('btnText').textContent = 'Generating PDF…';
+      // Re-enable after 4s (PDF opens in new tab — form stays here)
+      setTimeout(() => {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('btnText').textContent = 'Generate Hotel Voucher PDF →';
+      }, 4000);
+    }
+  </script>
+</body>
+</html>

@@ -33,6 +33,11 @@ app = FastAPI(title="VIKRAM CMS")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# ── Feature routers ──────────────────────────────────────────────────────────
+# Each feature is a self-contained module in features/<name>/router.py
+from features.voucher.router import router as voucher_router
+app.include_router(voucher_router, prefix="/voucher", tags=["voucher"])
+
 # ========== CONFIGURATION ==========
 ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 SECRET_KEY     = os.environ["SECRET_KEY"]
