@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Generation Progress — VIKRAM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --surface2: #16161f;
+      --border: rgba(255,255,255,0.07); --accent: #e8c547;
+      --text: #f0ede8; --muted: #6b6880;
+      --success: #10b981; --error: #ef4444;
+      --progress-bg: #2a2a35;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .container { max-width: 680px; margin: 0 auto; padding: 40px 24px; }
+    .progress-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+      padding: 40px; text-align: center;
+    }
+    h1 { font-family: 'Syne', sans-serif; font-size: 28px; margin-bottom: 12px; }
+    .status-badge {
+      display: inline-block; padding: 6px 14px; border-radius: 99px;
+      font-size: 12px; font-weight: 600; margin-bottom: 32px;
+    }
+    .status-pending { background: rgba(107,104,128,0.2); color: var(--muted); }
+    .status-processing { background: rgba(232,197,71,0.15); color: var(--accent); }
+    .status-completed { background: rgba(16,185,129,0.15); color: var(--success); }
+    .status-failed { background: rgba(239,68,68,0.15); color: var(--error); }
+    
+    /* Enhanced Progress Bar */
+    .progress-section { margin: 32px 0; }
+    .progress-bar-container {
+      background: var(--progress-bg); border-radius: 99px; height: 12px;
+      overflow: hidden; position: relative;
+    }
+    .progress-bar {
+      background: linear-gradient(90deg, var(--accent), #f5dc76);
+      height: 100%; width: 0%;
+      transition: width 0.5s ease;
+      border-radius: 99px;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .progress-percent {
+      font-size: 14px;
+      color: var(--accent);
+      margin-top: 12px;
+      font-weight: 600;
+    }
+    
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+      margin: 32px 0; text-align: left;
+    }
+    .stat-card {
+      background: var(--surface2); border-radius: 16px; padding: 20px;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 32px; font-weight: 700; font-family: 'Syne', sans-serif; }
+    .stat-value.success { color: var(--success); }
+    .stat-value.error { color: var(--error); }
+    .stat-unit { font-size: 12px; color: var(--muted); margin-left: 4px; }
+    
+    /* Current Processing Row */
+    .current-row {
+      background: var(--surface2); border-radius: 12px; padding: 16px;
+      margin: 16px 0; font-size: 13px;
+    }
+    .current-row-label { color: var(--muted); margin-bottom: 8px; font-size: 11px; text-transform: uppercase; }
+    .current-row-value { color: var(--accent); font-family: monospace; font-size: 14px; }
+    
+    .error-list {
+      margin-top: 24px; text-align: left; max-height: 200px; overflow-y: auto;
+      background: var(--surface2); border-radius: 16px; padding: 16px;
+    }
+    .error-item { font-size: 12px; color: var(--error); padding: 8px 0; border-bottom: 1px solid var(--border); }
+    
+    .btn-group { display: flex; gap: 12px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+    .btn {
+      background: var(--accent); border: none; padding: 12px 24px; border-radius: 12px;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px;
+      color: #0a0a0f; cursor: pointer; text-decoration: none; display: inline-block;
+      transition: all 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    .btn-secondary {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    }
+    .btn-secondary:hover { border-color: var(--accent); }
+    
+    .hidden { display: none; }
+    
+    /* Spinner */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Animation for completed state */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .completed-animation {
+      animation: pulse 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="progress-card" id="progressCard">
+      <div class="status-badge" id="statusBadge">
+        <span id="statusIcon">⏳</span> <span id="statusText">Queued</span>
+      </div>
+      <h1 id="title">Processing Your Vouchers</h1>
+      <p id="subtitle" style="color: var(--muted); font-size: 14px;">Please wait while we generate your vouchers</p>
+      
+      <div class="progress-section">
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-percent" id="progressPercent">0%</div>
+      </div>
+      
+      <div class="current-row" id="currentRowSection">
+        <div class="current-row-label">Currently Processing</div>
+        <div class="current-row-value" id="currentRowValue">-</div>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Processed</div>
+          <div class="stat-value" id="processedCount">0</div>
+          <div style="font-size: 12px; color: var(--muted);">of <span id="totalCount">0</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">✅ Successful</div>
+          <div class="stat-value success" id="successCount">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">❌ Failed</div>
+          <div class="stat-value error" id="failedCount">0</div>
+        </div>
+      </div>
+      
+      <div id="errorSection" class="hidden">
+        <div class="error-list" id="errorList">
+          <div style="color: var(--muted); font-size: 12px; padding: 8px;">Loading errors...</div>
+        </div>
+      </div>
+      
+      <div id="actionButtons" class="hidden btn-group">
+        <a href="#" id="downloadBtn" class="btn">📦 Download All Vouchers (ZIP)</a>
+        <a href="/voucher/bulk" class="btn btn-secondary">📤 Upload Another</a>
+        <a href="/voucher" class="btn btn-secondary">← Back to Vouchers</a>
+      </div>
+      
+      <div id="loadingSpinner">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const jobId = window.location.pathname.split('/').pop();
+    let pollInterval = null;
+    let lastProcessed = 0;
+    
+    function updateProgressBar(percent) {
+      const progressBar = document.getElementById('progressBar');
+      const progressPercent = document.getElementById('progressPercent');
+      progressBar.style.width = `${percent}%`;
+      progressPercent.textContent = `${Math.round(percent)}% Complete`;
+    }
+    
+    function updateStatus(status, processed, total, successful, failed) {
+      const badge = document.getElementById('statusBadge');
+      const title = document.getElementById('title');
+      const subtitle = document.getElementById('subtitle');
+      const statusIcon = document.getElementById('statusIcon');
+      const statusText = document.getElementById('statusText');
+      
+      if (status === 'pending') {
+        statusIcon.textContent = '⏳';
+        statusText.textContent = 'Queued';
+        badge.className = 'status-badge status-pending';
+        title.textContent = 'Waiting to Start';
+        subtitle.textContent = 'Your job is in the queue. Starting soon...';
+      } else if (status === 'processing') {
+        statusIcon.textContent = '⚙️';
+        statusText.textContent = 'Processing';
+        badge.className = 'status-badge status-processing';
+        title.textContent = 'Generating Your Vouchers';
+        subtitle.textContent = `Processing row ${processed} of ${total}`;
+        
+        // Update current row with animation
+        if (processed !== lastProcessed) {
+          const currentRowDiv = document.getElementById('currentRowValue');
+          currentRowDiv.style.opacity = '0';
+          setTimeout(() => {
+            currentRowDiv.textContent = `Row ${processed} of ${total}`;
+            currentRowDiv.style.opacity = '1';
+          }, 150);
+          lastProcessed = processed;
+        }
+      } else if (status === 'completed') {
+        statusIcon.textContent = '✅';
+        statusText.textContent = 'Completed';
+        badge.className = 'status-badge status-completed';
+        title.textContent = 'All Vouchers Generated!';
+        subtitle.textContent = `Successfully generated ${successful} vouchers`;
+        
+        // Add celebration effect
+        document.getElementById('progressCard').classList.add('completed-animation');
+        setTimeout(() => {
+          document.getElementById('progressCard').classList.remove('completed-animation');
+        }, 500);
+      } else if (status === 'failed') {
+        statusIcon.textContent = '❌';
+        statusText.textContent = 'Failed';
+        badge.className = 'status-badge status-failed';
+        title.textContent = 'Generation Failed';
+        subtitle.textContent = 'Some errors occurred during processing';
+      }
+    }
+    
+    async function checkStatus() {
+      try {
+        const response = await fetch(`/voucher/bulk/status/${jobId}`);
+        const data = await response.json();
+        
+        // Update counts
+        const processed = data.processed_rows || 0;
+        const total = data.total_rows || 1;
+        const successful = data.successful || 0;
+        const failed = data.failed || 0;
+        
+        document.getElementById('processedCount').textContent = processed;
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('successCount').textContent = successful;
+        document.getElementById('failedCount').textContent = failed;
+        
+        // Calculate and update progress
+        const percent = (processed / total) * 100;
+        updateProgressBar(percent);
+        
+        // Update status UI
+        updateStatus(data.status, processed, total, successful, failed);
+        
+        // Handle completed state
+        if (data.status === 'completed') {
+          if (pollInterval) clearInterval(pollInterval);
+          
+          document.getElementById('actionButtons').classList.remove('hidden');
+          document.getElementById('loadingSpinner').classList.add('hidden');
+          document.getElementById('currentRowSection').classList.add('hidden');
+          
+          // Set download URL
+          const downloadBtn = document.getElementById('downloadBtn');
+          downloadBtn.href = `/voucher/bulk/download/${jobId}`;
+        } 
+        // Handle failed state
+        else if (data.status === 'failed') {
+          if (pollInterval) clearInterval(pollInterval);
+          document.getElementById('loadingSpinner').classList.add('hidden');
+          document.getElementById('actionButtons').classList.remove('hidden');
+          document.getElementById('currentRowSection').classList.add('hidden');
+        }
+        
+        // Show errors if any
+        if (data.errors && data.errors.length > 0) {
+          const errorSection = document.getElementById('errorSection');
+          const errorList = document.getElementById('errorList');
+          errorList.innerHTML = data.errors.slice(0, 10).map(e => 
+            `<div class="error-item">⚠️ Row ${e.row || '?'}: ${e.error.substring(0, 200)}</div>`
+          ).join('');
+          errorSection.classList.remove('hidden');
+        }
+        
+        // If still processing, continue polling
+        if (data.status === 'pending' || data.status === 'processing') {
+          // Adjust polling interval based on progress
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            // Poll faster when processing (1.5 seconds), slower when pending (3 seconds)
+            const interval = data.status === 'processing' ? 1500 : 3000;
+            pollInterval = setInterval(checkStatus, interval);
+          }
+        }
+        
+      } catch (err) {
+        console.error('Status check failed:', err);
+      }
+    }
+    
+    // Start polling with initial 2 second interval
+    checkStatus();
+    pollInterval = setInterval(checkStatus, 2000);
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (pollInterval) clearInterval(pollInterval);
+    });
+  </script>
+</body>
+</html>

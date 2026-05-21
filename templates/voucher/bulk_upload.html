@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Voucher Generator — VIKRAM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --surface2: #16161f;
+      --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.15);
+      --accent: #e8c547; --accent-dim: rgba(232,197,71,0.12);
+      --text: #f0ede8; --muted: #6b6880;
+      --error: #ef4444; --success: #10b981;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(232,197,71,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(232,197,71,0.025) 1px, transparent 1px);
+      background-size: 60px 60px; pointer-events: none; z-index: 0;
+    }
+    header {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 48px; border-bottom: 1px solid var(--border);
+    }
+    .logo-row { display: flex; align-items: center; gap: 12px; }
+    .logo-mark {
+      width: 36px; height: 36px; background: var(--accent); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: #0a0a0f;
+    }
+    .logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 0.08em; }
+    .logo-text span { color: var(--accent); }
+    .nav-links { display: flex; gap: 16px; align-items: center; }
+    .nav-link { font-size: 13px; color: var(--muted); text-decoration: none; padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; }
+    .nav-link:hover { color: var(--text); border-color: var(--border-hover); }
+    .shell { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 60px 24px 80px; }
+    .page-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent-dim); border: 1px solid rgba(232,197,71,0.25);
+      border-radius: 99px; padding: 5px 14px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 24px;
+    }
+    h1 { font-family: 'Syne', sans-serif; font-size: clamp(32px,5vw,48px); font-weight: 800; line-height: 1.1; margin-bottom: 14px; }
+    h1 em { font-style: normal; color: var(--accent); }
+    .subtitle { font-size: 16px; color: var(--muted); max-width: 520px; line-height: 1.65; margin-bottom: 52px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; text-decoration: none; margin-bottom: 40px; }
+    .back-link:hover { color: var(--text); }
+    
+    .upload-card {
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: 24px;
+      padding: 40px; margin-bottom: 32px;
+    }
+    .form-group { margin-bottom: 28px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--muted); letter-spacing: 0.03em; }
+    .radio-group { display: flex; gap: 24px; margin-top: 8px; }
+    .radio-option { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .radio-option input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
+    .file-zone {
+      border: 2px dashed var(--border); border-radius: 20px; padding: 48px 24px;
+      text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface2);
+    }
+    .file-zone:hover { border-color: var(--accent); background: var(--accent-dim); }
+    .file-zone.drag-over { border-color: var(--accent); background: var(--accent-dim); }
+    .file-icon { font-size: 48px; margin-bottom: 16px; }
+    .file-text { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+    .file-text strong { color: var(--accent); }
+    .file-name { font-size: 13px; color: var(--text); margin-top: 12px; display: none; }
+    input[type="file"] { display: none; }
+    .btn {
+      background: var(--accent); border: none; padding: 14px 32px; border-radius: 12px;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px;
+      color: #0a0a0f; cursor: pointer; transition: all 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-loading {
+      position: relative;
+      padding-right: 48px;
+    }
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 50%;
+      right: 20px;
+      margin-top: -8px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: #0a0a0f;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .info-box {
+      background: var(--accent-dim); border: 1px solid rgba(232,197,71,0.2);
+      border-radius: 16px; padding: 24px; margin-top: 32px;
+    }
+    .info-box h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
+    .info-box ul { margin-left: 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .info-box code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 6px; font-size: 12px; }
+    .error-message { color: var(--error); font-size: 13px; margin-top: 12px; display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-row">
+      <div class="logo-mark">VI</div>
+      <div class="logo-text">VIK<span>RAM</span></div>
+    </div>
+    <div class="nav-links">
+      <a href="/voucher" class="nav-link">← Back to Vouchers</a>
+      <a href="/home" class="nav-link">Home</a>
+      <a href="/logout" class="nav-link">Sign out</a>
+    </div>
+  </header>
+  <div class="shell">
+    <div class="page-eyebrow">
+      <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+      Bulk Generator
+    </div>
+    <h1>Generate Multiple <em>Vouchers</em></h1>
+    <p class="subtitle">Upload an Excel or CSV file with your booking data. Each row will become a separate voucher.</p>
+    
+    <div class="upload-card">
+      <div class="form-group">
+        <label>VOUCHER TYPE</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="voucherType" value="hotel" checked> Hotel Voucher
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="voucherType" value="tour"> Tour Voucher
+          </label>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>UPLOAD FILE</label>
+        <div class="file-zone" id="dropZone">
+          <div class="file-icon">📊</div>
+          <div class="file-text">Drag & drop your file here or <strong>browse</strong></div>
+          <div class="file-text" style="font-size: 12px;">Supports .xlsx, .xls, .csv</div>
+          <div class="file-name" id="fileName"></div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+        </div>
+        <div class="error-message" id="errorMsg"></div>
+      </div>
+      
+      <button class="btn" id="generateBtn" disabled>Generate All Vouchers →</button>
+    </div>
+    
+    <div class="info-box">
+      <h3>📋 Excel/CSV Format Requirements</h3>
+      <ul>
+        <li><strong>Hotel Voucher required columns:</strong> <code>booking_number</code>, <code>guest_name</code>, <code>hotel_name</code></li>
+        <li><strong>Tour Voucher required columns:</strong> <code>booking_number</code>, <code>guest_name</code>, <code>tour_name</code></li>
+        <li>All other columns are optional and will use default values if missing</li>
+        <li>First row must contain column headers</li>
+        <li><a href="/voucher/bulk/template?type=hotel" style="color: var(--accent);">Download Hotel Template</a> | 
+            <a href="/voucher/bulk/template?type=tour" style="color: var(--accent);">Download Tour Template</a></li>
+      </ul>
+    </div>
+  </div>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const generateBtn = document.getElementById('generateBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    let selectedFile = null;
+    
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      if (files.length) handleFile(files[0]);
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+    
+    function handleFile(file) {
+      const validExtensions = ['.xlsx', '.xls', '.csv'];
+      const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+      
+      if (!validExtensions.includes(ext)) {
+        errorMsg.textContent = 'Invalid file type. Please upload .xlsx, .xls, or .csv files only.';
+        errorMsg.style.display = 'block';
+        selectedFile = null;
+        generateBtn.disabled = true;
+        fileName.style.display = 'none';
+        return;
+      }
+      
+      errorMsg.style.display = 'none';
+      selectedFile = file;
+      fileName.textContent = `📄 ${file.name}`;
+      fileName.style.display = 'block';
+      generateBtn.disabled = false;
+    }
+    
+    generateBtn.addEventListener('click', function() {
+      if (!selectedFile) return;
+      
+      const voucherType = document.querySelector('input[name="voucherType"]:checked').value;
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('voucher_type', voucherType);
+      
+      // Show loading state
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Uploading...';
+      generateBtn.classList.add('btn-loading');
+      errorMsg.style.display = 'none';
+      
+      // Use XMLHttpRequest instead of fetch for better debugging
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/voucher/bulk/upload', true);
+      
+      xhr.onload = function() {
+        console.log('Status:', xhr.status);
+        console.log('Response:', xhr.responseText);
+        
+        if (xhr.status === 200) {
+          try {
+            const result = JSON.parse(xhr.responseText);
+            console.log('Parsed result:', result);
+            
+            if (result.ok && result.job_id) {
+              window.location.href = '/voucher/bulk/progress/' + result.job_id;
+            } else {
+              throw new Error(result.detail || 'Upload failed');
+            }
+          } catch (e) {
+            errorMsg.textContent = 'Invalid response from server';
+            errorMsg.style.display = 'block';
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'Generate All Vouchers →';
+            generateBtn.classList.remove('btn-loading');
+          }
+        } else {
+          errorMsg.textContent = 'Server error: ' + xhr.status;
+          errorMsg.style.display = 'block';
+          generateBtn.disabled = false;
+          generateBtn.textContent = 'Generate All Vouchers →';
+          generateBtn.classList.remove('btn-loading');
+        }
+      };
+      
+      xhr.onerror = function() {
+        errorMsg.textContent = 'Network error - please check your connection';
+        errorMsg.style.display = 'block';
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate All Vouchers →';
+        generateBtn.classList.remove('btn-loading');
+      };
+      
+      xhr.send(formData);
+    });
+  </script>
+</body>
+</html>

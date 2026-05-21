@@ -1,3 +1,4 @@
+import io
 import os
 import re
 import html as html_lib
@@ -12,13 +13,14 @@ from urllib.parse import quote
 import boto3
 from botocore.config import Config
 from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from github import Github, GithubException
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
 
 # ========== LOGGING ==========
@@ -29,6 +31,7 @@ logging.basicConfig(
 )
 log = logging.getLogger("vikram")
 
+# ========== FASTAPI APP INITIALIZATION ==========
 app = FastAPI(title="VIKRAM CMS")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -38,17 +41,30 @@ templates = Jinja2Templates(directory="templates")
 from features.voucher.router import router as voucher_router
 app.include_router(voucher_router, prefix="/voucher", tags=["voucher"])
 
+from features.quotation.router import router as quotation_router
+app.include_router(quotation_router, prefix="/quotation", tags=["quotation"])
+
 # ========== CONFIGURATION ==========
-ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
-SECRET_KEY     = os.environ["SECRET_KEY"]
-GITHUB_TOKEN   = os.environ["GITHUB_TOKEN"]
-GITHUB_REPO    = os.environ["GITHUB_REPO"]
-GITHUB_BRANCH  = os.environ.get("GITHUB_BRANCH", "main")
-R2_ACCOUNT_ID  = os.environ["R2_ACCOUNT_ID"]
-R2_ACCESS_KEY  = os.environ["R2_ACCESS_KEY"]
-R2_SECRET_KEY  = os.environ["R2_SECRET_KEY"]
-R2_BUCKET_NAME = os.environ["R2_BUCKET_NAME"]
-R2_PUBLIC_URL  = os.environ["R2_PUBLIC_URL"].rstrip("/")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+SECRET_KEY = os.environ.get("SECRET_KEY")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+GITHUB_REPO = os.environ.get("GITHUB_REPO")
+GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
+R2_ACCOUNT_ID = os.environ.get("R2_ACCOUNT_ID")
+R2_ACCESS_KEY = os.environ.get("R2_ACCESS_KEY")
+R2_SECRET_KEY = os.environ.get("R2_SECRET_KEY")
+R2_BUCKET_NAME = os.environ.get("R2_BUCKET_NAME")
+R2_PUBLIC_URL = os.environ.get("R2_PUBLIC_URL", "").rstrip("/")
+
+# Validate required environment variables
+required_vars = [
+    "ADMIN_PASSWORD", "SECRET_KEY", "GITHUB_TOKEN", "GITHUB_REPO",
+    "R2_ACCOUNT_ID", "R2_ACCESS_KEY", "R2_SECRET_KEY", "R2_BUCKET_NAME", "R2_PUBLIC_URL"
+]
+missing_vars = [var for var in required_vars if not os.environ.get(var)]
+if missing_vars:
+    log.error("Missing required environment variables: %s", ", ".join(missing_vars))
+    raise RuntimeError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
 log.info("VIKRAM CMS starting up")
 log.info("GitHub repo:  %s  branch: %s", GITHUB_REPO, GITHUB_BRANCH)
@@ -206,14 +222,6 @@ def update_github_file(repo, path: str, sha: str, content: str, commit_msg: str)
     log.info("GitHub COMMIT OK")
 
 # ========== NEWS — GALLERY ARRAY ITEM ==========
-# ROOT CAUSE FIX:
-# The news2.html gallery uses item.src directly as the <img src> and <a href>.
-# These resolve relative to the Cloudflare Pages domain (your website), NOT R2.
-# Existing items (100.jpeg, 101.jpeg …) live in the GitHub repo so relative paths work.
-# New VIKRAM uploads live ONLY in R2, so we MUST use the absolute R2 URL.
-# Previously the code stripped the R2 domain, producing a relative path that 404'd.
-# FIX: keep the full absolute R2 URL in both src and thumb.
-
 def build_news_gallery_array_item(
     media_url: str,
     caption: str,
@@ -223,33 +231,19 @@ def build_news_gallery_array_item(
 ) -> str:
     """
     Build a JS galleryItems entry using ABSOLUTE R2 URLs.
-
     New items always use batch: 1 so they appear in the first loaded set.
-    The INSERT marker is at the TOP of the galleryItems array so new items
-    are prepended and shown first by GalleryPaginator.
-
-    NOTE: We use full absolute URLs (https://pub-xxx.r2.dev/...) because
-    these files live in R2, not in the Cloudflare Pages repo. Relative paths
-    would resolve to the Cloudflare Pages domain and return 404.
     """
     media_type = "video" if is_video else "image"
-
-    # media_url is always an absolute R2 URL from upload_to_r2()
-    # We use it directly — do NOT strip the domain prefix.
     src_url = media_url
 
     if is_video:
-        # Derive thumbnail: swap /videos/ → /images/ and replace extension with _thumb.png
         thumb_url = src_url.replace("/videos/", "/images/")
         thumb_url = re.sub(r"\.(mp4|webm|ogg)$", "_thumb.png", thumb_url, flags=re.IGNORECASE)
     else:
         thumb_url = src_url
 
     item = f"    {{ type: '{media_type}', src: '{src_url}', thumb: '{thumb_url}', batch: 1 }},"
-    log.info(
-        "Built news gallery item  type=%s  src=%s",
-        media_type, src_url,
-    )
+    log.info("Built news gallery item  type=%s  src=%s", media_type, src_url)
     return item
 
 # ========== ATTRACTIONS — HTML CARD ==========
@@ -262,28 +256,7 @@ def build_attractions_html_card(
 ) -> str:
     """
     Build an HTML card matching the exact structure in attractions.html.
-    Uses absolute R2 URLs — consistent with how attractions.html already works.
-
-    Image card:
-        <div class="card">
-            <a href="https://..." class="popup-link" title="...">
-                <img src="https://..." alt="...">
-            </a>
-            <div class="card-content"><h3>...</h3></div>
-            <span class="card-zoom-icon"><i class="fas fa-search-plus"></i></span>
-        </div>
-
-    Video card:
-        <div class="card">
-            <a href="https://..." class="fancybox" data-fancybox data-type="video" title="...">
-                <div class="video-thumbnail">
-                    <img src="https://...PLY.webp" alt="...">
-                    <div class="play-button"></div>
-                </div>
-            </a>
-            <div class="card-content"><h3>...</h3></div>
-            <span class="card-zoom-icon"><i class="fas fa-search-plus"></i></span>
-        </div>
+    Uses absolute R2 URLs.
     """
     safe_caption = html_lib.escape(caption or "VayoAura attraction")
     safe_alt     = html_lib.escape(caption or "VayoAura attraction media", quote=True)
@@ -352,19 +325,14 @@ def inject_media_into_html(
 ) -> str:
     """
     Inject the generated markup into the HTML string at the correct marker.
-
-    News:        inserts after  // VIKRAM:INSERT_GALLERY_ITEM  (top of galleryItems[])
-    Attractions: inserts after  <!-- VIKRAM:INSERT:country:city -->
     """
     tag = build_media_markup(
         page_key, media_url, caption, is_video, content_type, original_filename
     )
 
-    # Determine marker
     if page_key == "news":
         marker = MANAGED_PAGES["news"]["insert_marker"]
         log.info("Injection target: news marker=%r", marker)
-
     elif page_key == "attractions":
         loc_key = (country_key.lower(), city_key.lower())
         marker  = ATTRACTIONS_LOCATIONS.get(loc_key)
@@ -377,13 +345,11 @@ def inject_media_into_html(
     else:
         raise ValueError(f"Unsupported page key: {page_key}")
 
-    # Inject
     if marker in html:
         updated = html.replace(marker, marker + "\n" + tag, 1)
         log.info("Injection OK  marker found and replaced")
         return updated
 
-    # Fallback — should never happen if markers are in place
     log.warning("Marker %r NOT FOUND in HTML — falling back to </body> insertion", marker)
     if "</body>" in html:
         return html.replace("</body>", tag + "\n</body>", 1)
@@ -396,7 +362,6 @@ async def favicon():
     favicon_file = os.path.join("static", "favicon.ico")
     if os.path.exists(favicon_file):
         return FileResponse(favicon_file, media_type="image/x-icon")
-    from fastapi.responses import Response
     return Response(status_code=204)
 
 @app.get("/", response_class=HTMLResponse)
@@ -466,14 +431,6 @@ async def upload(
 ):
     """
     Upload a media file to R2 and inject the correct markup into the website HTML.
-
-    Flow:
-      1. Validate page / location / file type / file size
-      2. Read file bytes — log size so we can confirm the file arrived
-      3. Upload bytes to R2 — log the resulting public URL
-      4. Fetch target HTML from GitHub
-      5. Inject markup at the correct INSERT marker
-      6. Commit updated HTML back to GitHub
     """
     log.info(
         "Upload request  page=%s  country=%s  city=%s  filename=%s  content_type=%s",
@@ -481,12 +438,10 @@ async def upload(
         file.filename, file.content_type,
     )
 
-    # ── 1. Validate page ─────────────────────────────────────────────────────
     if page_key not in MANAGED_PAGES:
         log.error("Invalid page key: %s", page_key)
         raise HTTPException(status_code=400, detail="Invalid page.")
 
-    # ── 2. Validate attractions location ─────────────────────────────────────
     if page_key == "attractions":
         loc_key = (country_key.lower(), city_key.lower())
         if loc_key not in ATTRACTIONS_LOCATIONS:
@@ -496,7 +451,6 @@ async def upload(
                 status_code=400,
             )
 
-    # ── 3. Validate file type ─────────────────────────────────────────────────
     allowed_images = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
     allowed_videos = {"video/mp4", "video/webm", "video/ogg"}
 
@@ -518,7 +472,6 @@ async def upload(
             status_code=400,
         )
 
-    # ── 4. Read and validate file size ────────────────────────────────────────
     file_bytes = await file.read()
     size_bytes = len(file_bytes)
     size_mb    = size_bytes / (1024 * 1024)
@@ -543,22 +496,18 @@ async def upload(
         )
 
     try:
-        # ── 5. Upload to R2 ───────────────────────────────────────────────────
         media_url = upload_to_r2(
             page_key,
             file_bytes,
             file.filename or "upload.bin",
             content_type,
         )
-        # media_url is always an absolute https:// URL from upload_to_r2()
 
-        # ── 6. Fetch HTML from GitHub ─────────────────────────────────────────
         gh        = Github(GITHUB_TOKEN)
         repo      = gh.get_repo(GITHUB_REPO)
         html_path = MANAGED_PAGES[page_key]["file"]
         html_content, sha = get_github_file(repo, html_path)
 
-        # ── 7. Inject markup ──────────────────────────────────────────────────
         updated_html = inject_media_into_html(
             html=html_content,
             page_key=page_key,
@@ -571,7 +520,6 @@ async def upload(
             city_key=city_key,
         )
 
-        # ── 8. Commit to GitHub ───────────────────────────────────────────────
         media_type_str = "video" if is_video else "image"
         location_str   = f"{country_key}/{city_key}" if page_key == "attractions" else html_path
         commit_msg = (
@@ -614,6 +562,155 @@ async def upload(
             status_code=500,
         )
 
+# ========== PDF GENERATION ENDPOINTS ==========
+from features.voucher.generator import (
+    warmup_caches, 
+    generate_hotel_pdf, 
+    generate_tour_pdf,
+    generate_hotel_pdf_async,
+    generate_tour_pdf_async,
+    get_cache_stats
+)
+
+@app.on_event("startup")
+async def startup_event():
+    """Pre-load templates, CSS, and images on application startup."""
+    log.info("Starting application and warming up caches...")
+    try:
+        warmup_caches()
+        stats = get_cache_stats()
+        log.info("Cache warmup complete: %s", stats)
+    except Exception as e:
+        log.warning("Cache warmup failed (will load on first request): %s", e)
+
+@app.get("/voucher/generate-hotel-pdf", response_class=HTMLResponse)
+@require_auth
+async def hotel_voucher_form(request: Request):
+    """Display the hotel voucher form."""
+    return templates.TemplateResponse("hotel_voucher_form.html", {"request": request})
+
+@app.get("/voucher/generate-tour-pdf", response_class=HTMLResponse)
+@require_auth
+async def tour_voucher_form(request: Request):
+    """Display the tour voucher form."""
+    return templates.TemplateResponse("tour_voucher_form.html", {"request": request})
+
+@app.post("/voucher/generate-hotel-pdf")
+@require_auth
+async def generate_hotel_pdf_endpoint(
+    request: Request,
+    booking_number: str = Form(...),
+    hotel_cfn: str = Form(...),
+    guest_name: str = Form(...),
+    country: str = Form(...),
+    hotel_name: str = Form(...),
+    address: str = Form(...),
+    contact_number: str = Form(...),
+    cancellation_policy: str = Form(...),
+    check_in: str = Form(...),
+    check_out: str = Form(...),
+    book_payable_by: str = Form(...),
+    remarks: str = Form(""),
+    num_rooms: str = Form("1"),
+    extra_beds: str = Form("0"),
+    num_adults: str = Form("1"),
+    num_children: str = Form("0"),
+    room_type: str = Form(...),
+):
+    """Generate hotel voucher PDF from form data."""
+    try:
+        form_data = {
+            "booking_number": booking_number,
+            "hotel_cfn": hotel_cfn,
+            "guest_name": guest_name,
+            "country": country,
+            "hotel_name": hotel_name,
+            "address": address,
+            "contact_number": contact_number,
+            "cancellation_policy": cancellation_policy,
+            "check_in": check_in,
+            "check_out": check_out,
+            "book_payable_by": book_payable_by,
+            "remarks": remarks,
+            "num_rooms": num_rooms,
+            "extra_beds": extra_beds,
+            "num_adults": num_adults,
+            "num_children": num_children,
+            "room_type": room_type,
+        }
+        
+        pdf_bytes, filename = await generate_hotel_pdf_async(form_data)
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        log.exception("Failed to generate hotel PDF: %s", e)
+        return JSONResponse(
+            {"ok": False, "error": f"PDF generation failed: {str(e)}"},
+            status_code=500
+        )
+
+@app.post("/voucher/generate-tour-pdf")
+@require_auth
+async def generate_tour_pdf_endpoint(
+    request: Request,
+    booking_number: str = Form(...),
+    guest_name: str = Form(...),
+    guest_mobile_no: str = Form(...),
+    tour_name: str = Form(...),
+    package_name: str = Form(...),
+    service_date: str = Form(...),
+    pickup_from: str = Form(...),
+    drop_to: str = Form(...),
+    pick_time: str = Form(...),
+    cancellation_policy: str = Form(...),
+    book_payable_by: str = Form(...),
+    num_adults: str = Form("1"),
+    num_children: str = Form("0"),
+    service_type: str = Form(...),
+):
+    """Generate tour voucher PDF from form data."""
+    try:
+        form_data = {
+            "booking_number": booking_number,
+            "guest_name": guest_name,
+            "guest_mobile_no": guest_mobile_no,
+            "tour_name": tour_name,
+            "package_name": package_name,
+            "service_date": service_date,
+            "pickup_from": pickup_from,
+            "drop_to": drop_to,
+            "pick_time": pick_time,
+            "cancellation_policy": cancellation_policy,
+            "book_payable_by": book_payable_by,
+            "num_adults": num_adults,
+            "num_children": num_children,
+            "service_type": service_type,
+        }
+        
+        pdf_bytes, filename = await generate_tour_pdf_async(form_data)
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        log.exception("Failed to generate tour PDF: %s", e)
+        return JSONResponse(
+            {"ok": False, "error": f"PDF generation failed: {str(e)}"},
+            status_code=500
+        )
+
+@app.get("/voucher/cache-stats")
+@require_auth
+async def voucher_cache_stats():
+    """Get cache statistics for monitoring."""
+    return JSONResponse(get_cache_stats())
+
 @app.get("/health")
 async def health():
     return {
@@ -623,6 +720,7 @@ async def health():
         "r2_bucket":   R2_BUCKET_NAME,
         "github_repo": GITHUB_REPO,
         "github_branch": GITHUB_BRANCH,
+        "voucher_cache": get_cache_stats(),
     }
 
 if __name__ == "__main__":

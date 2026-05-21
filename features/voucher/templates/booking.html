@@ -6,10 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Booking Confirmation</title>
   <style>
-    /* Embedded CSS to ensure styles are applied */
     @page {
       size: A4;
-      margin: 10mm;
+      margin: 8mm;
     }
   </style>
   <link rel="stylesheet" href="styles.css" />
@@ -20,7 +19,7 @@
     <header class="voucher-header">
       <h1><span class="booking-purple">Booking</span> Confirmation</h1>
       <p class="subtitle">
-        “This Isn't Just a Voucher. It's a Vibe Check.” Show this booking
+        "This Isn't Just a Voucher. It's a Vibe Check." Show this booking
         confirmation (phone or paper) at check-in and unlock more than just a
         room — unlock your getaway story. Your adventure starts right at the
         reception desk.
@@ -35,7 +34,7 @@
             <table class="booking-info">
               <tr>
                 <td>Booking ID:</td>
-                <td>{{booking_number}}</td>
+                <td><strong>{{booking_number}}</strong></td>
               </tr>
               <tr>
                 <td>Hotel Confirmation No.:</td>
@@ -43,7 +42,7 @@
               </tr>
               <tr>
                 <td>Guest Name:</td>
-                <td>{{guest_name}}</td>
+                <td><strong>{{guest_name}}</strong></td>
               </tr>
               <tr>
                 <td>Country of Residence:</td>
@@ -51,7 +50,7 @@
               </tr>
               <tr>
                 <td>Hotel Name:</td>
-                <td>{{hotel_name}}</td>
+                <td><strong>{{hotel_name}}</strong></td>
               </tr>
               <tr>
                 <td>Address:</td>
@@ -85,7 +84,7 @@
               </div>
               <div class="room-detail-item">
                 <span>Room Type:</span>
-                <span>{{room_type}}</span>
+                <span><strong>{{room_type}}</strong></span>
               </div>
             </div>
           </div>
@@ -94,7 +93,7 @@
 
       <table class="stay-dates">
         <tr>
-          <td>Check In:</td>
+          <td><strong>Check In:</strong></td>
           <td>{{check_in}}</td>
           <td><strong>Check Out:</strong></td>
           <td>{{check_out}}</td>
@@ -109,8 +108,7 @@
         <div class="signature-section">
           <div class="company-stamp">
             {% if stamp_path %}
-            <img src="{{ stamp_path }}" alt="Company Stamp" class="stamp-image"
-              onerror="this.parentElement.innerHTML='<div class=\'stamp-image\'></div>'" />
+            <img src="{{ stamp_path }}" alt="Company Stamp" class="stamp-image" />
             {% else %}
             <div class="stamp-image"></div>
             {% endif %}
@@ -133,11 +131,10 @@
 
     <div class="emergency-contact-section">
       <div class="emergency-header">
-        <i class="phone-icon">📞</i> Emergency Numbers
+        <span class="phone-icon">📞</span> Emergency Numbers
       </div>
 
       <div class="pill-grid">
-        <!-- Thailand full-row pill -->
         <div class="pill-card">
           <img src="{{ thailand_path }}" alt="Thailand" />
           <div>
@@ -146,7 +143,6 @@
           </div>
         </div>
 
-        <!-- Vietnam -->
         <div class="pill-card">
           <img src="{{ vietnam_path }}" alt="Vietnam" />
           <div>
@@ -155,7 +151,6 @@
           </div>
         </div>
 
-        <!-- Japan -->
         <div class="pill-card">
           <img src="{{ japan_path }}" alt="Japan" />
           <div>
@@ -164,14 +159,13 @@
           </div>
         </div>
 
-        <!-- Indonesia -->
         <div class="pill-card">
           <img src="{{ indonesia_path }}" alt="Indonesia" />
           <div>
             <strong>Indonesia:</strong>
             <span class="contact-number">+66 960 877 457</span>
           </div>
-        </div>  
+        </div>
       </div>
     </div>
 
@@ -179,8 +173,7 @@
       <div class="footer-content">
         <div class="footer-logo">
           {% if logo_path %}
-          <img src="{{ logo_path }}" alt="Vayo Aura Logo" class="company-logo"
-            onerror="this.parentElement.innerHTML='<div class=\'company-logo\'></div>'" />
+          <img src="{{ logo_path }}" alt="Vayo Aura Logo" class="company-logo" />
           {% else %}
           <div class="company-logo"></div>
           {% endif %}
@@ -188,7 +181,7 @@
         <div class="footer-info">
           <div class="company-name">
             Vayo Aura - Explore Unseen Wonders <br />
-            Thailand | Vietnam | Indonesia
+            Thailand | Vietnam | Indonesia | Japan
           </div>
           <div class="contact-line">
             <span class="contact-item">Contact Number: +66 960 877 457</span>
@@ -196,7 +189,7 @@
             <span class="contact-item">Mail: info@vayoaura.com</span>
           </div>
           <div class="footer-row address">
-            30th Floor, Singha Complex, Unit 3001-3003,3009-3014, Bangkapi,
+            30th Floor, Singha Complex, Unit 3001-3003, 3009-3014, Bangkapi,
             Huaikhwang, Bangkok 10310
           </div>
         </div>

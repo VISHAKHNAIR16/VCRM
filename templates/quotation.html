@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quotation Tool — VIKRAM CMS</title>
+<style>
+/* ── Reset & base ─────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+     background:#f5f5f0;color:#1a1a18;font-size:15px;line-height:1.6}
+a{color:#1a6b4a;text-decoration:none}
+
+/* ── Layout ───────────────────────────────────────────────────────── */
+.topbar{background:#1a1a18;color:#e8e6de;padding:.75rem 1.5rem;
+        display:flex;align-items:center;gap:1rem}
+.topbar a{color:#9fe1cb;font-size:13px}
+.topbar h1{font-size:15px;font-weight:600;color:#fff}
+.page{max-width:960px;margin:0 auto;padding:1.5rem}
+
+/* ── Card ─────────────────────────────────────────────────────────── */
+.card{background:#fff;border:1px solid #e2e0d8;border-radius:10px;
+      padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+.card-title{font-size:13px;font-weight:600;color:#888;letter-spacing:.05em;
+            text-transform:uppercase;margin-bottom:1rem}
+
+/* ── Filter row ──────────────────────────────────────────────────── */
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem}
+.field label{display:block;font-size:12px;font-weight:500;color:#666;margin-bottom:.3rem}
+.field select,.field input{width:100%;padding:.5rem .75rem;border:1px solid #ddd;
+  border-radius:6px;font-size:14px;background:#fff;color:#1a1a18;
+  appearance:none;-webkit-appearance:none;outline:none;transition:border .15s}
+.field select:focus,.field input:focus{border-color:#1a6b4a;
+  box-shadow:0 0 0 3px rgba(26,107,74,.1)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+       background-repeat:no-repeat;background-position:right .75rem center;
+       padding-right:2rem}
+
+/* ── PAX + commission row ────────────────────────────────────────── */
+.calc-row{display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;
+          border-top:1px solid #eee;margin-top:1rem;padding-top:1rem}
+.calc-row .field{flex:1;min-width:120px}
+.pax-inputs{display:flex;gap:.5rem}
+.pax-inputs input{width:80px}
+.badge-vat{display:inline-flex;align-items:center;gap:.35rem;
+           background:#fff8e1;color:#7a5800;border:1px solid #f5c842;
+           border-radius:4px;font-size:11px;font-weight:600;
+           padding:2px 8px;margin-left:.5rem;vertical-align:middle}
+.badge-vat.incl{background:#e8f5e9;color:#256029;border-color:#81c784}
+
+/* ── Search btn ──────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:.4rem;
+     padding:.55rem 1.25rem;border-radius:6px;font-size:14px;
+     font-weight:500;cursor:pointer;border:none;transition:.15s}
+.btn-primary{background:#1a6b4a;color:#fff}
+.btn-primary:hover{background:#155a3e}
+.btn-ghost{background:transparent;color:#555;border:1px solid #ddd}
+.btn-ghost:hover{background:#f5f5f0}
+.btn-sm{padding:.35rem .8rem;font-size:13px}
+
+/* ── Results ─────────────────────────────────────────────────────── */
+#results-count{font-size:13px;color:#888;margin-bottom:.75rem}
+.result-card{background:#fff;border:1px solid #e2e0d8;border-radius:8px;
+             margin-bottom:.75rem;overflow:hidden}
+.result-header{display:flex;align-items:flex-start;justify-content:space-between;
+               gap:1rem;padding:.9rem 1.1rem .7rem;cursor:pointer;
+               border-bottom:1px solid transparent;transition:.15s}
+.result-header:hover{background:#fafaf8}
+.result-card.open .result-header{border-bottom-color:#eee}
+.result-name{font-size:14px;font-weight:600;color:#1a1a18;flex:1}
+.result-meta{font-size:12px;color:#888;margin-top:.15rem}
+.result-badges{display:flex;gap:.4rem;flex-shrink:0;align-items:center}
+.badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
+.badge-src{background:#eee;color:#555}
+.badge-tc{background:#e6f1fb;color:#0c447c}
+.chevron{font-size:12px;color:#aaa;margin-left:.5rem;transition:transform .2s}
+.result-card.open .chevron{transform:rotate(180deg)}
+
+/* ── Result body ─────────────────────────────────────────────────── */
+.result-body{display:none;padding:1rem 1.1rem}
+.result-card.open .result-body{display:block}
+
+/* ── Rate table ──────────────────────────────────────────────────── */
+.rate-section{margin-bottom:1rem}
+.rate-section-title{font-size:11px;font-weight:700;color:#888;
+                    text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+.rate-table{width:100%;border-collapse:collapse;font-size:13px}
+.rate-table th{text-align:left;font-weight:600;color:#555;
+               border-bottom:1px solid #eee;padding:.35rem .6rem;font-size:12px}
+.rate-table td{padding:.4rem .6rem;border-bottom:1px solid #f5f5f0;color:#333}
+.rate-table tr:last-child td{border-bottom:none}
+.rate-table tr.highlight td{background:#e8f5e9;font-weight:600;color:#1a1a18}
+
+/* ── Quote summary panel ─────────────────────────────────────────── */
+.quote-panel{background:#f0faf5;border:1.5px solid #1a6b4a;
+             border-radius:8px;padding:1rem 1.25rem;margin-top:1rem}
+.quote-panel h4{font-size:13px;font-weight:700;color:#1a6b4a;margin-bottom:.75rem}
+.quote-line{display:flex;justify-content:space-between;font-size:13px;
+            color:#333;margin-bottom:.35rem}
+.quote-line.total{font-size:16px;font-weight:700;color:#1a1a18;
+                  border-top:1px solid #b2dfcc;padding-top:.5rem;margin-top:.4rem}
+.quote-line .usd{font-size:12px;color:#666;font-weight:400}
+.copy-btn{margin-top:.75rem;width:100%}
+
+/* ── Zones ───────────────────────────────────────────────────────── */
+.zone-list{font-size:12px;color:#666;margin-top:.5rem}
+.zone-list span{background:#f5f5f0;border:1px solid #e2e0d8;border-radius:4px;
+                padding:2px 7px;margin:.2rem .2rem 0 0;display:inline-block}
+
+/* ── Empty / loading ─────────────────────────────────────────────── */
+.empty{text-align:center;padding:3rem;color:#aaa;font-size:14px}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid #ddd;
+         border-top-color:#1a6b4a;border-radius:50%;animation:spin .7s linear infinite;
+         vertical-align:middle;margin-right:.4rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media(max-width:600px){
+  .filters{grid-template-columns:1fr 1fr}
+  .calc-row{flex-direction:column}
+  .pax-inputs input{width:70px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/home">← Home</a>
+  <span style="color:#555">|</span>
+  <h1>Quotation Tool</h1>
+  <span style="margin-left:auto;font-size:12px;color:#666" id="fx-label">Loading rates…</span>
+</div>
+
+<div class="page">
+
+  <!-- ── FILTERS ────────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">Search Services</div>
+    <div class="filters">
+      <div class="field">
+        <label>Destination</label>
+        <select id="sel-dest" onchange="onDestChange()">
+          <option value="">— pick destination —</option>
+          {% for d in destinations %}
+          <option value="{{ d }}">{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Service type</label>
+        <select id="sel-type" onchange="onTypeChange()" disabled>
+          <option value="">— pick type —</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Vehicle</label>
+        <select id="sel-vehicle" disabled>
+          <option value="">All vehicles</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Rate type</label>
+        <select id="sel-ratetype">
+          <option value="">Private &amp; SIC</option>
+          <option value="Private">Private only</option>
+          <option value="SIC">SIC (group) only</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Search service name</label>
+        <input type="text" id="inp-search" placeholder="e.g. airport, phi phi, jungle…"
+               onkeydown="if(event.key==='Enter')doSearch()">
+      </div>
+    </div>
+
+    <!-- ── PAX + commission ──────────────────────────────────────────────── -->
+    <div class="calc-row">
+      <div class="field">
+        <label>Adults</label>
+        <input type="number" id="inp-adults" value="2" min="0" max="50"
+               oninput="recalcAll()">
+      </div>
+      <div class="field">
+        <label>Children <span style="font-size:11px;color:#aaa">(3-10 yrs)</span></label>
+        <input type="number" id="inp-children" value="0" min="0" max="30"
+               oninput="recalcAll()">
+      </div>
+      <div class="field">
+        <label>Commission %</label>
+        <input type="number" id="inp-commission" value="15" min="0" max="100" step="0.5"
+               oninput="recalcAll()">
+      </div>
+      <div class="field">
+        <label>VAT <span style="font-size:11px;color:#aaa">(where excluded)</span></label>
+        <select id="sel-vat" onchange="recalcAll()">
+          <option value="0">Exclude VAT</option>
+          <option value="7">Add 7% VAT</option>
+        </select>
+      </div>
+      <div class="field" style="margin-left:auto">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary" onclick="doSearch()">
+          <span id="search-spinner" style="display:none" class="spinner"></span>
+          Search
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ────────────────────────────────────────────────────────── -->
+  <div id="results-count"></div>
+  <div id="results-list"></div>
+
+</div><!-- /page -->
+
+<script>
+// ── state ────────────────────────────────────────────────────────────────────
+let fxRate = null;   // THB per USD
+
+// ── FX ───────────────────────────────────────────────────────────────────────
+async function loadFx() {
+  try {
+    const r = await fetch('/quotation/api/fx');
+    const d = await r.json();
+    fxRate = d.thb_per_usd;
+    document.getElementById('fx-label').textContent =
+      fxRate ? `1 USD = ฿${fxRate.toFixed(2)}` : 'FX unavailable';
+    recalcAll();
+  } catch {
+    document.getElementById('fx-label').textContent = 'FX unavailable';
+  }
+}
+
+function thbToUsd(thb) {
+  if (!fxRate || !thb) return null;
+  return (thb / fxRate).toFixed(2);
+}
+
+// ── Cascading dropdowns ───────────────────────────────────────────────────────
+async function onDestChange() {
+  const dest = document.getElementById('sel-dest').value;
+  const selType    = document.getElementById('sel-type');
+  const selVehicle = document.getElementById('sel-vehicle');
+
+  selType.disabled = true; selType.innerHTML = '<option value="">— loading —</option>';
+  selVehicle.disabled = true; selVehicle.innerHTML = '<option value="">All vehicles</option>';
+
+  if (!dest) { selType.innerHTML = '<option value="">— pick type —</option>'; return; }
+
+  const types = await fetch(`/quotation/api/service-types?destination=${encodeURIComponent(dest)}`).then(r=>r.json());
+  selType.innerHTML = '<option value="">All types</option>' +
+    types.map(t=>`<option value="${t}">${t}</option>`).join('');
+  selType.disabled = false;
+}
+
+async function onTypeChange() {
+  const dest = document.getElementById('sel-dest').value;
+  const type = document.getElementById('sel-type').value;
+  const selVehicle = document.getElementById('sel-vehicle');
+
+  selVehicle.disabled = true;
+  selVehicle.innerHTML = '<option value="">All vehicles</option>';
+
+  if (!dest || !type) return;
+
+  const vehicles = await fetch(
+    `/quotation/api/vehicles?destination=${encodeURIComponent(dest)}&service_type=${encodeURIComponent(type)}`
+  ).then(r=>r.json());
+
+  selVehicle.innerHTML = '<option value="">All vehicles</option>' +
+    vehicles.map(v=>`<option value="${v}">${v}</option>`).join('');
+  selVehicle.disabled = false;
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+async function doSearch() {
+  const dest   = document.getElementById('sel-dest').value;
+  const type   = document.getElementById('sel-type').value;
+  const vehicle = document.getElementById('sel-vehicle').value;
+  const rtype  = document.getElementById('sel-ratetype').value;
+  const search = document.getElementById('inp-search').value;
+
+  if (!dest) { alert('Please select a destination first.'); return; }
+
+  document.getElementById('search-spinner').style.display = 'inline-block';
+  document.getElementById('results-list').innerHTML = '<div class="empty"><span class="spinner"></span> Searching…</div>';
+  document.getElementById('results-count').textContent = '';
+
+  const params = new URLSearchParams({destination:dest,service_type:type,vehicle,rate_type:rtype,search});
+  const data   = await fetch(`/quotation/api/search?${params}`).then(r=>r.json());
+  document.getElementById('search-spinner').style.display = 'none';
+
+  if (!data.length) {
+    document.getElementById('results-list').innerHTML = '<div class="empty">No services found. Try a broader search.</div>';
+    return;
+  }
+
+  document.getElementById('results-count').textContent = `${data.length} service${data.length>1?'s':''} found`;
+  document.getElementById('results-list').innerHTML = data.map(svc => renderCard(svc)).join('');
+}
+
+// ── Render a service card ─────────────────────────────────────────────────────
+function srcLabel(source) {
+  const map = {
+    BKK_EXCEL:'BKK/PTY', GDV_EXCEL:'Good Day',
+    PHUKET_CONTRACT:'Phuket Contract', KRABI_CONTRACT:'Krabi Contract',
+    SAMUI_CONTRACT:'Samui Contract',
+  };
+  return map[source] || source;
+}
+
+function renderCard(svc) {
+  const vatBadge = svc.includes_vat
+    ? `<span class="badge-vat incl">VAT incl.</span>`
+    : `<span class="badge-vat">VAT excl.</span>`;
+
+  const tcBadge = svc.tour_code
+    ? `<span class="badge badge-tc">${svc.tour_code}</span>` : '';
+
+  const srcBadge = `<span class="badge badge-src">${srcLabel(svc.source)}</span>`;
+
+  return `
+  <div class="result-card" id="card-${svc.id}">
+    <div class="result-header" onclick="toggleCard(${svc.id})">
+      <div>
+        <div class="result-name">${svc.name} ${vatBadge}</div>
+        <div class="result-meta">
+          ${svc.notes ? svc.notes + ' · ' : ''}
+          ${svc.duration ? svc.duration + ' · ' : ''}
+        </div>
+      </div>
+      <div class="result-badges">
+        ${tcBadge}${srcBadge}
+        <span class="chevron">▼</span>
+      </div>
+    </div>
+    <div class="result-body">
+      ${renderRateTables(svc)}
+      ${renderZones(svc)}
+      ${renderQuotePanel(svc)}
+    </div>
+  </div>`;
+}
+
+// ── Rate tables ───────────────────────────────────────────────────────────────
+function renderRateTables(svc) {
+  const privateRates = svc.rates.filter(r => r.rate_type === 'Private');
+  const sicRates     = svc.rates.filter(r => r.rate_type === 'SIC');
+  let html = '';
+
+  if (privateRates.length) {
+    // Group by vehicle
+    const byVehicle = {};
+    for (const r of privateRates) {
+      const key = r.vehicle || 'All';
+      if (!byVehicle[key]) byVehicle[key] = [];
+      byVehicle[key].push(r);
+    }
+    html += `<div class="rate-section">
+      <div class="rate-section-title">Private rates (per vehicle)</div>
+      <table class="rate-table">
+        <thead><tr><th>Vehicle</th><th>Pax range</th><th>Category</th><th>Price (THB)</th></tr></thead>
+        <tbody>
+        ${Object.entries(byVehicle).map(([veh, rows]) =>
+          rows.map(r => `<tr data-sid="${svc.id}" data-price="${r.price_thb}" data-cat="${r.pax_category}" data-rt="Private">
+            <td>${veh}</td>
+            <td>${r.pax_range || '—'}</td>
+            <td>${r.pax_category}</td>
+            <td><strong>฿${r.price_thb.toLocaleString()}</strong></td>
+          </tr>`).join('')
+        ).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }
+
+  if (sicRates.length) {
+    html += `<div class="rate-section">
+      <div class="rate-section-title">SIC rates (per person, join tour)</div>
+      <table class="rate-table">
+        <thead><tr><th>Category</th><th>Pax range</th><th>Price (THB)</th></tr></thead>
+        <tbody>
+        ${sicRates.map(r => `<tr data-sid="${svc.id}" data-price="${r.price_thb}" data-cat="${r.pax_category}" data-rt="SIC">
+          <td>${r.pax_category}</td>
+          <td>${r.pax_range || '—'}</td>
+          <td><strong>฿${r.price_thb.toLocaleString()}</strong></td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }
+
+  return html;
+}
+
+function renderZones(svc) {
+  if (!svc.zones.length) return '';
+  return `<div class="zone-list">
+    <strong style="font-size:12px;color:#555">Zone surcharges: </strong>
+    ${svc.zones.map(z =>
+      `<span>${z.zone_name}${z.surcharge ? ': ฿'+z.surcharge+'/'+z.per : ''}</span>`
+    ).join('')}
+  </div>`;
+}
+
+// ── Quote panel ───────────────────────────────────────────────────────────────
+function renderQuotePanel(svc) {
+  return `
+  <div class="quote-panel" id="qpanel-${svc.id}">
+    <h4>Quick quote calculator</h4>
+    <div id="qlines-${svc.id}">
+      <div class="empty" style="padding:.5rem;font-size:13px">
+        ↑ Select vehicle / rate type above, then rates will calculate automatically.
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm copy-btn" onclick="copyQuote(${svc.id})">
+      📋 Copy quote to clipboard
+    </button>
+  </div>`;
+}
+
+// ── Recalc all open cards ─────────────────────────────────────────────────────
+function recalcAll() {
+  document.querySelectorAll('.result-card.open').forEach(card => {
+    const sid = parseInt(card.id.replace('card-', ''));
+    recalcCard(sid);
+  });
+}
+
+function recalcCard(sid) {
+  const adults     = parseInt(document.getElementById('inp-adults').value)   || 0;
+  const children   = parseInt(document.getElementById('inp-children').value) || 0;
+  const commission = parseFloat(document.getElementById('inp-commission').value) || 0;
+  const vatPct     = parseFloat(document.getElementById('sel-vat').value)    || 0;
+  const panel      = document.getElementById(`qlines-${sid}`);
+  if (!panel) return;
+
+  // Find selected vehicle row  (prefer selected vehicle from filter)
+  const selectedVehicle = document.getElementById('sel-vehicle').value;
+  const selectedRateType = document.getElementById('sel-ratetype').value;
+
+  // Collect all rows for this card
+  const rows = document.querySelectorAll(`tr[data-sid="${sid}"]`);
+  if (!rows.length) { panel.innerHTML = '<div class="empty" style="padding:.5rem;font-size:13px">No rate rows found.</div>'; return; }
+
+  // Prefer: matching vehicle + rate_type. Otherwise show all.
+  let candidates = Array.from(rows);
+  if (selectedVehicle)  candidates = candidates.filter(r => r.querySelector('td')?.textContent.trim() === selectedVehicle || r.dataset.rt === 'SIC');
+  if (selectedRateType) candidates = candidates.filter(r => r.dataset.rt === selectedRateType);
+  if (!candidates.length) candidates = Array.from(rows);
+
+  // Summarise lines
+  let lines = '';
+  let grandTotal = 0;
+
+  // Group by rate_type
+  const privRows = candidates.filter(r => r.dataset.rt === 'Private');
+  const sicRows  = candidates.filter(r => r.dataset.rt === 'SIC');
+
+  // Private — show per-vehicle price
+  const seenPriv = new Set();
+  for (const r of privRows) {
+    const price = parseInt(r.dataset.price);
+    const cat   = r.dataset.cat;
+    const key   = `${cat}-${price}`;
+    if (seenPriv.has(key)) continue;
+    seenPriv.add(key);
+    const withVat   = vatPct ? Math.round(price * (1 + vatPct/100)) : price;
+    const withComm  = Math.round(withVat * (1 + commission/100));
+    grandTotal = withComm;  // private = per vehicle, use last
+    const usd = thbToUsd(withComm);
+    lines += `<div class="quote-line">
+      <span>Base rate (private, per vehicle)</span>
+      <span>฿${withVat.toLocaleString()}</span>
+    </div>`;
+    if (vatPct && !document.getElementById(`card-${sid}`)?.dataset?.includesVat) {
+      lines += `<div class="quote-line"><span>+ VAT ${vatPct}%</span><span>฿${(withVat-price).toLocaleString()}</span></div>`;
+    }
+    lines += `<div class="quote-line"><span>+ Commission ${commission}%</span><span>฿${(withComm-withVat).toLocaleString()}</span></div>`;
+    lines += `<div class="quote-line total">
+      <span>Final rate (per vehicle)</span>
+      <span>฿${withComm.toLocaleString()} ${usd ? `<span class="usd">≈ $${usd}</span>` : ''}</span>
+    </div>`;
+    break; // show first match only
+  }
+
+  // SIC — calculate adults + children
+  if (sicRows.length) {
+    const adultRow  = sicRows.find(r => r.dataset.cat === 'Adult');
+    const childRow  = sicRows.find(r => r.dataset.cat === 'Child');
+    const adultP    = adultRow  ? parseInt(adultRow.dataset.price)  : 0;
+    const childP    = childRow  ? parseInt(childRow.dataset.price)  : 0;
+
+    if (adultP || childP) {
+      const adultTotal = adultP * adults;
+      const childTotal = childP * children;
+      const base       = adultTotal + childTotal;
+      const withVat    = vatPct ? Math.round(base * (1 + vatPct/100)) : base;
+      const withComm   = Math.round(withVat * (1 + commission/100));
+      const usd        = thbToUsd(withComm);
+      grandTotal       = withComm;
+
+      lines += `<div class="quote-line"><span>Adults × ${adults}</span><span>฿${adultTotal.toLocaleString()}</span></div>`;
+      if (children > 0) lines += `<div class="quote-line"><span>Children × ${children}</span><span>฿${childTotal.toLocaleString()}</span></div>`;
+      if (vatPct) lines += `<div class="quote-line"><span>+ VAT ${vatPct}%</span><span>฿${(withVat-base).toLocaleString()}</span></div>`;
+      lines += `<div class="quote-line"><span>+ Commission ${commission}%</span><span>฿${(withComm-withVat).toLocaleString()}</span></div>`;
+      lines += `<div class="quote-line total">
+        <span>Final rate (SIC, ${adults}A${children>0?' + '+children+'C':''})</span>
+        <span>฿${withComm.toLocaleString()} ${usd ? `<span class="usd">≈ $${usd}</span>` : ''}</span>
+      </div>`;
+    }
+  }
+
+  panel.innerHTML = lines || '<div class="empty" style="padding:.5rem;font-size:13px">Adjust filters to see calculation.</div>';
+}
+
+// ── Card toggle ───────────────────────────────────────────────────────────────
+function toggleCard(sid) {
+  const card = document.getElementById(`card-${sid}`);
+  card.classList.toggle('open');
+  if (card.classList.contains('open')) recalcCard(sid);
+}
+
+// ── Copy quote ────────────────────────────────────────────────────────────────
+function copyQuote(sid) {
+  const card    = document.getElementById(`card-${sid}`);
+  const name    = card.querySelector('.result-name')?.textContent?.trim() || '';
+  const lines   = card.querySelectorAll(`#qlines-${sid} .quote-line`);
+  let text      = `Quotation: ${name}\n`;
+  text         += '─'.repeat(40) + '\n';
+  lines.forEach(l => {
+    const label = l.querySelector('span:first-child')?.textContent?.trim();
+    const val   = l.querySelector('span:last-child')?.textContent?.replace(/\s+/g,' ').trim();
+    if (label && val) text += `${label}: ${val}\n`;
+  });
+  text += `\nGenerated: ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Bangkok'})} (Bangkok time)`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = card.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(()=>btn.textContent='📋 Copy quote to clipboard', 2000);
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadFx();
+</script>
+</body>
+</html>

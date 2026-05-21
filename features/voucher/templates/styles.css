@@ -15,13 +15,10 @@ body {
 .voucher {
   background-color: white;
   border-radius: 8px;
-  width: 700px;
+  width: 750px;
   margin: 0 1px;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: none;
-  max-height: 1120px;
   box-sizing: border-box;
   padding: 20px;
   border: 3px solid #4f3966;
@@ -63,10 +60,29 @@ body {
 .voucher-body { flex: 1; padding: 10px 0; }
 
 /* Main Details */
-.main-details-container { margin-bottom: 10px; }
-.main-details { display: flex; gap: 12px; }
-.left-column { flex: 1; }
-.right-column { flex: 0 0 250px; }
+/* Main Details - CRITICAL FIX */
+.main-details-container { 
+  margin-bottom: 10px;
+  width: 100%;
+  overflow: hidden; /* Clear floats */
+}
+
+.main-details { 
+  display: flex; 
+  gap: 20px;
+  width: 100%;
+  flex-wrap: nowrap; /* Don't wrap, keep side by side */
+}
+
+.left-column { 
+  flex: 1;
+  min-width: 0; /* Allow flex shrinking */
+}
+
+.right-column { 
+  flex: 0 0 240px;
+  min-width: 0;
+}
 
 .booking-info {
   width: 100%;
@@ -88,13 +104,16 @@ body {
 
 .booking-info td:last-child { word-break: break-word; }
 
-/* Room Details */
+
+/* Room Details - FIXED POSITIONING */
 .room-details-box {
   background-color: #f9f9f9;
   border-radius: 6px;
-  padding: 10px;
+  padding: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e0e0e0;
 }
-
 .room-detail-item {
   display: flex;
   justify-content: space-between;
@@ -397,17 +416,36 @@ body {
 /* Print Styles */
 @media print {
   .meeting-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .voucher { transform: scale(0.97); transform-origin: top center; }
+  .voucher { transform: scale(0.85); transform-origin: top center; }
 }
 
 @media print {
-  .scale-wrapper {
-    transform: scale(0.95);
-    transform-origin: top center;
-    width: 100%;
-    height: auto;
+  .voucher {
+    page-break-after: avoid;
     page-break-inside: avoid;
+    max-height: none;
   }
+  
+  .voucher-body,
+  .meeting-points-section,
+  .emergency-contact-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  @page {
+    margin: 0.5cm;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.pill-card, .meeting-location-card {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pill-card, .meeting-location-card {

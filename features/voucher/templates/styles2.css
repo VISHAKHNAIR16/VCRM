@@ -397,16 +397,30 @@ body {
 /* Print Styles */
 @media print {
   .meeting-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .voucher { transform: scale(0.97); transform-origin: top center; }
+  .voucher { transform: scale(0.85); transform-origin: top center; }
 }
 
 @media print {
-  .scale-wrapper {
-    transform: scale(0.95);
-    transform-origin: top center;
-    width: 100%;
-    height: auto;
+  .voucher {
+    page-break-after: avoid;
     page-break-inside: avoid;
+    max-height: none;
+  }
+  
+  .voucher-body,
+  .meeting-points-section,
+  .emergency-contact-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  @page {
+    margin: 0.5cm;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
   }
 }
 
@@ -414,3 +428,4 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
