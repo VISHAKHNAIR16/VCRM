@@ -67,6 +67,43 @@
       padding: 24px 0;
       border-bottom: 1px solid var(--border);
       margin-bottom: 48px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .back-btn:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+    }
+    .back-btn svg {
+      transition: transform 0.2s;
+    }
+    .back-btn:hover svg {
+      transform: translateX(-2px);
     }
 
     .logo-row { display: flex; align-items: center; gap: 12px; }
@@ -433,15 +470,36 @@
       color: var(--muted); margin-bottom: 6px;
     }
     .location-field { flex: 1; display: flex; flex-direction: column; }
+
+    /* ── Responsive ── */
+    @media(max-width: 640px) {
+      .page-grid { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: stretch; }
+      .header-left { justify-content: space-between; }
+      .header-right { justify-content: flex-end; }
+      .location-selector { flex-direction: column; }
+      .page-header h1 { font-size: 26px; }
+    }
   </style>
 </head>
 <body>
   <header>
-    <div class="logo-row">
-      <div class="logo-mark">VI</div>
-      <div class="logo-text">VIK<span>RAM</span></div>
+    <div class="header-left">
+      <a href="/home" class="back-btn">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Home
+      </a>
+      <div class="logo-row">
+        <div class="logo-mark">VI</div>
+        <div class="logo-text">VIK<span>RAM</span></div>
+      </div>
     </div>
-    <a href="/logout" class="logout-btn">Sign out</a>
+    <div class="header-right">
+      <a href="/logout" class="logout-btn">Sign out</a>
+    </div>
   </header>
 
   <div class="shell">

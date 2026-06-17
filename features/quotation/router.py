@@ -1,15 +1,7 @@
 """
 features/quotation/router.py
 ─────────────────────────────
-Quotation lookup tool — mounted in main.py at /quotation.
-
-Auth is handled locally (reads SECRET_KEY from env).
-This avoids any import chain issues — main.py's require_auth
-stays in main.py; this router is fully self-contained.
-
-HTML routes  → _page_guard()  — 302 redirect to /login on failure
-API  routes  → _api_guard()   — 401 JSON on failure so JS fetch()
-                                 can catch it and redirect the user
+Quotation lookup tool — simplified search-first interface.
 """
 
 import logging
@@ -25,15 +17,13 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
-log       = logging.getLogger("vikram.quotation")
-router    = APIRouter()
-BASE      = Path(__file__).parent
-DB_PATH   = BASE / "quotation.db"
+log = logging.getLogger("vikram.quotation")
+router = APIRouter()
+BASE = Path(__file__).parent
+DB_PATH = BASE / "quotation.db"
 templates = Jinja2Templates(directory="templates")
 
 # ── Local auth ─────────────────────────────────────────────────────────────────
-# Mirrors main.py's logic exactly (same SECRET_KEY env var, same cookie name).
-# Kept local to avoid a shared module that could create import-order issues.
 _serializer = URLSafeTimedSerializer(os.environ.get("SECRET_KEY", ""))
 
 def _is_authenticated(request: Request) -> bool:
@@ -46,9 +36,7 @@ def _is_authenticated(request: Request) -> bool:
     except (BadSignature, SignatureExpired):
         return False
 
-
 def _page_guard(func):
-    """For HTML routes — unauthenticated → redirect to /login."""
     @wraps(func)
     async def wrapper(request: Request, *args, **kwargs):
         if not _is_authenticated(request):
@@ -57,14 +45,7 @@ def _page_guard(func):
         return await func(request, *args, **kwargs)
     return wrapper
 
-
 def _api_guard(func):
-    """
-    For API (fetch) routes — unauthenticated → 401 JSON.
-    Never return 302 on a fetch() endpoint: the browser silently follows
-    the redirect and returns the login HTML as if it were JSON.
-    The JS checks resp.status === 401 and does window.location.href='/login'.
-    """
     @wraps(func)
     async def wrapper(request: Request, *args, **kwargs):
         if not _is_authenticated(request):
@@ -73,11 +54,9 @@ def _api_guard(func):
         return await func(request, *args, **kwargs)
     return wrapper
 
-
 # ── FX rate cache ──────────────────────────────────────────────────────────────
 _fx_cache: dict = {"rate": None, "fetched_at": 0}
-FX_TTL = 3600   # seconds
-
+FX_TTL = 3600
 
 def get_usd_rate() -> float | None:
     now = time.time()
@@ -95,7 +74,6 @@ def get_usd_rate() -> float | None:
         log.warning("FX fetch failed: %s", exc)
         return _fx_cache.get("rate")
 
-
 # ── DB helpers ─────────────────────────────────────────────────────────────────
 
 def _db():
@@ -105,75 +83,46 @@ def _db():
     conn.row_factory = sqlite3.Row
     return conn
 
-
-def get_destinations() -> list[str]:
+def search_services(query: str, limit: int = 50) -> list[dict]:
+    """
+    Simple fuzzy search across service names, destinations, and types.
+    Returns matching services with their rates.
+    """
     with _db() as conn:
-        rows = conn.execute(
-            "SELECT DISTINCT destination FROM services ORDER BY destination"
-        ).fetchall()
-    return [r["destination"] for r in rows]
-
-
-def get_service_types(destination: str) -> list[str]:
-    with _db() as conn:
-        rows = conn.execute(
-            "SELECT DISTINCT service_type FROM services "
-            "WHERE destination=? ORDER BY service_type",
-            (destination,),
-        ).fetchall()
-    return [r["service_type"] for r in rows]
-
-
-def get_vehicles(destination: str, service_type: str) -> list[str]:
-    with _db() as conn:
-        rows = conn.execute(
-            """SELECT DISTINCT r.vehicle
-               FROM rates r JOIN services s ON s.id = r.service_id
-               WHERE s.destination=? AND s.service_type=?
-                 AND r.vehicle IS NOT NULL
-               ORDER BY r.vehicle""",
-            (destination, service_type),
-        ).fetchall()
-    return [r["vehicle"] for r in rows]
-
-
-def search_services(
-    destination: str,
-    service_type: str,
-    vehicle: str | None,
-    rate_type: str | None,
-    search: str,
-) -> list[dict]:
-    with _db() as conn:
+        search_term = f"%{query}%"
+        
         sql = """
-            SELECT DISTINCT s.id, s.service_name, s.tour_code,
-                   s.duration, s.includes_vat, s.notes, s.source
+            SELECT DISTINCT s.id, s.service_name, s.destination, s.service_type,
+                   s.tour_code, s.duration, s.includes_vat, s.notes, s.source,
+                   s.company_code
             FROM services s
-            JOIN rates r ON r.service_id = s.id
-            WHERE s.destination = ? AND s.service_type = ?
+            WHERE s.service_name LIKE ? 
+               OR s.destination LIKE ?
+               OR s.service_type LIKE ?
+            ORDER BY 
+                CASE 
+                    WHEN s.service_name LIKE ? THEN 1
+                    WHEN s.destination LIKE ? THEN 2
+                    WHEN s.service_type LIKE ? THEN 3
+                    ELSE 4
+                END,
+                s.service_name
+            LIMIT ?
         """
-        params: list = [destination, service_type]
-        if vehicle:
-            sql += " AND (r.vehicle = ? OR r.vehicle IS NULL)"
-            params.append(vehicle)
-        if rate_type:
-            sql += " AND r.rate_type = ?"
-            params.append(rate_type)
-        if search:
-            sql += " AND LOWER(s.service_name) LIKE ?"
-            params.append(f"%{search.lower()}%")
-        sql += " ORDER BY s.service_name LIMIT 80"
-
+        params = [search_term] * 6 + [limit]
+        
         service_rows = conn.execute(sql, params).fetchall()
         result = []
 
         for svc in service_rows:
             sid = svc["id"]
             rate_rows = conn.execute(
-                "SELECT rate_type, vehicle, pax_range, pax_category, price_thb "
-                "FROM rates WHERE service_id=? ORDER BY rate_type, vehicle, pax_category",
+                """SELECT rate_type, vehicle, pax_range, pax_category, price_thb 
+                   FROM rates WHERE service_id=? 
+                   ORDER BY rate_type, vehicle, pax_category""",
                 (sid,),
             ).fetchall()
+            
             try:
                 zone_rows = conn.execute(
                     "SELECT zone_name, surcharge, per FROM zone_surcharges WHERE service_id=?",
@@ -181,6 +130,7 @@ def search_services(
                 ).fetchall()
             except Exception:
                 zone_rows = []
+            
             try:
                 addon_rows = conn.execute(
                     "SELECT addon_name, price_adult, price_child FROM addons WHERE service_id=?",
@@ -192,17 +142,53 @@ def search_services(
             result.append({
                 "id":           sid,
                 "name":         svc["service_name"],
+                "destination":  svc["destination"],
+                "service_type": svc["service_type"],
                 "tour_code":    svc["tour_code"],
                 "duration":     svc["duration"],
                 "includes_vat": bool(svc["includes_vat"]) if svc["includes_vat"] is not None else False,
                 "notes":        svc["notes"],
                 "source":       svc["source"],
+                "company_code": svc["company_code"],
                 "rates":        [dict(r) for r in rate_rows],
                 "zones":        [dict(z) for z in zone_rows],
                 "addons":       [dict(a) for a in addon_rows],
             })
     return result
 
+def get_service_by_id(service_id: int) -> dict | None:
+    """Get a single service with all its details."""
+    with _db() as conn:
+        svc = conn.execute(
+            """SELECT id, service_name, destination, service_type, tour_code,
+                      duration, includes_vat, notes, source, company_code
+               FROM services WHERE id = ?""",
+            (service_id,)
+        ).fetchone()
+        
+        if not svc:
+            return None
+        
+        rate_rows = conn.execute(
+            """SELECT rate_type, vehicle, pax_range, pax_category, price_thb 
+               FROM rates WHERE service_id=? 
+               ORDER BY rate_type, vehicle, pax_category""",
+            (service_id,),
+        ).fetchall()
+        
+        return {
+            "id":           svc["id"],
+            "name":         svc["service_name"],
+            "destination":  svc["destination"],
+            "service_type": svc["service_type"],
+            "tour_code":    svc["tour_code"],
+            "duration":     svc["duration"],
+            "includes_vat": bool(svc["includes_vat"]) if svc["includes_vat"] is not None else False,
+            "notes":        svc["notes"],
+            "source":       svc["source"],
+            "company_code": svc["company_code"],
+            "rates":        [dict(r) for r in rate_rows],
+        }
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
@@ -210,53 +196,37 @@ def search_services(
 @router.get("/", response_class=HTMLResponse)
 @_page_guard
 async def quotation_page(request: Request):
-    try:
-        destinations = get_destinations()
-    except FileNotFoundError:
-        destinations = []
-        log.error("quotation.db missing — destinations list will be empty")
+    """Main quotation page with search-first interface."""
     return templates.TemplateResponse(
-        "quotation.html", {"request": request, "destinations": destinations}
+        "quotation.html", 
+        {"request": request}
     )
-
-
-@router.get("/api/service-types")
-@_api_guard
-async def api_service_types(request: Request, destination: str = Query(...)):
-    return get_service_types(destination)
-
-
-@router.get("/api/vehicles")
-@_api_guard
-async def api_vehicles(
-    request: Request,
-    destination: str  = Query(...),
-    service_type: str = Query(...),
-):
-    return get_vehicles(destination, service_type)
-
 
 @router.get("/api/search")
 @_api_guard
 async def api_search(
     request: Request,
-    destination: str  = Query(...),
-    service_type: str = Query(...),
-    vehicle: str      = Query(default=""),
-    rate_type: str    = Query(default=""),
-    search: str       = Query(default=""),
+    q: str = Query(default="", min_length=1),
+    limit: int = Query(default=50, ge=1, le=100),
 ):
+    """Search services by name, destination, or type."""
     try:
-        return search_services(
-            destination=destination,
-            service_type=service_type,
-            vehicle=vehicle or None,
-            rate_type=rate_type or None,
-            search=search,
-        )
+        results = search_services(q, limit)
+        return results
     except FileNotFoundError:
         return JSONResponse({"error": "Database unavailable"}, status_code=503)
 
+@router.get("/api/service/{service_id}")
+@_api_guard
+async def api_get_service(request: Request, service_id: int):
+    """Get full details for a specific service."""
+    try:
+        result = get_service_by_id(service_id)
+        if not result:
+            return JSONResponse({"error": "Service not found"}, status_code=404)
+        return result
+    except FileNotFoundError:
+        return JSONResponse({"error": "Database unavailable"}, status_code=503)
 
 @router.get("/api/fx")
 @_api_guard

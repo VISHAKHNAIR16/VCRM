@@ -43,6 +43,58 @@ _executor = ThreadPoolExecutor(max_workers=6)
 
 
 # ── Enhanced Image Helper with Quality Optimization ─────────────────────────
+from datetime import datetime
+import re
+
+def format_date(value):
+    """
+    Convert any date string to dd/mm/yyyy format.
+    Handles various input formats: YYYY-MM-DD, DD/MM/YYYY, etc.
+    """
+    if not value or value == "N/A" or value.strip() == "":
+        return "N/A"
+    
+    value = str(value).strip()
+    
+    # Try to parse various date formats
+    date_formats = [
+        "%Y-%m-%d",           # 2024-01-15
+        "%Y/%m/%d",           # 2024/01/15
+        "%d-%m-%Y",           # 15-01-2024
+        "%d/%m/%Y",           # 15/01/2024
+        "%d-%b-%Y",           # 15-Jan-2024
+        "%d %b %Y",           # 15 Jan 2024
+        "%B %d, %Y",          # January 15, 2024
+        "%d %B %Y",           # 15 January 2024
+        "%m/%d/%Y",           # 01/15/2024 (US format)
+        "%Y%m%d",             # 20240115
+        "%d.%m.%Y",           # 15.01.2024
+    ]
+    
+    # Also try to extract date from strings like "2024-01-15 14:30:00"
+    # First, try to split on space and take the first part
+    if " " in value:
+        date_part = value.split(" ")[0]
+        # Try parsing just the date part
+        for fmt in date_formats:
+            try:
+                dt = datetime.strptime(date_part, fmt)
+                return dt.strftime("%d/%m/%Y")
+            except ValueError:
+                continue
+    
+    # Try parsing the full string with all formats
+    for fmt in date_formats:
+        try:
+            dt = datetime.strptime(value, fmt)
+            return dt.strftime("%d/%m/%Y")
+        except ValueError:
+            continue
+    
+    # If we can't parse it, return the original
+    return value
+
+
 @lru_cache(maxsize=64)
 def image_to_base64_enhanced(
     filename: str, 
@@ -249,6 +301,8 @@ def _get_jinja_env() -> jinja2.Environment:
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        # Register custom filters
+        _jinja_env.filters['format_date'] = format_date
         log.info("Jinja2 environment initialized with caching")
     return _jinja_env
 
