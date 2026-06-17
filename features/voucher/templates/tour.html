@@ -86,14 +86,14 @@
 
       <div class="signature-policy-container">
         <div class="policy-box">
-          <h3>Terms & Conditions / Remarks:</h3>
+          <h3>Terms &amp; Conditions / Remarks:</h3>
           <p>{{ cancellation_policy }}</p>
         </div>
         <div class="signature-section">
           <div class="company-stamp">
             {% if stamp_path %}
             <img src="{{ stamp_path }}" alt="Company Stamp" class="stamp-image"
-              onerror="this.parentElement.innerHTML='<div class=\'stamp-image\'></div>'" />
+              onerror="this.parentElement.innerHTML='&lt;div class=&quot;stamp-image&quot;&gt;&lt;/div&gt;'" />
             {% else %}
             <div class="stamp-image"></div>
             {% endif %}
@@ -110,7 +110,7 @@
 
       <div class="meeting-points-section">
         <div class="meeting-section-header">
-          <h3>Meeting Points & Contact Numbers:</h3>
+          <h3>Meeting Points &amp; Contact Numbers:</h3>
 
           <div class="placard-instruction">
             <div class="placard-icon-wrapper">
@@ -127,9 +127,25 @@
           </div>
         </div>
 
+        <!-- SVG pin icon replaces 📍 emoji throughout this section -->
+        {% set pin_svg %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+          fill="currentColor" style="vertical-align:middle;margin-right:3px">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13
+            c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5
+            2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+        </svg>
+        {% endset %}
+
         <div class="meeting-location-card centered-card">
           <div class="meeting-header">
-            <i class="location-icon">📍</i> Bangkok & Pattaya (Transport)
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+              fill="currentColor" style="vertical-align:middle;margin-right:3px">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13
+                c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5
+                2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            Bangkok &amp; Pattaya (Transport)
           </div>
           <div class="meeting-body">
             <p><strong>No:</strong> +66 90 209 8138</p>
@@ -139,7 +155,13 @@
         <div class="meeting-grid">
           <div class="meeting-location-card">
             <div class="meeting-header">
-              <i class="location-icon">📍</i> SUV Airport
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                fill="currentColor" style="vertical-align:middle;margin-right:3px">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13
+                  c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5
+                  2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              SUV Airport
             </div>
             <div class="meeting-body">
               <p><strong>Arrival Level 2 / Exit C - Gate Number 10</strong></p>
@@ -149,7 +171,13 @@
 
           <div class="meeting-location-card">
             <div class="meeting-header">
-              <i class="location-icon">📍</i> DMK Airport - International
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                fill="currentColor" style="vertical-align:middle;margin-right:3px">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13
+                  c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5
+                  2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              DMK Airport - International
             </div>
             <div class="meeting-body">
               <p><strong>Gate 5</strong></p>
@@ -159,7 +187,13 @@
 
           <div class="meeting-location-card">
             <div class="meeting-header">
-              <i class="location-icon">📍</i> DMK Airport - Domestic
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                fill="currentColor" style="vertical-align:middle;margin-right:3px">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13
+                  c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5
+                  2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              DMK Airport - Domestic
             </div>
             <div class="meeting-body">
               <p><strong>Gate 11</strong></p>
@@ -169,11 +203,16 @@
 
           <div class="meeting-location-card">
             <div class="meeting-header">
-              <i class="location-icon">📍</i> Phuket Airport
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                fill="currentColor" style="vertical-align:middle;margin-right:3px">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13
+                  c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5
+                  2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              Phuket Airport
             </div>
             <div class="meeting-body">
-              <p>International Arrivals - <strong>Gate No 2</strong> | Domestic Arrivals - <strong>Gate No 01</strong>
-              </p>
+              <p>International Arrivals - <strong>Gate No 2</strong> | Domestic Arrivals - <strong>Gate No 01</strong></p>
               <p class="contact-line">Airport Rep No: <strong>+66 640 256 140</strong></p>
             </div>
           </div>
@@ -182,7 +221,14 @@
 
       <div class="emergency-contact-section">
         <div class="emergency-header">
-          <i class="phone-icon">📞</i> Emergency Numbers
+          <!-- SVG phone icon replaces 📞 emoji -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+            fill="currentColor" style="vertical-align:middle;margin-right:4px">
+            <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2
+              1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17
+              0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+          </svg>
+          Emergency Numbers
         </div>
         <div class="pill-grid">
           <div class="pill-card">
@@ -210,7 +256,7 @@
         <div class="footer-logo">
           {% if logo_path %}
           <img src="{{ logo_path }}" alt="Vayo Aura Logo" class="company-logo"
-            onerror="this.parentElement.innerHTML='<div class=\'company-logo\'></div>'" />
+            onerror="this.parentElement.innerHTML='&lt;div class=&quot;company-logo&quot;&gt;&lt;/div&gt;'" />
           {% else %}
           <div class="company-logo"></div>
           {% endif %}

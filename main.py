@@ -574,8 +574,24 @@ from features.voucher.generator import (
 
 @app.on_event("startup")
 async def startup_event():
-    """Pre-load templates, CSS, and images on application startup."""
+    """Pre-load templates, CSS, images. Also guards the quotation DB."""
     log.info("Starting application and warming up caches...")
+
+    # ── Quotation DB guard ────────────────────────────────────────────────────
+    # quotation.db should be committed to git.
+    # If missing (e.g. forgotten in .gitignore), rebuild it automatically.
+    try:
+        from features.quotation.build_db import DB_PATH as _QDB, main as _build_qdb
+        if not _QDB.exists():
+            log.warning("quotation.db missing at %s — rebuilding from Excel (~10 s)", _QDB)
+            _build_qdb(dry_run=False)
+            log.info("quotation.db rebuilt OK")
+        else:
+            log.info("quotation.db found at %s", _QDB)
+    except Exception as _e:
+        log.error("quotation.db check failed: %s", _e)
+
+    # ── Voucher cache warmup ──────────────────────────────────────────────────
     try:
         warmup_caches()
         stats = get_cache_stats()

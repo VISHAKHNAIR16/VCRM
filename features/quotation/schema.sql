@@ -1,7 +1,8 @@
 -- =============================================================================
 -- schema.sql
 -- Quotation Tool — SQLite Database Schema
--- Version: 1.0.0
+-- Version: 1.1.0  (added tour_code, includes_vat, source to services;
+--                   added zone_surcharges and addons tables)
 -- =============================================================================
 --
 -- HOW TO USE:
@@ -14,9 +15,11 @@
 --   services        → One row per service (e.g. "Airport to Bangkok Hotel")
 --   rates           → Prices for a service (by vehicle, pax, adult/child)
 --   ferry_schedules → Departure times & per-person prices for ferry tickets
+--   zone_surcharges → Optional zone-based surcharges per service
+--   addons          → Optional purchasable add-ons per service
 --
 -- DATA SOURCES:
---   BKK_PTT.xlsx    → source = 'DIVINE'  | destination = Bangkok / Pattaya / etc.
+--   BKK_PTT.xlsx    → source = 'DIVINE'   | destination = Bangkok / Pattaya / etc.
 --   GOOD_DAY.xlsx   → source = 'GOOD_DAY' | destination = Phuket / Krabi / Samui
 --
 -- RATE TYPES:
@@ -39,10 +42,10 @@ PRAGMA synchronous     = NORMAL; -- Safe + faster than FULL for our use case
 -- One row per travel company whose rates are stored in this DB.
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS companies (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    code        TEXT    NOT NULL UNIQUE,  -- e.g. 'DIVINE', 'GOOD_DAY'
-    name        TEXT    NOT NULL,         -- Full display name
-    currency    TEXT    NOT NULL DEFAULT 'THB',
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    code         TEXT    NOT NULL UNIQUE,  -- e.g. 'DIVINE', 'GOOD_DAY'
+    name         TEXT    NOT NULL,         -- Full display name
+    currency     TEXT    NOT NULL DEFAULT 'THB',
     includes_vat INTEGER NOT NULL DEFAULT 0  -- 1 = rates already include VAT
 );
 
@@ -65,9 +68,19 @@ CREATE TABLE IF NOT EXISTS services (
     -- The name shown to the user in search results
     service_name TEXT    NOT NULL,
 
+    -- Optional tour/transfer code (e.g. 'BKK-01', 'PTT-TOUR-03')
+    tour_code    TEXT    DEFAULT NULL,
+
     -- Extra metadata (optional, shown in cart detail view)
     duration     TEXT,               -- e.g. '4 Hours', 'Full Day'
     notes        TEXT,               -- Remarks / conditions from the Excel
+
+    -- Whether this service's rates already include VAT
+    -- NULL means: inherit from companies.includes_vat
+    includes_vat INTEGER DEFAULT NULL,
+
+    -- Which source file / company produced this row (mirrors company_code for now)
+    source       TEXT    DEFAULT NULL,  -- e.g. 'DIVINE', 'GOOD_DAY'
 
     -- Audit
     created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
@@ -127,6 +140,34 @@ CREATE TABLE IF NOT EXISTS ferry_schedules (
 );
 
 -- =============================================================================
+-- TABLE: zone_surcharges
+-- Optional zone-based surcharges that apply on top of the base rate.
+-- e.g. "Late Night Surcharge: +200 THB per vehicle"
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS zone_surcharges (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+
+    zone_name  TEXT    NOT NULL,   -- e.g. 'Sukhumvit Zone', 'Late Night'
+    surcharge  INTEGER NOT NULL CHECK(surcharge > 0),  -- extra THB amount
+    per        TEXT    NOT NULL DEFAULT 'vehicle'  -- 'vehicle' | 'person'
+);
+
+-- =============================================================================
+-- TABLE: addons
+-- Optional add-ons a customer can purchase alongside a service.
+-- e.g. "Snorkelling Equipment: Adult 300 THB, Child 200 THB"
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS addons (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    service_id  INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+
+    addon_name  TEXT    NOT NULL,
+    price_adult INTEGER CHECK(price_adult IS NULL OR price_adult > 0),
+    price_child INTEGER CHECK(price_child IS NULL OR price_child > 0)
+);
+
+-- =============================================================================
 -- INDEXES — speeds up the search queries the frontend will run
 -- =============================================================================
 
@@ -154,12 +195,20 @@ CREATE INDEX IF NOT EXISTS idx_rates_service
 CREATE INDEX IF NOT EXISTS idx_ferry_service
     ON ferry_schedules(service_id);
 
+-- Join: zone_surcharges → services
+CREATE INDEX IF NOT EXISTS idx_zone_surcharges_service
+    ON zone_surcharges(service_id);
+
+-- Join: addons → services
+CREATE INDEX IF NOT EXISTS idx_addons_service
+    ON addons(service_id);
+
 -- =============================================================================
 -- SEED DATA: companies (insert once, ignore if already there)
 -- =============================================================================
 INSERT OR IGNORE INTO companies (code, name, currency, includes_vat)
 VALUES
-    ('DIVINE',    'Divine Travel (BKK / PTT)',     'THB', 0),
+    ('DIVINE',    'Divine Travel (BKK / PTT)',              'THB', 0),
     ('GOOD_DAY',  'Good Day Vacation (Phuket/Krabi/Samui)', 'THB', 0);
 
 -- =============================================================================

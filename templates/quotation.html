@@ -3,140 +3,577 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quotation Tool — VIKRAM CMS</title>
+<title>Quotation Tool — VIKRAM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
 <style>
-/* ── Reset & base ─────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   TOKENS  — match home.html / dashboard.html exactly
+══════════════════════════════════════════════════════════════ */
+:root{
+  --bg:          #0a0a0f;
+  --surface:     #111118;
+  --surface2:    #16161f;
+  --surface3:    #1c1c28;
+  --border:      rgba(255,255,255,0.07);
+  --border-h:    rgba(255,255,255,0.14);
+  --accent:      #e8c547;
+  --accent-dim:  rgba(232,197,71,0.12);
+  --accent-dim2: rgba(232,197,71,0.06);
+  --accent-glow: rgba(232,197,71,0.18);
+  --text:        #f0ede8;
+  --muted:       #6b6880;
+  --muted2:      #3d3b4a;
+  --green:       #34d399;
+  --green-bg:    rgba(52,211,153,0.08);
+  --green-border:rgba(52,211,153,0.22);
+  --red:         #f87171;
+  --red-bg:      rgba(248,113,113,0.08);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-     background:#f5f5f0;color:#1a1a18;font-size:15px;line-height:1.6}
-a{color:#1a6b4a;text-decoration:none}
 
-/* ── Layout ───────────────────────────────────────────────────────── */
-.topbar{background:#1a1a18;color:#e8e6de;padding:.75rem 1.5rem;
-        display:flex;align-items:center;gap:1rem}
-.topbar a{color:#9fe1cb;font-size:13px}
-.topbar h1{font-size:15px;font-weight:600;color:#fff}
-.page{max-width:960px;margin:0 auto;padding:1.5rem}
+html{scroll-behavior:smooth}
 
-/* ── Card ─────────────────────────────────────────────────────────── */
-.card{background:#fff;border:1px solid #e2e0d8;border-radius:10px;
-      padding:1.25rem 1.5rem;margin-bottom:1.25rem}
-.card-title{font-size:13px;font-weight:600;color:#888;letter-spacing:.05em;
-            text-transform:uppercase;margin-bottom:1rem}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:15px;
+  line-height:1.6;
+  min-height:100vh;
+  padding-bottom:100px; /* cart bar clearance */
+}
 
-/* ── Filter row ──────────────────────────────────────────────────── */
-.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem}
-.field label{display:block;font-size:12px;font-weight:500;color:#666;margin-bottom:.3rem}
-.field select,.field input{width:100%;padding:.5rem .75rem;border:1px solid #ddd;
-  border-radius:6px;font-size:14px;background:#fff;color:#1a1a18;
-  appearance:none;-webkit-appearance:none;outline:none;transition:border .15s}
-.field select:focus,.field input:focus{border-color:#1a6b4a;
-  box-shadow:0 0 0 3px rgba(26,107,74,.1)}
-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
-       background-repeat:no-repeat;background-position:right .75rem center;
-       padding-right:2rem}
+/* subtle grid pattern — same as home/dashboard */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(232,197,71,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(232,197,71,0.025) 1px,transparent 1px);
+  background-size:60px 60px;
+  pointer-events:none;z-index:0;
+}
 
-/* ── PAX + commission row ────────────────────────────────────────── */
-.calc-row{display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;
-          border-top:1px solid #eee;margin-top:1rem;padding-top:1rem}
-.calc-row .field{flex:1;min-width:120px}
-.pax-inputs{display:flex;gap:.5rem}
-.pax-inputs input{width:80px}
-.badge-vat{display:inline-flex;align-items:center;gap:.35rem;
-           background:#fff8e1;color:#7a5800;border:1px solid #f5c842;
-           border-radius:4px;font-size:11px;font-weight:600;
-           padding:2px 8px;margin-left:.5rem;vertical-align:middle}
-.badge-vat.incl{background:#e8f5e9;color:#256029;border-color:#81c784}
+/* ══════════════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════════════ */
+.site-header{
+  position:sticky;top:0;z-index:200;
+  background:rgba(10,10,15,0.92);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+  padding:0 24px;height:56px;
+}
 
-/* ── Search btn ──────────────────────────────────────────────────── */
-.btn{display:inline-flex;align-items:center;gap:.4rem;
-     padding:.55rem 1.25rem;border-radius:6px;font-size:14px;
-     font-weight:500;cursor:pointer;border:none;transition:.15s}
-.btn-primary{background:#1a6b4a;color:#fff}
-.btn-primary:hover{background:#155a3e}
-.btn-ghost{background:transparent;color:#555;border:1px solid #ddd}
-.btn-ghost:hover{background:#f5f5f0}
-.btn-sm{padding:.35rem .8rem;font-size:13px}
+.header-back{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;color:var(--muted);
+  text-decoration:none;transition:color .2s;
+}
+.header-back:hover{color:var(--accent)}
+.header-back svg{transition:transform .2s}
+.header-back:hover svg{transform:translateX(-2px)}
 
-/* ── Results ─────────────────────────────────────────────────────── */
-#results-count{font-size:13px;color:#888;margin-bottom:.75rem}
-.result-card{background:#fff;border:1px solid #e2e0d8;border-radius:8px;
-             margin-bottom:.75rem;overflow:hidden}
-.result-header{display:flex;align-items:flex-start;justify-content:space-between;
-               gap:1rem;padding:.9rem 1.1rem .7rem;cursor:pointer;
-               border-bottom:1px solid transparent;transition:.15s}
-.result-header:hover{background:#fafaf8}
-.result-card.open .result-header{border-bottom-color:#eee}
-.result-name{font-size:14px;font-weight:600;color:#1a1a18;flex:1}
-.result-meta{font-size:12px;color:#888;margin-top:.15rem}
-.result-badges{display:flex;gap:.4rem;flex-shrink:0;align-items:center}
-.badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
-.badge-src{background:#eee;color:#555}
-.badge-tc{background:#e6f1fb;color:#0c447c}
-.chevron{font-size:12px;color:#aaa;margin-left:.5rem;transition:transform .2s}
-.result-card.open .chevron{transform:rotate(180deg)}
+.header-sep{width:1px;height:20px;background:var(--border)}
 
-/* ── Result body ─────────────────────────────────────────────────── */
-.result-body{display:none;padding:1rem 1.1rem}
-.result-card.open .result-body{display:block}
+.header-title{
+  font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:700;
+  letter-spacing:.04em;color:var(--text);
+}
 
-/* ── Rate table ──────────────────────────────────────────────────── */
-.rate-section{margin-bottom:1rem}
-.rate-section-title{font-size:11px;font-weight:700;color:#888;
-                    text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
-.rate-table{width:100%;border-collapse:collapse;font-size:13px}
-.rate-table th{text-align:left;font-weight:600;color:#555;
-               border-bottom:1px solid #eee;padding:.35rem .6rem;font-size:12px}
-.rate-table td{padding:.4rem .6rem;border-bottom:1px solid #f5f5f0;color:#333}
-.rate-table tr:last-child td{border-bottom:none}
-.rate-table tr.highlight td{background:#e8f5e9;font-weight:600;color:#1a1a18}
+.header-fx{
+  margin-left:auto;
+  font-size:12px;color:var(--muted);
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:4px 12px;
+  transition:color .3s;
+}
+.header-fx.loaded{color:var(--green)}
 
-/* ── Quote summary panel ─────────────────────────────────────────── */
-.quote-panel{background:#f0faf5;border:1.5px solid #1a6b4a;
-             border-radius:8px;padding:1rem 1.25rem;margin-top:1rem}
-.quote-panel h4{font-size:13px;font-weight:700;color:#1a6b4a;margin-bottom:.75rem}
-.quote-line{display:flex;justify-content:space-between;font-size:13px;
-            color:#333;margin-bottom:.35rem}
-.quote-line.total{font-size:16px;font-weight:700;color:#1a1a18;
-                  border-top:1px solid #b2dfcc;padding-top:.5rem;margin-top:.4rem}
-.quote-line .usd{font-size:12px;color:#666;font-weight:400}
-.copy-btn{margin-top:.75rem;width:100%}
+/* ══════════════════════════════════════════════════════════════
+   PAGE SHELL
+══════════════════════════════════════════════════════════════ */
+.page{
+  position:relative;z-index:1;
+  max-width:900px;margin:0 auto;
+  padding:32px 24px 40px;
+}
 
-/* ── Zones ───────────────────────────────────────────────────────── */
-.zone-list{font-size:12px;color:#666;margin-top:.5rem}
-.zone-list span{background:#f5f5f0;border:1px solid #e2e0d8;border-radius:4px;
-                padding:2px 7px;margin:.2rem .2rem 0 0;display:inline-block}
+.page-heading{margin-bottom:28px}
+.page-heading h1{
+  font-family:'Syne',sans-serif;
+  font-size:28px;font-weight:800;line-height:1.15;
+  margin-bottom:6px;
+}
+.page-heading h1 em{font-style:normal;color:var(--accent)}
+.page-heading p{font-size:14px;color:var(--muted)}
 
-/* ── Empty / loading ─────────────────────────────────────────────── */
-.empty{text-align:center;padding:3rem;color:#aaa;font-size:14px}
-.spinner{display:inline-block;width:18px;height:18px;border:2px solid #ddd;
-         border-top-color:#1a6b4a;border-radius:50%;animation:spin .7s linear infinite;
-         vertical-align:middle;margin-right:.4rem}
+/* ══════════════════════════════════════════════════════════════
+   CARDS / SURFACES
+══════════════════════════════════════════════════════════════ */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px 24px;
+  margin-bottom:16px;
+  transition:border-color .2s;
+}
+.card:hover{border-color:var(--border-h)}
+.card-label{
+  font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:14px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORM ELEMENTS
+══════════════════════════════════════════════════════════════ */
+.field label{
+  display:block;font-size:12px;font-weight:500;
+  color:var(--muted);margin-bottom:6px;letter-spacing:.02em;
+}
+
+.field select,
+.field input[type="text"],
+.field input[type="number"]{
+  width:100%;
+  padding:10px 14px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:9px;
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;color:var(--text);
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  appearance:none;-webkit-appearance:none;
+}
+.field select:focus,
+.field input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-dim);
+}
+.field select:disabled{opacity:.35;cursor:not-allowed}
+
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6880'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  padding-right:36px;
+  cursor:pointer;
+}
+select option{background:#16161f;color:var(--text)}
+
+.filters{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+  gap:12px;
+}
+
+/* PAX / commission row */
+.calc-row{
+  display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
+  border-top:1px solid var(--border);
+  margin-top:16px;padding-top:16px;
+}
+.calc-row .field{flex:1;min-width:110px}
+
+/* ══════════════════════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 20px;border-radius:9px;
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;font-weight:500;
+  cursor:pointer;border:none;
+  transition:background .15s,box-shadow .15s,transform .1s;
+}
+.btn:active{transform:scale(.97)}
+
+.btn-primary{
+  background:var(--accent);color:#0a0a0f;font-weight:700;
+}
+.btn-primary:hover{background:#f0d060;box-shadow:0 4px 16px var(--accent-glow)}
+
+.btn-ghost{
+  background:transparent;color:var(--muted);
+  border:1px solid var(--border);
+}
+.btn-ghost:hover{color:var(--text);border-color:var(--border-h);background:var(--surface2)}
+
+.btn-sm{padding:6px 14px;font-size:13px;border-radius:7px}
+
+.btn-add{
+  background:var(--green-bg);color:var(--green);
+  border:1px solid var(--green-border);
+  font-size:12px;padding:5px 12px;border-radius:6px;
+}
+.btn-add:hover{background:var(--green);color:#0a0a0f;font-weight:600}
+.btn-add.added{background:var(--green);color:#0a0a0f;font-weight:600}
+
+/* search spinner */
+.spinner{
+  display:inline-block;width:16px;height:16px;
+  border:2px solid rgba(10,10,15,.3);
+  border-top-color:#0a0a0f;
+  border-radius:50%;
+  animation:spin .65s linear infinite;
+  vertical-align:middle;
+}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── Responsive ──────────────────────────────────────────────────── */
-@media(max-width:600px){
+/* ══════════════════════════════════════════════════════════════
+   BADGES
+══════════════════════════════════════════════════════════════ */
+.badge{
+  font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:4px;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.badge-src{background:var(--surface3);color:var(--muted);border:1px solid var(--border)}
+.badge-tc{background:rgba(99,179,237,.1);color:#63b3ed;border:1px solid rgba(99,179,237,.2)}
+.badge-vat-excl{background:rgba(251,191,36,.08);color:#fbbf24;border:1px solid rgba(251,191,36,.2)}
+.badge-vat-incl{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+
+/* ══════════════════════════════════════════════════════════════
+   RESULTS COUNT
+══════════════════════════════════════════════════════════════ */
+#results-meta{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:13px;color:var(--muted);margin-bottom:12px;
+  min-height:24px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RESULT CARDS  (animated in on search)
+══════════════════════════════════════════════════════════════ */
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(14px)}
+  to  {opacity:1;transform:none}
+}
+
+.result-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  margin-bottom:10px;
+  overflow:hidden;
+  animation:cardIn .3s ease both;
+  transition:border-color .2s,box-shadow .2s;
+}
+.result-card:hover{border-color:var(--border-h)}
+.result-card.open{
+  border-color:rgba(232,197,71,.25);
+  box-shadow:0 0 0 1px rgba(232,197,71,.08),0 4px 24px rgba(0,0,0,.3);
+}
+
+/* header row */
+.result-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;padding:14px 18px 12px;
+  cursor:pointer;
+  border-bottom:1px solid transparent;
+  transition:background .15s;
+}
+.result-header:hover{background:rgba(255,255,255,.02)}
+.result-card.open .result-header{
+  border-bottom-color:var(--border);
+  background:rgba(232,197,71,.03);
+}
+
+.result-name{
+  font-size:14px;font-weight:600;color:var(--text);
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px;
+}
+.result-meta-line{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+.result-badges{display:flex;gap:6px;flex-shrink:0;align-items:center;padding-top:2px}
+
+.chevron{
+  color:var(--muted2);font-size:11px;margin-left:4px;
+  transition:transform .22s ease;display:inline-block;
+}
+.result-card.open .chevron{transform:rotate(180deg);color:var(--accent)}
+
+/* body (collapsible) */
+.result-body{
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows .25s ease;
+}
+.result-card.open .result-body{grid-template-rows:1fr}
+.result-body-inner{overflow:hidden;padding:0 18px}
+.result-card.open .result-body-inner{padding:16px 18px}
+
+/* ══════════════════════════════════════════════════════════════
+   RATE TABLES
+══════════════════════════════════════════════════════════════ */
+.rate-section{margin-bottom:14px}
+.rate-section-title{
+  font-size:10px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;
+}
+
+.rate-table{width:100%;border-collapse:collapse;font-size:13px}
+.rate-table th{
+  text-align:left;font-size:11px;font-weight:600;
+  color:var(--muted);padding:6px 10px;
+  border-bottom:1px solid var(--border);
+}
+.rate-table td{
+  padding:8px 10px;
+  border-bottom:1px solid var(--border);
+  color:var(--text);
+}
+.rate-table tbody tr:last-child td{border-bottom:none}
+.rate-table tbody tr:hover td{background:rgba(255,255,255,.02)}
+.rate-table strong{color:var(--accent)}
+
+/* zones */
+.zone-list{
+  display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;padding-top:6px;
+  border-top:1px solid var(--border);
+}
+.zone-pill{
+  font-size:11px;color:var(--muted);
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:4px;padding:2px 8px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   QUOTE PANEL
+══════════════════════════════════════════════════════════════ */
+.quote-panel{
+  background:var(--green-bg);
+  border:1px solid var(--green-border);
+  border-radius:10px;
+  padding:14px 16px;
+  margin-top:14px;
+}
+.quote-panel-title{
+  font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--green);margin-bottom:10px;
+}
+.quote-line{
+  display:flex;justify-content:space-between;
+  font-size:13px;color:var(--muted);margin-bottom:5px;
+}
+.quote-line.total{
+  font-size:15px;font-weight:700;color:var(--text);
+  border-top:1px solid var(--green-border);
+  padding-top:8px;margin-top:6px;margin-bottom:0;
+}
+.quote-line .usd{font-size:11px;color:var(--muted);font-weight:400;margin-left:4px}
+
+/* add-to-quote buttons row */
+.add-row{
+  display:flex;gap:8px;flex-wrap:wrap;
+  margin-top:12px;padding-top:12px;
+  border-top:1px solid var(--green-border);
+  align-items:center;
+}
+.add-row-label{font-size:11px;color:var(--green);font-weight:600;margin-right:2px}
+
+/* ══════════════════════════════════════════════════════════════
+   EMPTY / LOADING
+══════════════════════════════════════════════════════════════ */
+.empty-state{
+  text-align:center;padding:48px 24px;
+  color:var(--muted);font-size:14px;
+  background:var(--surface);border:1px dashed var(--border);
+  border-radius:12px;margin-bottom:10px;
+}
+.empty-state svg{display:block;margin:0 auto 12px;opacity:.3}
+
+/* ══════════════════════════════════════════════════════════════
+   STICKY CART BAR
+══════════════════════════════════════════════════════════════ */
+#cart-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:rgba(17,17,24,0.97);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-top:1px solid rgba(232,197,71,.3);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;gap:12px;
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 -8px 40px rgba(0,0,0,.4);
+}
+#cart-bar.visible{transform:translateY(0)}
+
+.cart-info{display:flex;align-items:center;gap:10px}
+.cart-pill{
+  background:var(--accent);color:#0a0a0f;
+  font-size:12px;font-weight:800;
+  padding:3px 10px;border-radius:99px;
+}
+.cart-summary{font-size:14px;color:var(--muted)}
+.cart-total{font-size:17px;font-weight:700;color:var(--text)}
+.cart-usd{font-size:12px;color:var(--muted);margin-left:4px}
+
+.cart-actions{display:flex;gap:8px;align-items:center}
+
+.btn-clear{
+  font-size:13px;color:var(--muted);
+  background:transparent;border:1px solid var(--muted2);
+  border-radius:7px;padding:6px 14px;cursor:pointer;
+  transition:.15s;font-family:'DM Sans',sans-serif;
+}
+.btn-clear:hover{color:var(--text);border-color:var(--border-h)}
+
+.btn-generate{
+  background:var(--accent);color:#0a0a0f;
+  border:none;border-radius:9px;
+  padding:9px 18px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;gap:7px;
+  transition:background .15s,box-shadow .15s,transform .1s;
+}
+.btn-generate:hover{background:#f0d060;box-shadow:0 4px 16px var(--accent-glow)}
+.btn-generate:active{transform:scale(.97)}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════════════════ */
+@keyframes modalBg{from{opacity:0}to{opacity:1}}
+@keyframes modalBox{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:none}}
+
+#quotation-modal{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,.7);
+  align-items:center;justify-content:center;
+  padding:16px;
+  animation:modalBg .2s ease;
+}
+#quotation-modal.visible{display:flex}
+
+.modal-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  width:100%;max-width:580px;
+  max-height:90vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 24px 80px rgba(0,0,0,.6);
+  animation:modalBox .22s ease;
+}
+
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 22px 16px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.modal-header h3{
+  font-family:'Syne',sans-serif;
+  font-size:17px;font-weight:700;color:var(--text);
+}
+.modal-close{
+  background:none;border:none;
+  color:var(--muted);font-size:20px;cursor:pointer;
+  padding:4px 8px;border-radius:6px;
+  line-height:1;transition:.15s;
+}
+.modal-close:hover{background:var(--surface2);color:var(--text)}
+
+.modal-body{padding:20px 22px;overflow-y:auto;flex:1}
+.modal-footer{
+  padding:14px 22px;border-top:1px solid var(--border);
+  display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;
+}
+
+/* section label in modal */
+.m-label{
+  font-size:10px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:10px;
+}
+.m-divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+
+/* cart items in modal */
+.cart-item-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+}
+.cart-item-row:last-child{border-bottom:none}
+.cart-item-name{font-size:13px;font-weight:600;color:var(--text)}
+.cart-item-meta{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5}
+.cart-item-price{
+  font-size:14px;font-weight:700;color:var(--accent);
+  white-space:nowrap;text-align:right;flex-shrink:0;
+}
+.cart-item-usd{font-size:11px;color:var(--muted);font-weight:400}
+.cart-item-remove{
+  background:none;border:none;color:var(--muted2);
+  cursor:pointer;font-size:17px;padding:2px 6px;
+  border-radius:5px;line-height:1;flex-shrink:0;
+  transition:.15s;
+}
+.cart-item-remove:hover{color:var(--red);background:var(--red-bg)}
+
+/* text output */
+.quotation-pre{
+  font-family:'Courier New',Courier,monospace;
+  font-size:12.5px;line-height:1.7;
+  white-space:pre-wrap;word-break:break-word;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:14px 16px;color:var(--text);
+  max-height:300px;overflow-y:auto;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════════ */
+@media(max-width:640px){
+  .page{padding:20px 16px 32px}
   .filters{grid-template-columns:1fr 1fr}
   .calc-row{flex-direction:column}
-  .pax-inputs input{width:70px}
+  #cart-bar{flex-direction:column;align-items:flex-start;gap:10px}
+  .cart-actions{width:100%;justify-content:flex-end}
+  .modal-box{max-height:95vh}
 }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <a href="/home">← Home</a>
-  <span style="color:#555">|</span>
-  <h1>Quotation Tool</h1>
-  <span style="margin-left:auto;font-size:12px;color:#666" id="fx-label">Loading rates…</span>
-</div>
+<!-- ── HEADER ──────────────────────────────────────────────────────────────── -->
+<header class="site-header">
+  <a href="/home" class="header-back">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Home
+  </a>
+  <div class="header-sep"></div>
+  <span class="header-title">Quotation Tool</span>
+  <span class="header-fx" id="fx-label">Loading rates…</span>
+</header>
 
+<!-- ── PAGE ────────────────────────────────────────────────────────────────── -->
 <div class="page">
 
-  <!-- ── FILTERS ────────────────────────────────────────────────────────── -->
+  <div class="page-heading">
+    <h1>Build a <em>Quote</em></h1>
+    <p>Search services from the live database, set pax &amp; commission, then copy a ready-to-send WhatsApp message.</p>
+  </div>
+
+  <!-- ── FILTER CARD ──────────────────────────────────────────────────────── -->
   <div class="card">
-    <div class="card-title">Search Services</div>
+    <div class="card-label">Search Services</div>
     <div class="filters">
+
       <div class="field">
         <label>Destination</label>
         <select id="sel-dest" onchange="onDestChange()">
@@ -146,18 +583,21 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
           {% endfor %}
         </select>
       </div>
+
       <div class="field">
         <label>Service type</label>
         <select id="sel-type" onchange="onTypeChange()" disabled>
           <option value="">— pick type —</option>
         </select>
       </div>
+
       <div class="field">
         <label>Vehicle</label>
         <select id="sel-vehicle" disabled>
           <option value="">All vehicles</option>
         </select>
       </div>
+
       <div class="field">
         <label>Rate type</label>
         <select id="sel-ratetype">
@@ -166,37 +606,45 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
           <option value="SIC">SIC (group) only</option>
         </select>
       </div>
+
       <div class="field" style="grid-column:span 2">
-        <label>Search service name</label>
-        <input type="text" id="inp-search" placeholder="e.g. airport, phi phi, jungle…"
+        <label>Search name</label>
+        <input type="text" id="inp-search"
+               placeholder="e.g. airport, phi phi, coral island…"
                onkeydown="if(event.key==='Enter')doSearch()">
       </div>
+
     </div>
 
-    <!-- ── PAX + commission ──────────────────────────────────────────────── -->
+    <!-- PAX + commission -->
     <div class="calc-row">
+
       <div class="field">
         <label>Adults</label>
         <input type="number" id="inp-adults" value="2" min="0" max="50"
                oninput="recalcAll()">
       </div>
+
       <div class="field">
-        <label>Children <span style="font-size:11px;color:#aaa">(3-10 yrs)</span></label>
+        <label>Children <span style="font-size:10px;color:var(--muted2)">(3–10 yr)</span></label>
         <input type="number" id="inp-children" value="0" min="0" max="30"
                oninput="recalcAll()">
       </div>
+
       <div class="field">
         <label>Commission %</label>
         <input type="number" id="inp-commission" value="15" min="0" max="100" step="0.5"
                oninput="recalcAll()">
       </div>
+
       <div class="field">
-        <label>VAT <span style="font-size:11px;color:#aaa">(where excluded)</span></label>
+        <label>VAT</label>
         <select id="sel-vat" onchange="recalcAll()">
           <option value="0">Exclude VAT</option>
           <option value="7">Add 7% VAT</option>
         </select>
       </div>
+
       <div class="field" style="margin-left:auto">
         <label>&nbsp;</label>
         <button class="btn btn-primary" onclick="doSearch()">
@@ -204,344 +652,573 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
           Search
         </button>
       </div>
+
     </div>
   </div>
+  <!-- /filter card -->
 
-  <!-- ── RESULTS ────────────────────────────────────────────────────────── -->
-  <div id="results-count"></div>
+  <!-- ── RESULTS ───────────────────────────────────────────────────────────── -->
+  <div id="results-meta"></div>
   <div id="results-list"></div>
 
 </div><!-- /page -->
 
-<script>
-// ── state ────────────────────────────────────────────────────────────────────
-let fxRate = null;   // THB per USD
 
-// ── FX ───────────────────────────────────────────────────────────────────────
+<!-- ── STICKY CART BAR ──────────────────────────────────────────────────────── -->
+<div id="cart-bar">
+  <div class="cart-info">
+    <span class="cart-pill" id="cart-pill">0</span>
+    <span class="cart-summary">service(s) quoted</span>
+    <span class="cart-total" id="cart-total">฿0</span>
+    <span class="cart-usd" id="cart-usd"></span>
+  </div>
+  <div class="cart-actions">
+    <button class="btn-clear" onclick="clearCart()">Clear all</button>
+    <button class="btn-generate" onclick="showModal()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M9 12h6M9 16h4M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      Generate Quotation
+    </button>
+  </div>
+</div>
+
+
+<!-- ── MODAL ────────────────────────────────────────────────────────────────── -->
+<div id="quotation-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <h3>Quotation — Ready to Send</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="m-label">Services in this quote</div>
+      <div id="modal-cart-items"></div>
+
+      <hr class="m-divider">
+
+      <div class="m-label" style="margin-bottom:8px">
+        Copy to WhatsApp or email
+        <span style="font-weight:400;font-size:10px;color:var(--muted2);
+                     text-transform:none;letter-spacing:0;margin-left:4px">
+          (*bold* and _italic_ render in WhatsApp)
+        </span>
+      </div>
+      <pre class="quotation-pre" id="quotation-text"></pre>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary btn-sm" id="copy-btn" onclick="copyQuotation()">
+        Copy to Clipboard
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════════════════════════ -->
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let fxRate       = null;
+let servicesData = {};   // sid → service object
+let cart         = [];   // array of CartItem
+
+// ── AUTH-AWARE FETCH ──────────────────────────────────────────────────────────
+async function apiFetch(url) {
+  const r = await fetch(url);
+  if (r.status === 401) { window.location.href = '/login'; return null; }
+  return r;
+}
+
+// ── FX ────────────────────────────────────────────────────────────────────────
 async function loadFx() {
   try {
-    const r = await fetch('/quotation/api/fx');
+    const r = await apiFetch('/quotation/api/fx');
+    if (!r) return;
     const d = await r.json();
     fxRate = d.thb_per_usd;
-    document.getElementById('fx-label').textContent =
-      fxRate ? `1 USD = ฿${fxRate.toFixed(2)}` : 'FX unavailable';
+    const el = document.getElementById('fx-label');
+    el.textContent = fxRate ? `1 USD = ฿${fxRate.toFixed(2)}` : 'FX unavailable';
+    if (fxRate) el.classList.add('loaded');
     recalcAll();
+    updateCartBar();
   } catch {
     document.getElementById('fx-label').textContent = 'FX unavailable';
   }
 }
 
 function thbToUsd(thb) {
-  if (!fxRate || !thb) return null;
-  return (thb / fxRate).toFixed(2);
+  return (fxRate && thb) ? (thb / fxRate).toFixed(2) : null;
 }
 
-// ── Cascading dropdowns ───────────────────────────────────────────────────────
+// ── CASCADING DROPDOWNS ───────────────────────────────────────────────────────
 async function onDestChange() {
   const dest = document.getElementById('sel-dest').value;
-  const selType    = document.getElementById('sel-type');
-  const selVehicle = document.getElementById('sel-vehicle');
-
-  selType.disabled = true; selType.innerHTML = '<option value="">— loading —</option>';
-  selVehicle.disabled = true; selVehicle.innerHTML = '<option value="">All vehicles</option>';
-
-  if (!dest) { selType.innerHTML = '<option value="">— pick type —</option>'; return; }
-
-  const types = await fetch(`/quotation/api/service-types?destination=${encodeURIComponent(dest)}`).then(r=>r.json());
-  selType.innerHTML = '<option value="">All types</option>' +
-    types.map(t=>`<option value="${t}">${t}</option>`).join('');
-  selType.disabled = false;
+  const selT = document.getElementById('sel-type');
+  const selV = document.getElementById('sel-vehicle');
+  selT.disabled = true; selT.innerHTML = '<option value="">— loading —</option>';
+  selV.disabled = true; selV.innerHTML = '<option value="">All vehicles</option>';
+  if (!dest) { selT.innerHTML = '<option value="">— pick type —</option>'; return; }
+  const r = await apiFetch(`/quotation/api/service-types?destination=${encodeURIComponent(dest)}`);
+  if (!r) return;
+  const types = await r.json();
+  selT.innerHTML = '<option value="">All types</option>' +
+    types.map(t => `<option value="${t}">${t}</option>`).join('');
+  selT.disabled = false;
 }
 
 async function onTypeChange() {
   const dest = document.getElementById('sel-dest').value;
   const type = document.getElementById('sel-type').value;
-  const selVehicle = document.getElementById('sel-vehicle');
-
-  selVehicle.disabled = true;
-  selVehicle.innerHTML = '<option value="">All vehicles</option>';
-
+  const selV = document.getElementById('sel-vehicle');
+  selV.disabled = true; selV.innerHTML = '<option value="">All vehicles</option>';
   if (!dest || !type) return;
-
-  const vehicles = await fetch(
+  const r = await apiFetch(
     `/quotation/api/vehicles?destination=${encodeURIComponent(dest)}&service_type=${encodeURIComponent(type)}`
-  ).then(r=>r.json());
-
-  selVehicle.innerHTML = '<option value="">All vehicles</option>' +
-    vehicles.map(v=>`<option value="${v}">${v}</option>`).join('');
-  selVehicle.disabled = false;
+  );
+  if (!r) return;
+  const vs = await r.json();
+  selV.innerHTML = '<option value="">All vehicles</option>' +
+    vs.map(v => `<option value="${v}">${v}</option>`).join('');
+  selV.disabled = false;
 }
 
-// ── Search ────────────────────────────────────────────────────────────────────
+// ── SEARCH ────────────────────────────────────────────────────────────────────
 async function doSearch() {
-  const dest   = document.getElementById('sel-dest').value;
-  const type   = document.getElementById('sel-type').value;
+  const dest    = document.getElementById('sel-dest').value;
+  const type    = document.getElementById('sel-type').value;
   const vehicle = document.getElementById('sel-vehicle').value;
-  const rtype  = document.getElementById('sel-ratetype').value;
-  const search = document.getElementById('inp-search').value;
+  const rtype   = document.getElementById('sel-ratetype').value;
+  const search  = document.getElementById('inp-search').value;
 
   if (!dest) { alert('Please select a destination first.'); return; }
 
   document.getElementById('search-spinner').style.display = 'inline-block';
-  document.getElementById('results-list').innerHTML = '<div class="empty"><span class="spinner"></span> Searching…</div>';
-  document.getElementById('results-count').textContent = '';
+  document.getElementById('results-list').innerHTML =
+    `<div class="empty-state">
+       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+       </svg>
+       <span class="spinner" style="margin-right:0"></span>&nbsp; Searching…
+     </div>`;
+  document.getElementById('results-meta').textContent = '';
 
-  const params = new URLSearchParams({destination:dest,service_type:type,vehicle,rate_type:rtype,search});
-  const data   = await fetch(`/quotation/api/search?${params}`).then(r=>r.json());
+  const params = new URLSearchParams({
+    destination: dest, service_type: type, vehicle, rate_type: rtype, search
+  });
+  const r = await apiFetch(`/quotation/api/search?${params}`);
   document.getElementById('search-spinner').style.display = 'none';
+  if (!r) return;
 
+  const data = await r.json();
+
+  if (data.error) {
+    document.getElementById('results-list').innerHTML =
+      `<div class="empty-state">Error: ${data.error}</div>`;
+    return;
+  }
   if (!data.length) {
-    document.getElementById('results-list').innerHTML = '<div class="empty">No services found. Try a broader search.</div>';
+    document.getElementById('results-list').innerHTML =
+      `<div class="empty-state">
+         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+         </svg>
+         No services found — try a broader search.
+       </div>`;
     return;
   }
 
-  document.getElementById('results-count').textContent = `${data.length} service${data.length>1?'s':''} found`;
-  document.getElementById('results-list').innerHTML = data.map(svc => renderCard(svc)).join('');
+  // Cache for cart use
+  servicesData = {};
+  for (const s of data) servicesData[s.id] = s;
+
+  document.getElementById('results-meta').innerHTML =
+    `<span style="color:var(--muted)">${data.length} service${data.length > 1 ? 's' : ''} found</span>`;
+  document.getElementById('results-list').innerHTML =
+    data.map((svc, i) => renderCard(svc, i)).join('');
 }
 
-// ── Render a service card ─────────────────────────────────────────────────────
-function srcLabel(source) {
-  const map = {
-    BKK_EXCEL:'BKK/PTY', GDV_EXCEL:'Good Day',
-    PHUKET_CONTRACT:'Phuket Contract', KRABI_CONTRACT:'Krabi Contract',
-    SAMUI_CONTRACT:'Samui Contract',
-  };
-  return map[source] || source;
+// ── RENDER CARDS ──────────────────────────────────────────────────────────────
+function srcLabel(src) {
+  const m = { DIVINE:'BKK/PTT', GOOD_DAY:'Good Day',
+    BKK_EXCEL:'BKK/PTT', GDV_EXCEL:'Good Day',
+    PHUKET_CONTRACT:'Phuket', KRABI_CONTRACT:'Krabi', SAMUI_CONTRACT:'Samui' };
+  return m[src] || src || '—';
 }
 
-function renderCard(svc) {
+function renderCard(svc, idx) {
   const vatBadge = svc.includes_vat
-    ? `<span class="badge-vat incl">VAT incl.</span>`
-    : `<span class="badge-vat">VAT excl.</span>`;
-
-  const tcBadge = svc.tour_code
-    ? `<span class="badge badge-tc">${svc.tour_code}</span>` : '';
-
-  const srcBadge = `<span class="badge badge-src">${srcLabel(svc.source)}</span>`;
+    ? `<span class="badge badge-vat-incl">VAT incl.</span>`
+    : `<span class="badge badge-vat-excl">VAT excl.</span>`;
+  const tc = svc.tour_code ? `<span class="badge badge-tc">${svc.tour_code}</span>` : '';
+  const src = `<span class="badge badge-src">${srcLabel(svc.source)}</span>`;
+  const delay = Math.min(idx * 40, 400);
 
   return `
-  <div class="result-card" id="card-${svc.id}">
-    <div class="result-header" onclick="toggleCard(${svc.id})">
-      <div>
-        <div class="result-name">${svc.name} ${vatBadge}</div>
-        <div class="result-meta">
-          ${svc.notes ? svc.notes + ' · ' : ''}
-          ${svc.duration ? svc.duration + ' · ' : ''}
-        </div>
-      </div>
-      <div class="result-badges">
-        ${tcBadge}${srcBadge}
-        <span class="chevron">▼</span>
+<div class="result-card" id="card-${svc.id}" style="animation-delay:${delay}ms">
+  <div class="result-header" onclick="toggleCard(${svc.id})">
+    <div style="flex:1;min-width:0">
+      <div class="result-name">${svc.name} ${vatBadge}</div>
+      <div class="result-meta-line">
+        ${svc.duration ? svc.duration + '&nbsp;·&nbsp;' : ''}
+        ${svc.notes   ? svc.notes                       : ''}
       </div>
     </div>
-    <div class="result-body">
+    <div class="result-badges">
+      ${tc}${src}
+      <span class="chevron">▼</span>
+    </div>
+  </div>
+  <div class="result-body">
+    <div class="result-body-inner">
       ${renderRateTables(svc)}
       ${renderZones(svc)}
       ${renderQuotePanel(svc)}
     </div>
-  </div>`;
+  </div>
+</div>`;
 }
 
-// ── Rate tables ───────────────────────────────────────────────────────────────
 function renderRateTables(svc) {
-  const privateRates = svc.rates.filter(r => r.rate_type === 'Private');
-  const sicRates     = svc.rates.filter(r => r.rate_type === 'SIC');
+  const priv = svc.rates.filter(r => r.rate_type === 'Private');
+  const sic  = svc.rates.filter(r => r.rate_type === 'SIC');
   let html = '';
 
-  if (privateRates.length) {
-    // Group by vehicle
-    const byVehicle = {};
-    for (const r of privateRates) {
-      const key = r.vehicle || 'All';
-      if (!byVehicle[key]) byVehicle[key] = [];
-      byVehicle[key].push(r);
-    }
+  if (priv.length) {
+    const byVeh = {};
+    for (const r of priv) { const k = r.vehicle||'All'; (byVeh[k]||(byVeh[k]=[])).push(r); }
     html += `<div class="rate-section">
       <div class="rate-section-title">Private rates (per vehicle)</div>
       <table class="rate-table">
         <thead><tr><th>Vehicle</th><th>Pax range</th><th>Category</th><th>Price (THB)</th></tr></thead>
-        <tbody>
-        ${Object.entries(byVehicle).map(([veh, rows]) =>
-          rows.map(r => `<tr data-sid="${svc.id}" data-price="${r.price_thb}" data-cat="${r.pax_category}" data-rt="Private">
-            <td>${veh}</td>
-            <td>${r.pax_range || '—'}</td>
-            <td>${r.pax_category}</td>
+        <tbody>${Object.entries(byVeh).map(([v,rows])=>rows.map(r=>`
+          <tr data-sid="${svc.id}" data-price="${r.price_thb}" data-cat="${r.pax_category}" data-rt="Private">
+            <td>${v}</td><td>${r.pax_range||'—'}</td><td>${r.pax_category}</td>
             <td><strong>฿${r.price_thb.toLocaleString()}</strong></td>
-          </tr>`).join('')
-        ).join('')}
+          </tr>`).join('')).join('')}
         </tbody>
-      </table>
-    </div>`;
+      </table></div>`;
   }
 
-  if (sicRates.length) {
+  if (sic.length) {
     html += `<div class="rate-section">
       <div class="rate-section-title">SIC rates (per person, join tour)</div>
       <table class="rate-table">
         <thead><tr><th>Category</th><th>Pax range</th><th>Price (THB)</th></tr></thead>
-        <tbody>
-        ${sicRates.map(r => `<tr data-sid="${svc.id}" data-price="${r.price_thb}" data-cat="${r.pax_category}" data-rt="SIC">
-          <td>${r.pax_category}</td>
-          <td>${r.pax_range || '—'}</td>
-          <td><strong>฿${r.price_thb.toLocaleString()}</strong></td>
-        </tr>`).join('')}
+        <tbody>${sic.map(r=>`
+          <tr data-sid="${svc.id}" data-price="${r.price_thb}" data-cat="${r.pax_category}" data-rt="SIC">
+            <td>${r.pax_category}</td><td>${r.pax_range||'—'}</td>
+            <td><strong>฿${r.price_thb.toLocaleString()}</strong></td>
+          </tr>`).join('')}
         </tbody>
-      </table>
-    </div>`;
+      </table></div>`;
   }
-
   return html;
 }
 
 function renderZones(svc) {
-  if (!svc.zones.length) return '';
+  if (!svc.zones?.length) return '';
   return `<div class="zone-list">
-    <strong style="font-size:12px;color:#555">Zone surcharges: </strong>
-    ${svc.zones.map(z =>
-      `<span>${z.zone_name}${z.surcharge ? ': ฿'+z.surcharge+'/'+z.per : ''}</span>`
-    ).join('')}
+    ${svc.zones.map(z=>`<span class="zone-pill">${z.zone_name}${z.surcharge ? ': ฿'+z.surcharge+'/'+z.per : ''}</span>`).join('')}
   </div>`;
 }
 
-// ── Quote panel ───────────────────────────────────────────────────────────────
 function renderQuotePanel(svc) {
+  const hasPriv = svc.rates.some(r => r.rate_type === 'Private');
+  const hasSIC  = svc.rates.some(r => r.rate_type === 'SIC');
+  const btns = [
+    hasPriv ? `<button class="btn btn-add btn-sm" id="add-${svc.id}-Private"
+      onclick="addToCart(${svc.id},'Private')">+ Private</button>` : '',
+    hasSIC  ? `<button class="btn btn-add btn-sm" id="add-${svc.id}-SIC"
+      onclick="addToCart(${svc.id},'SIC')">+ SIC</button>` : '',
+  ].filter(Boolean).join('');
+
   return `
-  <div class="quote-panel" id="qpanel-${svc.id}">
-    <h4>Quick quote calculator</h4>
-    <div id="qlines-${svc.id}">
-      <div class="empty" style="padding:.5rem;font-size:13px">
-        ↑ Select vehicle / rate type above, then rates will calculate automatically.
-      </div>
-    </div>
-    <button class="btn btn-ghost btn-sm copy-btn" onclick="copyQuote(${svc.id})">
-      📋 Copy quote to clipboard
-    </button>
-  </div>`;
+<div class="quote-panel" id="qpanel-${svc.id}">
+  <div class="quote-panel-title">Quick Quote Calculator</div>
+  <div id="qlines-${svc.id}" style="color:var(--muted);font-size:13px">
+    Set Adults / Commission above and rates will calculate here.
+  </div>
+  <div class="add-row">
+    <span class="add-row-label">Add to quote:</span>
+    ${btns}
+  </div>
+</div>`;
 }
 
-// ── Recalc all open cards ─────────────────────────────────────────────────────
+// ── CALCULATION ───────────────────────────────────────────────────────────────
 function recalcAll() {
-  document.querySelectorAll('.result-card.open').forEach(card => {
-    const sid = parseInt(card.id.replace('card-', ''));
-    recalcCard(sid);
+  document.querySelectorAll('.result-card.open').forEach(c => {
+    recalcCard(parseInt(c.id.replace('card-', '')));
   });
 }
 
 function recalcCard(sid) {
-  const adults     = parseInt(document.getElementById('inp-adults').value)   || 0;
-  const children   = parseInt(document.getElementById('inp-children').value) || 0;
-  const commission = parseFloat(document.getElementById('inp-commission').value) || 0;
-  const vatPct     = parseFloat(document.getElementById('sel-vat').value)    || 0;
-  const panel      = document.getElementById(`qlines-${sid}`);
+  const adults  = parseInt(document.getElementById('inp-adults').value)      || 0;
+  const kids    = parseInt(document.getElementById('inp-children').value)    || 0;
+  const comm    = parseFloat(document.getElementById('inp-commission').value)|| 0;
+  const vatPct  = parseFloat(document.getElementById('sel-vat').value)       || 0;
+  const selVeh  = document.getElementById('sel-vehicle').value;
+  const selRT   = document.getElementById('sel-ratetype').value;
+  const panel   = document.getElementById(`qlines-${sid}`);
   if (!panel) return;
 
-  // Find selected vehicle row  (prefer selected vehicle from filter)
-  const selectedVehicle = document.getElementById('sel-vehicle').value;
-  const selectedRateType = document.getElementById('sel-ratetype').value;
+  const allRows = Array.from(document.querySelectorAll(`tr[data-sid="${sid}"]`));
+  if (!allRows.length) {
+    panel.innerHTML = '<span style="color:var(--muted);font-size:13px">No rate rows found.</span>';
+    return;
+  }
 
-  // Collect all rows for this card
-  const rows = document.querySelectorAll(`tr[data-sid="${sid}"]`);
-  if (!rows.length) { panel.innerHTML = '<div class="empty" style="padding:.5rem;font-size:13px">No rate rows found.</div>'; return; }
+  let cands = allRows;
+  if (selVeh) cands = cands.filter(r =>
+    r.querySelector('td')?.textContent.trim() === selVeh || r.dataset.rt === 'SIC');
+  if (selRT)  cands = cands.filter(r => r.dataset.rt === selRT);
+  if (!cands.length) cands = allRows;
 
-  // Prefer: matching vehicle + rate_type. Otherwise show all.
-  let candidates = Array.from(rows);
-  if (selectedVehicle)  candidates = candidates.filter(r => r.querySelector('td')?.textContent.trim() === selectedVehicle || r.dataset.rt === 'SIC');
-  if (selectedRateType) candidates = candidates.filter(r => r.dataset.rt === selectedRateType);
-  if (!candidates.length) candidates = Array.from(rows);
-
-  // Summarise lines
   let lines = '';
-  let grandTotal = 0;
 
-  // Group by rate_type
-  const privRows = candidates.filter(r => r.dataset.rt === 'Private');
-  const sicRows  = candidates.filter(r => r.dataset.rt === 'SIC');
-
-  // Private — show per-vehicle price
-  const seenPriv = new Set();
+  // Private
+  const privRows = cands.filter(r => r.dataset.rt === 'Private');
+  const seen = new Set();
   for (const r of privRows) {
     const price = parseInt(r.dataset.price);
-    const cat   = r.dataset.cat;
-    const key   = `${cat}-${price}`;
-    if (seenPriv.has(key)) continue;
-    seenPriv.add(key);
-    const withVat   = vatPct ? Math.round(price * (1 + vatPct/100)) : price;
-    const withComm  = Math.round(withVat * (1 + commission/100));
-    grandTotal = withComm;  // private = per vehicle, use last
-    const usd = thbToUsd(withComm);
-    lines += `<div class="quote-line">
-      <span>Base rate (private, per vehicle)</span>
-      <span>฿${withVat.toLocaleString()}</span>
-    </div>`;
-    if (vatPct && !document.getElementById(`card-${sid}`)?.dataset?.includesVat) {
-      lines += `<div class="quote-line"><span>+ VAT ${vatPct}%</span><span>฿${(withVat-price).toLocaleString()}</span></div>`;
-    }
-    lines += `<div class="quote-line"><span>+ Commission ${commission}%</span><span>฿${(withComm-withVat).toLocaleString()}</span></div>`;
-    lines += `<div class="quote-line total">
-      <span>Final rate (per vehicle)</span>
-      <span>฿${withComm.toLocaleString()} ${usd ? `<span class="usd">≈ $${usd}</span>` : ''}</span>
-    </div>`;
-    break; // show first match only
+    const key   = `${r.dataset.cat}-${price}`;
+    if (seen.has(key)) continue; seen.add(key);
+    const withVat  = vatPct ? Math.round(price * (1 + vatPct/100)) : price;
+    const withComm = Math.round(withVat * (1 + comm/100));
+    const usd      = thbToUsd(withComm);
+    if (vatPct) lines += `<div class="quote-line"><span>Base rate</span><span>฿${price.toLocaleString()}</span></div>
+      <div class="quote-line"><span>+ VAT ${vatPct}%</span><span>฿${(withVat-price).toLocaleString()}</span></div>`;
+    lines += `<div class="quote-line"><span>+ Commission ${comm}%</span><span>฿${(withComm-withVat).toLocaleString()}</span></div>
+      <div class="quote-line total"><span>Private (per vehicle)</span>
+        <span>฿${withComm.toLocaleString()}${usd?`<span class="usd"> ≈ $${usd}</span>`:''}</span></div>`;
+    break;
   }
 
-  // SIC — calculate adults + children
-  if (sicRows.length) {
-    const adultRow  = sicRows.find(r => r.dataset.cat === 'Adult');
-    const childRow  = sicRows.find(r => r.dataset.cat === 'Child');
-    const adultP    = adultRow  ? parseInt(adultRow.dataset.price)  : 0;
-    const childP    = childRow  ? parseInt(childRow.dataset.price)  : 0;
-
-    if (adultP || childP) {
-      const adultTotal = adultP * adults;
-      const childTotal = childP * children;
-      const base       = adultTotal + childTotal;
-      const withVat    = vatPct ? Math.round(base * (1 + vatPct/100)) : base;
-      const withComm   = Math.round(withVat * (1 + commission/100));
-      const usd        = thbToUsd(withComm);
-      grandTotal       = withComm;
-
-      lines += `<div class="quote-line"><span>Adults × ${adults}</span><span>฿${adultTotal.toLocaleString()}</span></div>`;
-      if (children > 0) lines += `<div class="quote-line"><span>Children × ${children}</span><span>฿${childTotal.toLocaleString()}</span></div>`;
-      if (vatPct) lines += `<div class="quote-line"><span>+ VAT ${vatPct}%</span><span>฿${(withVat-base).toLocaleString()}</span></div>`;
-      lines += `<div class="quote-line"><span>+ Commission ${commission}%</span><span>฿${(withComm-withVat).toLocaleString()}</span></div>`;
-      lines += `<div class="quote-line total">
-        <span>Final rate (SIC, ${adults}A${children>0?' + '+children+'C':''})</span>
-        <span>฿${withComm.toLocaleString()} ${usd ? `<span class="usd">≈ $${usd}</span>` : ''}</span>
-      </div>`;
-    }
+  // SIC
+  const sicRows = cands.filter(r => r.dataset.rt === 'SIC');
+  const aRow = sicRows.find(r => r.dataset.cat === 'Adult');
+  const cRow = sicRows.find(r => r.dataset.cat === 'Child');
+  const aP   = aRow ? parseInt(aRow.dataset.price) : 0;
+  const cP   = cRow ? parseInt(cRow.dataset.price) : 0;
+  if (aP || cP) {
+    const base     = aP * adults + cP * kids;
+    const withVat  = vatPct ? Math.round(base * (1 + vatPct/100)) : base;
+    const withComm = Math.round(withVat * (1 + comm/100));
+    const usd      = thbToUsd(withComm);
+    lines += `<div class="quote-line"><span>Adults × ${adults}</span><span>฿${(aP*adults).toLocaleString()}</span></div>`;
+    if (kids) lines += `<div class="quote-line"><span>Children × ${kids}</span><span>฿${(cP*kids).toLocaleString()}</span></div>`;
+    if (vatPct) lines += `<div class="quote-line"><span>+ VAT ${vatPct}%</span><span>฿${(withVat-base).toLocaleString()}</span></div>`;
+    lines += `<div class="quote-line"><span>+ Commission ${comm}%</span><span>฿${(withComm-withVat).toLocaleString()}</span></div>
+      <div class="quote-line total"><span>SIC (${adults}A${kids?' + '+kids+'C':''})</span>
+        <span>฿${withComm.toLocaleString()}${usd?`<span class="usd"> ≈ $${usd}</span>`:''}</span></div>`;
   }
 
-  panel.innerHTML = lines || '<div class="empty" style="padding:.5rem;font-size:13px">Adjust filters to see calculation.</div>';
+  panel.innerHTML = lines ||
+    '<span style="color:var(--muted);font-size:13px">Adjust filters to see calculation.</span>';
 }
 
-// ── Card toggle ───────────────────────────────────────────────────────────────
 function toggleCard(sid) {
   const card = document.getElementById(`card-${sid}`);
   card.classList.toggle('open');
   if (card.classList.contains('open')) recalcCard(sid);
 }
 
-// ── Copy quote ────────────────────────────────────────────────────────────────
-function copyQuote(sid) {
-  const card    = document.getElementById(`card-${sid}`);
-  const name    = card.querySelector('.result-name')?.textContent?.trim() || '';
-  const lines   = card.querySelectorAll(`#qlines-${sid} .quote-line`);
-  let text      = `Quotation: ${name}\n`;
-  text         += '─'.repeat(40) + '\n';
-  lines.forEach(l => {
-    const label = l.querySelector('span:first-child')?.textContent?.trim();
-    const val   = l.querySelector('span:last-child')?.textContent?.replace(/\s+/g,' ').trim();
-    if (label && val) text += `${label}: ${val}\n`;
-  });
-  text += `\nGenerated: ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Bangkok'})} (Bangkok time)`;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = card.querySelector('.copy-btn');
-    btn.textContent = '✓ Copied!';
-    setTimeout(()=>btn.textContent='📋 Copy quote to clipboard', 2000);
-  });
+// ── CART ──────────────────────────────────────────────────────────────────────
+function addToCart(svcId, rateType) {
+  const svc    = servicesData[svcId]; if (!svc) return;
+  const adults = parseInt(document.getElementById('inp-adults').value)       || 0;
+  const kids   = parseInt(document.getElementById('inp-children').value)     || 0;
+  const comm   = parseFloat(document.getElementById('inp-commission').value) || 0;
+  const vatPct = parseFloat(document.getElementById('sel-vat').value)        || 0;
+  const selVeh = document.getElementById('sel-vehicle').value;
+  const rates  = svc.rates.filter(r => r.rate_type === rateType);
+  let item = null;
+
+  if (rateType === 'Private') {
+    const rate = rates.find(r => r.vehicle === selVeh) || rates[0];
+    if (!rate) { alert('No Private rate found.'); return; }
+    const withVat  = vatPct ? Math.round(rate.price_thb * (1+vatPct/100)) : rate.price_thb;
+    const withComm = Math.round(withVat * (1 + comm/100));
+    item = { cartId:Date.now()+Math.random(), serviceId:svcId, name:svc.name, source:svc.source,
+      tourCode:svc.tour_code, duration:svc.duration, rateType:'Private',
+      vehicle:rate.vehicle||'N/A', paxRange:rate.pax_range||'',
+      adults, kids, comm, vatPct, includesVat:svc.includes_vat,
+      basePrice:rate.price_thb, adultPrice:0, childPrice:0, finalTotal:withComm };
+
+  } else {
+    const aRate = rates.find(r => r.pax_category === 'Adult');
+    const cRate = rates.find(r => r.pax_category === 'Child');
+    const aP    = aRate ? aRate.price_thb : 0;
+    const cP    = cRate ? cRate.price_thb : 0;
+    if (!aP && !cP) { alert('No SIC rate found.'); return; }
+    const base     = aP * adults + cP * kids;
+    const withVat  = vatPct ? Math.round(base * (1+vatPct/100)) : base;
+    const withComm = Math.round(withVat * (1 + comm/100));
+    item = { cartId:Date.now()+Math.random(), serviceId:svcId, name:svc.name, source:svc.source,
+      tourCode:svc.tour_code, duration:svc.duration, rateType:'SIC',
+      vehicle:null, paxRange:'', adults, kids, comm, vatPct, includesVat:svc.includes_vat,
+      basePrice:0, adultPrice:aP, childPrice:cP, finalTotal:withComm };
+  }
+
+  if (!item) return;
+  cart.push(item);
+  updateCartBar();
+
+  // button feedback
+  const btn = document.getElementById(`add-${svcId}-${rateType}`);
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Added';
+    btn.classList.add('added');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('added'); }, 1800);
+  }
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+function removeFromCart(cartId) {
+  cart = cart.filter(i => i.cartId !== cartId);
+  updateCartBar();
+  if (document.getElementById('quotation-modal').classList.contains('visible')) {
+    renderModalItems(); renderQuotationText();
+  }
+}
+
+function clearCart() { cart = []; updateCartBar(); closeModal(); }
+
+function updateCartBar() {
+  const bar = document.getElementById('cart-bar');
+  if (!cart.length) { bar.classList.remove('visible'); return; }
+  bar.classList.add('visible');
+  const total = cart.reduce((s,i) => s+i.finalTotal, 0);
+  document.getElementById('cart-pill').textContent  = cart.length;
+  document.getElementById('cart-total').textContent = '฿' + total.toLocaleString();
+  const usd = thbToUsd(total);
+  document.getElementById('cart-usd').textContent = usd ? `≈ $${usd}` : '';
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function showModal() {
+  if (!cart.length) return;
+  renderModalItems();
+  renderQuotationText();
+  document.getElementById('quotation-modal').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('quotation-modal').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+function renderModalItems() {
+  document.getElementById('modal-cart-items').innerHTML = cart.map(item => {
+    const meta = item.rateType === 'Private'
+      ? `Private · ${item.vehicle} · ${item.adults}A${item.kids?' + '+item.kids+'C':''} · ${item.comm}% comm`
+      : `SIC (Join) · ${item.adults}A${item.kids?' + '+item.kids+'C':''} · ${item.comm}% comm`;
+    const usd = thbToUsd(item.finalTotal);
+    return `<div class="cart-item-row">
+      <div style="flex:1">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-meta">${meta}${item.duration ? ' · ' + item.duration : ''}</div>
+      </div>
+      <div>
+        <div class="cart-item-price">฿${item.finalTotal.toLocaleString()}</div>
+        ${usd ? `<div class="cart-item-usd">≈ $${usd}</div>` : ''}
+      </div>
+      <button class="cart-item-remove" onclick="removeFromCart(${item.cartId})" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderQuotationText() {
+  document.getElementById('quotation-text').textContent = buildQuotationText();
+}
+
+function buildQuotationText() {
+  const today = new Date().toLocaleDateString('en-GB', {
+    day:'2-digit', month:'short', year:'numeric', timeZone:'Asia/Bangkok'
+  });
+  const grandTotal = cart.reduce((s,i) => s+i.finalTotal, 0);
+  const grandUsd   = thbToUsd(grandTotal);
+  const div        = '─'.repeat(30);
+
+  const lines = [
+    `*VAYO AURA — Service Quotation*`,
+    `Date: ${today}`,
+    div, '',
+  ];
+
+  cart.forEach((item, i) => {
+    lines.push(`*${i+1}. ${item.name}*`);
+    if (item.rateType === 'Private') {
+      lines.push(`   Type: Private Transfer | Vehicle: ${item.vehicle}`);
+      if (item.paxRange) lines.push(`   Pax: ${item.paxRange}`);
+    } else {
+      lines.push(`   Type: SIC (Join Tour)`);
+    }
+    if (item.duration) lines.push(`   Duration: ${item.duration}`);
+    lines.push(`   Guests: ${item.adults} Adult${item.adults!==1?'s':''}${item.kids?' + '+item.kids+' Child'+(item.kids!==1?'ren':''):''}`);
+
+    if (item.rateType === 'Private') {
+      lines.push(`   Base Rate: ฿${item.basePrice.toLocaleString()}`);
+      if (item.vatPct) {
+        const va = Math.round(item.basePrice * item.vatPct/100);
+        lines.push(`   + ${item.vatPct}% VAT: ฿${va.toLocaleString()}`);
+      }
+      const afterVat = item.vatPct ? Math.round(item.basePrice*(1+item.vatPct/100)) : item.basePrice;
+      lines.push(`   + ${item.comm}% Commission: ฿${(item.finalTotal-afterVat).toLocaleString()}`);
+    } else {
+      if (item.adultPrice) lines.push(`   Adult: ฿${item.adultPrice.toLocaleString()} × ${item.adults} = ฿${(item.adultPrice*item.adults).toLocaleString()}`);
+      if (item.childPrice && item.kids) lines.push(`   Child: ฿${item.childPrice.toLocaleString()} × ${item.kids} = ฿${(item.childPrice*item.kids).toLocaleString()}`);
+      const base = item.adultPrice*item.adults + item.childPrice*item.kids;
+      if (item.vatPct) lines.push(`   + ${item.vatPct}% VAT: ฿${Math.round(base*item.vatPct/100).toLocaleString()}`);
+      const afterVat = item.vatPct ? Math.round(base*(1+item.vatPct/100)) : base;
+      lines.push(`   + ${item.comm}% Commission: ฿${(item.finalTotal-afterVat).toLocaleString()}`);
+    }
+
+    const usd = thbToUsd(item.finalTotal);
+    lines.push(`   *Total: ฿${item.finalTotal.toLocaleString()}*${usd?' (~$'+usd+' USD)':''}`);
+    lines.push('');
+  });
+
+  lines.push(div);
+  lines.push(`*GRAND TOTAL: ฿${grandTotal.toLocaleString()}*${grandUsd?' (~$'+grandUsd+' USD)':''}`);
+  lines.push(div);
+  lines.push('');
+  lines.push(`_All prices in Thai Baht (THB)_`);
+  lines.push(`_Prices are indicative and subject to availability_`);
+  lines.push('');
+  lines.push(`For bookings & queries:`);
+  lines.push(`+66 960 877 457 | info@vayoaura.com`);
+  return lines.join('\n');
+}
+
+async function copyQuotation() {
+  const text = document.getElementById('quotation-text').textContent;
+  const btn  = document.getElementById('copy-btn');
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = Object.assign(document.createElement('textarea'), {
+      value:text, style:'position:fixed;opacity:0'
+    });
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  btn.textContent = '✓ Copied!';
+  setTimeout(() => btn.textContent = 'Copy to Clipboard', 2200);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
 loadFx();
 </script>
 </body>
