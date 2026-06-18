@@ -1208,11 +1208,15 @@ function clearCart() {
   document.querySelectorAll('.rate-option.selected').forEach(el => el.classList.remove('selected'));
 }
 
+function roundToNearestHalf(value) {
+  return Math.round(value * 2) / 2;
+}
+
 function updateCartTotals() {
-  const comm = parseFloat(document.getElementById('commission-input').value) || 0;
+  const comm = parseFloat(document.getElementById('commission-input').value) || 100;
   const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const commissionAmount = subtotal * (comm / 100);
-  const total = subtotal + commissionAmount;
+  const commissionAmount = subtotal / (comm / 100);
+  const total =  roundToNearestHalf(commissionAmount);
 
   const usd = thbToUsd(total);
   document.getElementById('cart-total').innerHTML = `
@@ -1240,21 +1244,22 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+
+
 function buildQuotationText() {
   const today = new Date().toLocaleDateString('en-GB', {
     day:'2-digit', month:'short', year:'numeric', timeZone:'Asia/Bangkok'
   });
-  const comm = parseFloat(document.getElementById('commission-input').value) || 0;
+  const comm = parseFloat(document.getElementById('commission-input').value) || 100;
   const usdRate = getUsdRate();
   const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const commissionAmount = subtotal * (comm / 100);
-  const grandTotal = subtotal + commissionAmount;
+  const commissionAmount = subtotal / (comm / 100);
+  const grandTotal = roundToNearestHalf(commissionAmount);
   const div = '─'.repeat(30);
 
   const lines = [
-    `*VIKRAM — Service Quotation*`,
+    `*VAYO AURA — Service Quotation*`,
     `Date: ${today}`,
-    `USD Rate: 1 USD = ฿${usdRate.toFixed(2)}`,
     div, '',
   ];
 
@@ -1266,18 +1271,10 @@ function buildQuotationText() {
     if (item.addons.length) {
       lines.push(`   Add-ons: ${item.addons.map(a => a.name).join(', ')}`);
     }
-    const addonStr = item.addonTotal ? ` (+ ฿${item.addonTotal.toLocaleString()} add-ons)` : '';
-    lines.push(`   Subtotal: ฿${item.totalPrice.toLocaleString()}${addonStr}`);
-    if (itemUsd) lines.push(`   ≈ $${itemUsd} USD`);
-    lines.push('');
   });
 
   const grandUsd = thbToUsd(grandTotal);
   lines.push(div);
-  lines.push(`Subtotal: ฿${subtotal.toLocaleString()}`);
-  if (comm > 0) {
-    lines.push(`Commission (${comm}%): ฿${commissionAmount.toLocaleString()}`);
-  }
   lines.push(`*GRAND TOTAL: ฿${grandTotal.toLocaleString()}*`);
   if (grandUsd) lines.push(`*≈ $${grandUsd} USD*`);
   lines.push(div);

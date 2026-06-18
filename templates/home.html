@@ -22,6 +22,14 @@
       --muted:        #6b6880;
       --muted2:       #3d3b4a;
       --coming:       rgba(255,255,255,0.03);
+      --vstudio:      #7c3aed;
+      --vstudio-dim:  rgba(124,58,237,0.12);
+      --vstudio-glow: rgba(124,58,237,0.2);
+      --new-glow:     rgba(232,197,71,0.15);
+      --staff:        #34d399;
+      --staff-dim:    rgba(52,211,153,0.12);
+      --admin:        #f87171;
+      --admin-dim:    rgba(248,113,113,0.12);
     }
 
     body {
@@ -76,6 +84,27 @@
     }
     .logo-text span { color: var(--accent); }
 
+    .header-right {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .role-badge {
+      font-size: 11px; font-weight: 600;
+      padding: 4px 12px; border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .role-badge.admin {
+      background: var(--admin-dim);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: var(--admin);
+    }
+    .role-badge.staff {
+      background: var(--staff-dim);
+      border: 1px solid rgba(52,211,153,0.3);
+      color: var(--staff);
+    }
+
     .logout-btn {
       font-size: 13px; color: var(--muted); text-decoration: none;
       padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px;
@@ -125,6 +154,24 @@
       font-size: 11px; font-weight: 600;
       letter-spacing: 0.14em; text-transform: uppercase;
       color: var(--muted); margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-label .badge {
+      font-size: 9px;
+      padding: 2px 10px;
+      border-radius: 99px;
+      background: var(--staff-dim);
+      border: 1px solid rgba(52,211,153,0.2);
+      color: var(--staff);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .section-label .badge.admin-badge {
+      background: var(--admin-dim);
+      border-color: rgba(248,113,113,0.2);
+      color: var(--admin);
     }
 
     .feature-grid {
@@ -133,7 +180,6 @@
       gap: 16px;
     }
 
-    /* Active feature card */
     .feature-card {
       display: block; text-decoration: none;
       background: var(--surface);
@@ -155,19 +201,43 @@
     .feature-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
     .feature-card:hover::before { opacity: 1; }
 
-    /* Coming-soon card */
-    .feature-card.coming {
-      background: var(--coming);
-      border-style: dashed;
-      cursor: default;
-      opacity: 0.6;
+    .feature-card.staff-access {
+      border-color: rgba(52,211,153,0.2);
     }
-    .feature-card.coming:hover {
-      border-color: var(--border);
-      transform: none;
-      box-shadow: none;
+    .feature-card.staff-access::before {
+      background: radial-gradient(circle at 30% 40%, rgba(52,211,153,0.06), transparent 60%);
     }
-    .feature-card.coming::before { display: none; }
+    .feature-card.staff-access:hover {
+      border-color: var(--staff);
+      box-shadow: 0 16px 40px rgba(52,211,153,0.08);
+    }
+
+    .feature-card.admin-only {
+      border-color: rgba(248,113,113,0.15);
+    }
+    .feature-card.admin-only::before {
+      background: radial-gradient(circle at 30% 40%, rgba(248,113,113,0.06), transparent 60%);
+    }
+    .feature-card.admin-only:hover {
+      border-color: var(--admin);
+      box-shadow: 0 16px 40px rgba(248,113,113,0.08);
+    }
+
+    .feature-card.vstudio {
+      border-color: rgba(124,58,237,0.3);
+      background: linear-gradient(145deg, rgba(124,58,237,0.06), rgba(124,58,237,0.02));
+    }
+    .feature-card.vstudio::before {
+      background: radial-gradient(circle at 30% 40%, rgba(124,58,237,0.1), transparent 60%);
+    }
+    .feature-card.vstudio:hover {
+      border-color: var(--vstudio);
+      box-shadow: 0 16px 40px rgba(124,58,237,0.15);
+    }
+    .feature-card.vstudio .card-icon {
+      background: var(--vstudio-dim);
+      color: var(--vstudio);
+    }
 
     .card-top {
       display: flex; align-items: flex-start;
@@ -192,7 +262,17 @@
       border: 1px solid rgba(52,211,153,0.3);
       color: #34d399;
     }
-    .badge-v3 {
+    .badge-staff {
+      background: rgba(52,211,153,0.08);
+      border: 1px solid rgba(52,211,153,0.2);
+      color: #34d399;
+    }
+    .badge-admin {
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.2);
+      color: #f87171;
+    }
+    .badge-v4 {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.1);
       color: var(--muted);
@@ -218,7 +298,9 @@
     }
     .feature-card:hover .card-cta { gap: 10px; }
 
-    .feature-card.coming .card-cta { color: var(--muted); }
+    .feature-card.staff-access .card-cta { color: var(--staff); }
+    .feature-card.admin-only .card-cta { color: var(--admin); }
+    .feature-card.vstudio .card-cta { color: var(--vstudio); }
 
     /* ── Version tag ── */
     .version-row {
@@ -233,7 +315,8 @@
     }
 
     @media (max-width: 600px) {
-      header { padding: 20px 20px; }
+      header { padding: 20px 20px; flex-wrap: wrap; gap: 12px; }
+      .header-right { margin-left: auto; }
       .shell { padding: 48px 16px 60px; }
       .feature-grid { grid-template-columns: 1fr; }
     }
@@ -245,28 +328,86 @@
       <div class="logo-mark">VI</div>
       <div class="logo-text">VIK<span>RAM</span></div>
     </div>
-    <a href="/logout" class="logout-btn">Sign out</a>
+    <div class="header-right">
+      {% if is_admin %}
+      <span class="role-badge admin">Admin</span>
+      {% else %}
+      <span class="role-badge staff">Staff</span>
+      {% endif %}
+      <a href="/logout" class="logout-btn">Sign out</a>
+    </div>
   </header>
 
   <div class="shell">
     <div class="hero">
       <div class="hero-eyebrow">
         <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
-        Version 3
+        Version 4
       </div>
       <h1>Your website,<br><em>fully in your hands.</em></h1>
       <p>VIKRAM gives you the tools to manage your website content without touching code. Select a feature below to get started.</p>
     </div>
 
-    <div class="section-label">Features</div>
+    <!-- ── Staff / Basic Features ── -->
+    <div class="section-label">
+      Basic Tools
+      <span class="badge">Staff Access</span>
+    </div>
 
     <div class="feature-grid">
 
-      <!-- ── Content Manager (LIVE) ── -->
-      <a href="/dashboard" class="feature-card">
+      <!-- Quotation Tool -->
+      <a href="/quotation" class="feature-card staff-access">
+        <div class="card-top">
+          <div class="card-icon">💰</div>
+          <span class="badge badge-staff">Staff</span>
+        </div>
+        <div class="card-title">Quotation Tool</div>
+        <div class="card-desc">
+          Search services and transfer rates from the live database. Build multi-service quotes with commission and VAT.
+        </div>
+        <div class="card-cta">
+          Open Quotation Tool
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </a>
+
+      <!-- Voucher Generator -->
+      <a href="/voucher" class="feature-card staff-access">
+        <div class="card-top">
+          <div class="card-icon">📄</div>
+          <span class="badge badge-staff">Staff</span>
+        </div>
+        <div class="card-title">VTOP WEB</div>
+        <div class="card-desc">
+          Generate hotel and tour booking confirmation PDFs instantly. Fill a form, download a print-ready PDF.
+        </div>
+        <div class="card-cta">
+          Open Voucher Generator
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- ── Admin Only Features ── -->
+    {% if is_admin %}
+    <div class="section-label" style="margin-top: 48px;">
+      Admin Tools
+      <span class="badge admin-badge">Admin Only</span>
+    </div>
+
+    <div class="feature-grid">
+
+      <!-- Content Manager -->
+      <a href="/dashboard" class="feature-card admin-only">
         <div class="card-top">
           <div class="card-icon">📤</div>
-          <span class="badge badge-live">Live</span>
+          <span class="badge badge-admin">Admin</span>
         </div>
         <div class="card-title">Content Manager</div>
         <div class="card-desc">
@@ -280,70 +421,30 @@
         </div>
       </a>
 
-      <!-- ── Voucher Generator (LIVE) ── -->
-      <a href="/voucher" class="feature-card">
+      <!-- VStudio -->
+      <a href="/vstudio" class="feature-card vstudio">
         <div class="card-top">
-          <div class="card-icon">📄</div>
-          <span class="badge badge-live">Live</span>
+          <div class="card-icon">🎨</div>
+          <span class="badge badge-admin">Admin</span>
         </div>
-        <div class="card-title">VTOP WEB</div>
+        <div class="card-title">VStudio</div>
         <div class="card-desc">
-          Generate hotel and tour booking confirmation PDFs instantly. Fill a form, download a print-ready PDF — no desktop app, no file sharing needed.
+          Create stunning social media content for your brand. Design posts, stories, and reels with AI-powered templates.
         </div>
         <div class="card-cta">
-          Open Voucher Generator
+          Open VStudio
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
       </a>
-
-      <!-- ── Quotation Tool (LIVE) ── -->
-      <a href="/quotation" class="feature-card">
-        <div class="card-top">
-          <div class="card-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              style="color:var(--accent)">
-              <rect x="2" y="3" width="20" height="14" rx="2"/>
-              <path d="M8 21h8M12 17v4"/>
-              <path d="M7 8h10M7 12h6"/>
-            </svg>
-          </div>
-          <span class="badge badge-live">Live</span>
-        </div>
-        <div class="card-title">Quotation Tool</div>
-        <div class="card-desc">
-          Search services and transfer rates from the live database. Build multi-service quotes with commission and VAT, then copy a formatted message straight to WhatsApp or email.
-        </div>
-        <div class="card-cta">
-          Open Quotation Tool
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </a>
-
-      <!-- ── More coming ── -->
-      <div class="feature-card coming">
-        <div class="card-top">
-          <div class="card-icon">✨</div>
-          <span class="badge badge-v3">Coming in v4</span>
-        </div>
-        <div class="card-title">More coming soon</div>
-        <div class="card-desc">
-          Future features will appear here as VIKRAM grows. Every tool is built specifically for your workflow.
-        </div>
-        <div class="card-cta">
-          Stay tuned
-        </div>
-      </div>
 
     </div>
+    {% endif %}
 
     <div class="version-row">
       <div class="version-line"></div>
-      <div class="version-tag">VIKRAM v3 · VayoAura Content Suite</div>
+      <div class="version-tag">VIKRAM v4 · VayoAura Content Suite</div>
       <div class="version-line"></div>
     </div>
   </div>

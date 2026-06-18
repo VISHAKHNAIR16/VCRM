@@ -37,15 +37,18 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # ── Feature routers ──────────────────────────────────────────────────────────
-# Each feature is a self-contained module in features/<name>/router.py
 from features.voucher.router import router as voucher_router
 app.include_router(voucher_router, prefix="/voucher", tags=["voucher"])
 
 from features.quotation.router import router as quotation_router
 app.include_router(quotation_router, prefix="/quotation", tags=["quotation"])
 
+from features.vstudio.router import router as vstudio_router
+app.include_router(vstudio_router, prefix="/vstudio", tags=["vstudio"])
+
 # ========== CONFIGURATION ==========
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+STAFF_PASSWORD = os.environ.get("STAFF_PASSWORD")  # NEW: Staff password
 SECRET_KEY = os.environ.get("SECRET_KEY")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_REPO = os.environ.get("GITHUB_REPO")
@@ -66,10 +69,107 @@ if missing_vars:
     log.error("Missing required environment variables: %s", ", ".join(missing_vars))
     raise RuntimeError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
+# Staff password is optional - if not set, staff login is disabled
+if not STAFF_PASSWORD:
+    log.warning("STAFF_PASSWORD not set — staff login disabled")
+
 log.info("VIKRAM CMS starting up")
 log.info("GitHub repo:  %s  branch: %s", GITHUB_REPO, GITHUB_BRANCH)
 log.info("R2 bucket:    %s", R2_BUCKET_NAME)
 log.info("R2 public URL: %s", R2_PUBLIC_URL)
+
+# ========== USER ROLES ==========
+class UserRole:
+    ADMIN = "admin"
+    STAFF = "staff"
+
+# ========== SESSION MANAGEMENT ==========
+serializer = URLSafeTimedSerializer(SECRET_KEY)
+
+def make_session_token(role: str) -> str:
+    """Create a session token with role information."""
+    return serializer.dumps({"authenticated": True, "role": role})
+
+def verify_session_token(token: str) -> tuple[bool, str | None]:
+    """
+    Verify session token and return (is_valid, role).
+    Returns (False, None) if invalid.
+    """
+    try:
+        data = serializer.loads(token, max_age=60 * 60 * 24 * 7)
+        if isinstance(data, dict) and data.get("authenticated"):
+            return True, data.get("role", UserRole.STAFF)
+        return False, None
+    except (BadSignature, SignatureExpired):
+        return False, None
+
+def get_token_from_request(request: Request) -> str | None:
+    return request.cookies.get("vikram_session")
+
+def get_user_role(request: Request) -> str | None:
+    """Get the user's role from the session token."""
+    token = get_token_from_request(request)
+    if not token:
+        return None
+    is_valid, role = verify_session_token(token)
+    return role if is_valid else None
+
+def is_admin(request: Request) -> bool:
+    """Check if the current user is an admin."""
+    return get_user_role(request) == UserRole.ADMIN
+
+def is_staff(request: Request) -> bool:
+    """Check if the current user is a staff member."""
+    return get_user_role(request) == UserRole.STAFF
+
+def is_authenticated(request: Request) -> bool:
+    """Check if the user is authenticated (either admin or staff)."""
+    token = get_token_from_request(request)
+    if not token:
+        return False
+    is_valid, _ = verify_session_token(token)
+    return is_valid
+
+# ========== AUTH DECORATORS ==========
+def require_auth(func):
+    """
+    Require any authenticated user (admin or staff).
+    Redirects to /login if not authenticated.
+    """
+    @wraps(func)
+    async def wrapper(request: Request, *args, **kwargs):
+        if not is_authenticated(request):
+            log.warning("Unauthenticated access attempt to %s", request.url.path)
+            return RedirectResponse("/login", status_code=302)
+        return await func(request, *args, **kwargs)
+    return wrapper
+
+def require_admin(func):
+    """
+    Require admin role only.
+    Redirects to /home if user is not admin.
+    """
+    @wraps(func)
+    async def wrapper(request: Request, *args, **kwargs):
+        if not is_admin(request):
+            log.warning("Non-admin access attempt to %s", request.url.path)
+            return RedirectResponse("/home", status_code=302)
+        return await func(request, *args, **kwargs)
+    return wrapper
+
+def require_staff(func):
+    """
+    Require staff role (or admin).
+    Staff can access basic features, admin can access everything.
+    """
+    @wraps(func)
+    async def wrapper(request: Request, *args, **kwargs):
+        if not is_authenticated(request):
+            log.warning("Unauthenticated access attempt to %s", request.url.path)
+            return RedirectResponse("/login", status_code=302)
+        # Staff and admin both can access
+        return await func(request, *args, **kwargs)
+    return wrapper
 
 # ========== MANAGED PAGES ==========
 MANAGED_PAGES = {
@@ -87,7 +187,7 @@ MANAGED_PAGES = {
         "r2_prefix":     "media/attractions",
         "image_dir":     "images",
         "video_dir":     "videos",
-        "insert_marker": None,  # dynamic — see ATTRACTIONS_LOCATIONS
+        "insert_marker": None,
     },
 }
 
@@ -121,31 +221,17 @@ ATTRACTIONS_COUNTRIES = {
     "japan":     {"label": "Japan",     "cities": {"must-visit": "Must Visit"}},
 }
 
-# ========== SESSION MANAGEMENT ==========
-serializer = URLSafeTimedSerializer(SECRET_KEY)
-
-def make_session_token() -> str:
+# ========== SESSION MANAGEMENT (Legacy) ==========
+# Keep legacy functions for backward compatibility
+def make_session_token_legacy() -> str:
     return serializer.dumps("authenticated")
 
-def verify_session_token(token: str) -> bool:
+def verify_session_token_legacy(token: str) -> bool:
     try:
         serializer.loads(token, max_age=60 * 60 * 24 * 7)
         return True
     except (BadSignature, SignatureExpired):
         return False
-
-def get_token_from_request(request: Request) -> str | None:
-    return request.cookies.get("vikram_session")
-
-def require_auth(func):
-    @wraps(func)
-    async def wrapper(request: Request, *args, **kwargs):
-        token = get_token_from_request(request)
-        if not token or not verify_session_token(token):
-            log.warning("Unauthenticated access attempt to %s", request.url.path)
-            return RedirectResponse("/login", status_code=302)
-        return await func(request, *args, **kwargs)
-    return wrapper
 
 # ========== R2 CLOUDFLARE STORAGE ==========
 def get_r2_client():
@@ -173,10 +259,6 @@ def build_r2_key(page_key: str, filename: str, content_type: str) -> str:
     return key
 
 def upload_to_r2(page_key: str, file_bytes: bytes, filename: str, content_type: str) -> str:
-    """
-    Upload file bytes to Cloudflare R2 and return the absolute public URL.
-    Always returns an ABSOLUTE URL (https://...) — never a relative path.
-    """
     if not file_bytes:
         raise ValueError("upload_to_r2 received empty file_bytes — nothing to upload")
 
@@ -229,10 +311,6 @@ def build_news_gallery_array_item(
     content_type: str,
     original_filename: str,
 ) -> str:
-    """
-    Build a JS galleryItems entry using ABSOLUTE R2 URLs.
-    New items always use batch: 1 so they appear in the first loaded set.
-    """
     media_type = "video" if is_video else "image"
     src_url = media_url
 
@@ -254,10 +332,6 @@ def build_attractions_html_card(
     content_type: str,
     original_filename: str,
 ) -> str:
-    """
-    Build an HTML card matching the exact structure in attractions.html.
-    Uses absolute R2 URLs.
-    """
     safe_caption = html_lib.escape(caption or "VayoAura attraction")
     safe_alt     = html_lib.escape(caption or "VayoAura attraction media", quote=True)
     safe_url     = html_lib.escape(media_url, quote=True)
@@ -323,9 +397,6 @@ def inject_media_into_html(
     country_key: str = "",
     city_key: str = "",
 ) -> str:
-    """
-    Inject the generated markup into the HTML string at the correct marker.
-    """
     tag = build_media_markup(
         page_key, media_url, caption, is_video, content_type, original_filename
     )
@@ -371,29 +442,40 @@ async def root():
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     token = get_token_from_request(request)
-    if token and verify_session_token(token):
-        return RedirectResponse("/home", status_code=302)
+    if token:
+        is_valid, _ = verify_session_token(token)
+        if is_valid:
+            return RedirectResponse("/home", status_code=302)
     return templates.TemplateResponse("login.html", {"request": request, "error": None})
 
 @app.post("/login", response_class=HTMLResponse)
 async def login_submit(request: Request, password: str = Form(...)):
+    # Check if password matches admin or staff
+    role = None
+    
     if password == ADMIN_PASSWORD:
-        log.info("Login success")
-        token    = make_session_token()
-        response = RedirectResponse("/home", status_code=302)
-        response.set_cookie(
-            key="vikram_session",
-            value=token,
-            httponly=True,
-            samesite="lax",
-            max_age=60 * 60 * 24 * 7,
+        role = UserRole.ADMIN
+        log.info("Admin login success")
+    elif STAFF_PASSWORD and password == STAFF_PASSWORD:
+        role = UserRole.STAFF
+        log.info("Staff login success")
+    else:
+        log.warning("Login failed — wrong password")
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Incorrect password. Please try again."},
         )
-        return response
-    log.warning("Login failed — wrong password")
-    return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "error": "Incorrect password. Please try again."},
+    
+    token = make_session_token(role)
+    response = RedirectResponse("/home", status_code=302)
+    response.set_cookie(
+        key="vikram_session",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        max_age=60 * 60 * 24 * 7,
     )
+    return response
 
 @app.get("/logout")
 async def logout():
@@ -405,10 +487,67 @@ async def logout():
 @app.get("/home", response_class=HTMLResponse)
 @require_auth
 async def home(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    """Home page with role-based feature visibility."""
+    role = get_user_role(request)
+    is_admin_user = (role == UserRole.ADMIN)
+    
+    # Features available to all authenticated users
+    all_features = [
+        {
+            "id": "quotation",
+            "title": "Quotation Tool",
+            "icon": "💰",
+            "description": "Search services and build quotes with commission and VAT.",
+            "url": "/quotation",
+            "badge": "Live" if is_admin_user else "Staff Access",
+            "badge_class": "badge-live" if is_admin_user else "badge-staff",
+        },
+        {
+            "id": "voucher",
+            "title": "VTOP WEB",
+            "icon": "📄",
+            "description": "Generate hotel and tour booking confirmation PDFs instantly.",
+            "url": "/voucher",
+            "badge": "Live" if is_admin_user else "Staff Access",
+            "badge_class": "badge-live" if is_admin_user else "badge-staff",
+        },
+    ]
+    
+    # Admin-only features
+    admin_features = [
+        {
+            "id": "dashboard",
+            "title": "Content Manager",
+            "icon": "📤",
+            "description": "Upload images and videos to your website. Files go to Cloudflare R2.",
+            "url": "/dashboard",
+            "badge": "Admin Only",
+            "badge_class": "badge-admin",
+        },
+        {
+            "id": "vstudio",
+            "title": "VStudio",
+            "icon": "🎨",
+            "description": "Create stunning social media content for your brand.",
+            "url": "/vstudio",
+            "badge": "Admin Only",
+            "badge_class": "badge-admin",
+        },
+    ]
+    
+    return templates.TemplateResponse(
+        "home.html",
+        {
+            "request": request,
+            "features": all_features,
+            "admin_features": admin_features if is_admin_user else [],
+            "is_admin": is_admin_user,
+            "role": role,
+        }
+    )
 
 @app.get("/dashboard", response_class=HTMLResponse)
-@require_auth
+@require_admin  # Only admin can access
 async def dashboard(request: Request):
     return templates.TemplateResponse(
         "dashboard.html",
@@ -420,7 +559,7 @@ async def dashboard(request: Request):
     )
 
 @app.post("/upload")
-@require_auth
+@require_admin  # Only admin can upload
 async def upload(
     request:     Request,
     page_key:    str = Form(...),
@@ -429,9 +568,6 @@ async def upload(
     city_key:    str = Form(""),
     file:        UploadFile = File(...),
 ):
-    """
-    Upload a media file to R2 and inject the correct markup into the website HTML.
-    """
     log.info(
         "Upload request  page=%s  country=%s  city=%s  filename=%s  content_type=%s",
         page_key, country_key or "-", city_key or "-",
@@ -574,12 +710,8 @@ from features.voucher.generator import (
 
 @app.on_event("startup")
 async def startup_event():
-    """Pre-load templates, CSS, images. Also guards the quotation DB."""
     log.info("Starting application and warming up caches...")
 
-    # ── Quotation DB guard ────────────────────────────────────────────────────
-    # quotation.db should be committed to git.
-    # If missing (e.g. forgotten in .gitignore), rebuild it automatically.
     try:
         from features.quotation.build_db import DB_PATH as _QDB, main as _build_qdb
         if not _QDB.exists():
@@ -591,7 +723,6 @@ async def startup_event():
     except Exception as _e:
         log.error("quotation.db check failed: %s", _e)
 
-    # ── Voucher cache warmup ──────────────────────────────────────────────────
     try:
         warmup_caches()
         stats = get_cache_stats()
@@ -600,19 +731,17 @@ async def startup_event():
         log.warning("Cache warmup failed (will load on first request): %s", e)
 
 @app.get("/voucher/generate-hotel-pdf", response_class=HTMLResponse)
-@require_auth
+@require_staff  # Staff can access
 async def hotel_voucher_form(request: Request):
-    """Display the hotel voucher form."""
     return templates.TemplateResponse("hotel_voucher_form.html", {"request": request})
 
 @app.get("/voucher/generate-tour-pdf", response_class=HTMLResponse)
-@require_auth
+@require_staff  # Staff can access
 async def tour_voucher_form(request: Request):
-    """Display the tour voucher form."""
     return templates.TemplateResponse("tour_voucher_form.html", {"request": request})
 
 @app.post("/voucher/generate-hotel-pdf")
-@require_auth
+@require_staff
 async def generate_hotel_pdf_endpoint(
     request: Request,
     booking_number: str = Form(...),
@@ -633,7 +762,6 @@ async def generate_hotel_pdf_endpoint(
     num_children: str = Form("0"),
     room_type: str = Form(...),
 ):
-    """Generate hotel voucher PDF from form data."""
     try:
         form_data = {
             "booking_number": booking_number,
@@ -670,7 +798,7 @@ async def generate_hotel_pdf_endpoint(
         )
 
 @app.post("/voucher/generate-tour-pdf")
-@require_auth
+@require_staff
 async def generate_tour_pdf_endpoint(
     request: Request,
     booking_number: str = Form(...),
@@ -688,7 +816,6 @@ async def generate_tour_pdf_endpoint(
     num_children: str = Form("0"),
     service_type: str = Form(...),
 ):
-    """Generate tour voucher PDF from form data."""
     try:
         form_data = {
             "booking_number": booking_number,
@@ -722,9 +849,8 @@ async def generate_tour_pdf_endpoint(
         )
 
 @app.get("/voucher/cache-stats")
-@require_auth
+@require_admin  # Only admin can see cache stats
 async def voucher_cache_stats():
-    """Get cache statistics for monitoring."""
     return JSONResponse(get_cache_stats())
 
 @app.get("/health")
@@ -732,6 +858,7 @@ async def health():
     return {
         "status":      "ok",
         "app":         "VIKRAM CMS",
+        "version":     "4.0.0",
         "timestamp":   datetime.utcnow().isoformat(),
         "r2_bucket":   R2_BUCKET_NAME,
         "github_repo": GITHUB_REPO,

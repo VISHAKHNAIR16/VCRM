@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VStudio — VIKRAM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0a0a0f;
+      --surface:      #111118;
+      --surface2:     #16161f;
+      --surface3:     #1c1c28;
+      --border:       rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.15);
+      --accent:       #e8c547;
+      --accent-dim:   rgba(232,197,71,0.12);
+      --accent-dim2:  rgba(232,197,71,0.06);
+      --text:         #f0ede8;
+      --muted:        #6b6880;
+      --muted2:       #3d3b4a;
+      --vstudio:      #7c3aed;
+      --vstudio-dim:  rgba(124,58,237,0.12);
+      --vstudio-glow: rgba(124,58,237,0.2);
+      --vstudio-bg:   rgba(124,58,237,0.04);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(124,58,237,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,58,237,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Purple glow blob */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(124,58,237,0.05) 0%, transparent 65%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; gap: 16px;
+      padding: 24px 48px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-left {
+      display: flex; align-items: center; gap: 16px;
+    }
+
+    .header-right {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .back-btn:hover {
+      color: var(--text); border-color: var(--border-hover);
+    }
+    .back-btn svg {
+      transition: transform 0.2s;
+    }
+    .back-btn:hover svg {
+      transform: translateX(-2px);
+    }
+
+    .logo-row { display: flex; align-items: center; gap: 12px; }
+
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--vstudio); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px;
+      color: #fff; letter-spacing: -1px;
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 18px; letter-spacing: 0.08em;
+    }
+    .logo-text span { color: var(--vstudio); }
+
+    .logout-btn {
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .logout-btn:hover { color: var(--text); border-color: var(--border-hover); }
+
+    /* ── Beta badge ── */
+    .beta-badge {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 99px;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.3);
+      color: #a78bfa;
+    }
+
+    /* ── Main ── */
+    .shell {
+      position: relative; z-index: 1;
+      max-width: 960px; margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .hero {
+      margin-bottom: 48px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--vstudio-dim);
+      border: 1px solid rgba(124,58,237,0.25);
+      border-radius: 99px;
+      padding: 5px 14px;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: #a78bfa;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(36px, 5vw, 48px);
+      font-weight: 800; line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 em {
+      font-style: normal; color: var(--vstudio);
+    }
+
+    .hero p {
+      font-size: 17px; color: var(--muted);
+      max-width: 560px; line-height: 1.65;
+      margin: 0 auto;
+    }
+
+    /* ── Coming Soon Grid ── */
+    .section-label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 20px;
+    }
+
+    .studio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .studio-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 32px 28px 28px;
+      text-align: center;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .studio-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 40%, rgba(124,58,237,0.06), transparent 60%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+
+    .studio-card:hover {
+      border-color: var(--vstudio);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(124,58,237,0.1);
+    }
+    .studio-card:hover::before { opacity: 1; }
+
+    .studio-icon {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      background: var(--vstudio-dim);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px;
+      margin: 0 auto 16px;
+    }
+
+    .studio-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .studio-desc {
+      font-size: 13px; color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .studio-status {
+      margin-top: 16px;
+      display: inline-block;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.05em;
+      padding: 4px 14px;
+      border-radius: 99px;
+      background: var(--vstudio-dim);
+      border: 1px solid rgba(124,58,237,0.2);
+      color: #a78bfa;
+    }
+
+    /* ── Coming Soon Feature Cards ── */
+    .coming-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .coming-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0.6;
+    }
+
+    .coming-item .icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .coming-item .info {
+      font-size: 13px;
+    }
+    .coming-item .info .name { color: var(--text); font-weight: 500; }
+    .coming-item .info .sub { color: var(--muted); font-size: 11px; }
+
+    /* ── Version tag ── */
+    .version-row {
+      margin-top: 64px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .version-line { flex: 1; height: 1px; background: var(--border); }
+    .version-tag {
+      font-size: 11px; color: var(--muted);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 16px 16px; flex-wrap: wrap; }
+      .header-left { flex-wrap: wrap; }
+      .shell { padding: 32px 16px 60px; }
+      .studio-grid { grid-template-columns: 1fr; }
+      .coming-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ── HEADER ──────────────────────────────────────────────────────────────── -->
+  <header>
+    <div class="header-left">
+      <a href="/home" class="back-btn">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Home
+      </a>
+      <div class="logo-row">
+        <div class="logo-mark">VS</div>
+        <div class="logo-text">V<span>Studio</span></div>
+      </div>
+      <span class="beta-badge">Beta</span>
+    </div>
+    <div class="header-right">
+      <a href="/logout" class="logout-btn">Sign out</a>
+    </div>
+  </header>
+
+  <!-- ── MAIN ────────────────────────────────────────────────────────────────── -->
+  <div class="shell">
+
+    <div class="hero">
+      <div class="hero-eyebrow">
+        <svg width="8" height="8" viewBox="0 0 8 8">
+          <circle cx="4" cy="4" r="4" fill="#7c3aed"/>
+        </svg>
+        Social Media Studio
+      </div>
+      <h1>Create content that<br><em>captures attention.</em></h1>
+      <p>
+        VStudio helps you design stunning social media content for your brand.
+        From Instagram posts to Facebook ads — everything in one place.
+      </p>
+    </div>
+
+    <!-- ── Studio Tools ──────────────────────────────────────────────────────── -->
+    <div class="section-label">Studio Tools</div>
+
+    <div class="studio-grid">
+
+      <!-- Post Designer -->
+      <div class="studio-card">
+        <div class="studio-icon">🖼️</div>
+        <div class="studio-title">Post Designer</div>
+        <div class="studio-desc">
+          Create beautiful social media posts with AI-powered templates. Perfect for Instagram, Facebook, and LinkedIn.
+        </div>
+        <span class="studio-status">🚀 Coming Soon</span>
+      </div>
+
+      <!-- Story Creator -->
+      <div class="studio-card">
+        <div class="studio-icon">📱</div>
+        <div class="studio-title">Story Creator</div>
+        <div class="studio-desc">
+          Design engaging Instagram and Facebook Stories with animated elements, stickers, and text overlays.
+        </div>
+        <span class="studio-status">🚀 Coming Soon</span>
+      </div>
+
+      <!-- Reel Studio -->
+      <div class="studio-card">
+        <div class="studio-icon">🎬</div>
+        <div class="studio-title">Reel Studio</div>
+        <div class="studio-desc">
+          Create short-form video content for Reels, TikTok, and YouTube Shorts with AI-powered editing tools.
+        </div>
+        <span class="studio-status">🚀 Coming Soon</span>
+      </div>
+
+      <!-- Brand Kit -->
+      <div class="studio-card">
+        <div class="studio-icon">🎨</div>
+        <div class="studio-title">Brand Kit</div>
+        <div class="studio-desc">
+          Store your brand colors, fonts, and logos. Apply them across all your designs with one click.
+        </div>
+        <span class="studio-status">🚀 Coming Soon</span>
+      </div>
+
+    </div>
+
+    <!-- ── Coming Features ───────────────────────────────────────────────────── -->
+    <div style="margin-top: 48px;">
+      <div class="section-label">More features coming</div>
+      <div class="coming-grid">
+        <div class="coming-item">
+          <span class="icon">📊</span>
+          <div class="info">
+            <div class="name">Content Calendar</div>
+            <div class="sub">Schedule and plan your posts</div>
+          </div>
+        </div>
+        <div class="coming-item">
+          <span class="icon">🤖</span>
+          <div class="info">
+            <div class="name">AI Caption Generator</div>
+            <div class="sub">Write engaging captions instantly</div>
+          </div>
+        </div>
+        <div class="coming-item">
+          <span class="icon">📈</span>
+          <div class="info">
+            <div class="name">Analytics Dashboard</div>
+            <div class="sub">Track your content performance</div>
+          </div>
+        </div>
+        <div class="coming-item">
+          <span class="icon">🔄</span>
+          <div class="info">
+            <div class="name">Multi-Platform Publishing</div>
+            <div class="sub">Post to all platforms at once</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Version ───────────────────────────────────────────────────────────── -->
+    <div class="version-row">
+      <div class="version-line"></div>
+      <div class="version-tag">VStudio v1.0 · Social Media Studio</div>
+      <div class="version-line"></div>
+    </div>
+
+  </div>
+</body>
+</html>
