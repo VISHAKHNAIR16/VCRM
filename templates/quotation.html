@@ -865,7 +865,6 @@ function renderResultCard(svc, idx) {
   const pricePreview = svc.rates && svc.rates.length 
     ? `from ฿${Math.min(...svc.rates.map(r => r.price_thb)).toLocaleString()}`
     : 'No rates';
-  
 
   return `
 <div class="result-card ${isSelected ? 'selected' : ''}" 
@@ -877,8 +876,8 @@ function renderResultCard(svc, idx) {
       <div class="result-card-meta">
         <span class="badge badge-dest">${escHtml(svc.destination)}</span>
         <span class="badge">${escHtml(svc.service_type)}</span>
+        ${svc.supplier ? `<span class="badge" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--muted)">${escHtml(svc.supplier)}</span>` : ''}
         ${svc.tour_code ? `<span class="badge">${escHtml(svc.tour_code)}</span>` : ''}
-        ${svc.source ? `<span class="badge">${escHtml(svc.source)}</span>` : ''}
         ${svc.duration ? `<span>${escHtml(svc.duration)}</span>` : ''}
       </div>
     </div>

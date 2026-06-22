@@ -94,22 +94,24 @@ def search_services(query: str, limit: int = 50) -> list[dict]:
         sql = """
             SELECT DISTINCT s.id, s.service_name, s.destination, s.service_type,
                    s.tour_code, s.duration, s.includes_vat, s.notes, s.source,
-                   s.company_code
+                   s.company_code, s.supplier
             FROM services s
             WHERE s.service_name LIKE ? 
                OR s.destination LIKE ?
                OR s.service_type LIKE ?
+               OR s.supplier LIKE ?
             ORDER BY 
                 CASE 
                     WHEN s.service_name LIKE ? THEN 1
                     WHEN s.destination LIKE ? THEN 2
                     WHEN s.service_type LIKE ? THEN 3
-                    ELSE 4
+                    WHEN s.supplier LIKE ? THEN 4
+                    ELSE 5
                 END,
                 s.service_name
             LIMIT ?
         """
-        params = [search_term] * 6 + [limit]
+        params = [search_term] * 4 + [search_term] * 4 + [limit]
         
         service_rows = conn.execute(sql, params).fetchall()
         result = []
@@ -150,6 +152,7 @@ def search_services(query: str, limit: int = 50) -> list[dict]:
                 "notes":        svc["notes"],
                 "source":       svc["source"],
                 "company_code": svc["company_code"],
+                "supplier":     svc["supplier"],  # NEW: supplier name
                 "rates":        [dict(r) for r in rate_rows],
                 "zones":        [dict(z) for z in zone_rows],
                 "addons":       [dict(a) for a in addon_rows],
@@ -161,7 +164,7 @@ def get_service_by_id(service_id: int) -> dict | None:
     with _db() as conn:
         svc = conn.execute(
             """SELECT id, service_name, destination, service_type, tour_code,
-                      duration, includes_vat, notes, source, company_code
+                      duration, includes_vat, notes, source, company_code, supplier
                FROM services WHERE id = ?""",
             (service_id,)
         ).fetchone()
@@ -187,6 +190,7 @@ def get_service_by_id(service_id: int) -> dict | None:
             "notes":        svc["notes"],
             "source":       svc["source"],
             "company_code": svc["company_code"],
+            "supplier":     svc["supplier"],  # NEW: supplier name
             "rates":        [dict(r) for r in rate_rows],
         }
 

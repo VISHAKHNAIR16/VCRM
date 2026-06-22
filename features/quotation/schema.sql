@@ -1,8 +1,7 @@
 -- =============================================================================
 -- schema.sql
--- Quotation Tool — SQLite Database Schema
--- Version: 1.1.0  (added tour_code, includes_vat, source to services;
---                   added zone_surcharges and addons tables)
+-- Quotation Tool — SQLite Database Schema (Unified Version)
+-- Version: 2.0.0  (Unified master Excel support with supplier column)
 -- =============================================================================
 --
 -- HOW TO USE:
@@ -18,9 +17,8 @@
 --   zone_surcharges → Optional zone-based surcharges per service
 --   addons          → Optional purchasable add-ons per service
 --
--- DATA SOURCES:
---   BKK_PTT.xlsx    → source = 'DIVINE'   | destination = Bangkok / Pattaya / etc.
---   GOOD_DAY.xlsx   → source = 'GOOD_DAY' | destination = Phuket / Krabi / Samui
+-- DATA SOURCE:
+--   MASTER_RATES.xlsx → Unified Excel with all services and supplier column
 --
 -- RATE TYPES:
 --   Private         → Whole vehicle booked (price is per vehicle)
@@ -82,6 +80,9 @@ CREATE TABLE IF NOT EXISTS services (
     -- Which source file / company produced this row (mirrors company_code for now)
     source       TEXT    DEFAULT NULL,  -- e.g. 'DIVINE', 'GOOD_DAY'
 
+    -- Supplier name from the master Excel (NEW)
+    supplier     TEXT    DEFAULT NULL,
+
     -- Audit
     created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
 );
@@ -99,8 +100,6 @@ CREATE TABLE IF NOT EXISTS rates (
     rate_type    TEXT    NOT NULL CHECK(rate_type IN ('Private', 'SIC')),
 
     -- Vehicle type — NULL for SIC/per-person rates
-    -- BKK_PTT uses: CAR, SUV, VAN
-    -- GOOD_DAY uses: Sedan/SUV, D4D Van, Camry, Hyundai, VIP Van, Alphard, Car/Fortuner
     vehicle      TEXT,
 
     -- Pax range label — NULL means "applies to all"
@@ -142,7 +141,6 @@ CREATE TABLE IF NOT EXISTS ferry_schedules (
 -- =============================================================================
 -- TABLE: zone_surcharges
 -- Optional zone-based surcharges that apply on top of the base rate.
--- e.g. "Late Night Surcharge: +200 THB per vehicle"
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS zone_surcharges (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -156,7 +154,6 @@ CREATE TABLE IF NOT EXISTS zone_surcharges (
 -- =============================================================================
 -- TABLE: addons
 -- Optional add-ons a customer can purchase alongside a service.
--- e.g. "Snorkelling Equipment: Adult 300 THB, Child 200 THB"
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS addons (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -186,6 +183,10 @@ CREATE INDEX IF NOT EXISTS idx_services_type
 -- Filter by company
 CREATE INDEX IF NOT EXISTS idx_services_company
     ON services(company_code);
+
+-- Filter by supplier (NEW)
+CREATE INDEX IF NOT EXISTS idx_services_supplier
+    ON services(supplier);
 
 -- Join: rates → services
 CREATE INDEX IF NOT EXISTS idx_rates_service
