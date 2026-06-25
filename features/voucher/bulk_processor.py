@@ -126,7 +126,7 @@ class BulkVoucherProcessor:
         'country': '',
         'address': '',
         'contact_number': '',
-        'cancellation_policy': 'Standard cancellation policy applies',
+        'cancellation_policy': 'NA',
         'check_in': '',
         'check_out': '',
         'book_payable_by': 'Guest',
@@ -143,7 +143,7 @@ class BulkVoucherProcessor:
         'pickup_from': '',
         'drop_to': '',
         'pick_time': '',
-        'cancellation_policy': 'Standard cancellation policy applies',
+        'cancellation_policy': 'NA',
         'book_payable_by': 'Guest',
     }
     

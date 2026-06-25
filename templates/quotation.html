@@ -6,6 +6,8 @@
 <title>Quotation Tool — VIKRAM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+<!-- SheetJS — Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* ══════════════════════════════════════════════════════════════
    TOKENS
@@ -99,6 +101,147 @@ body::before{
   transition:color .3s;
 }
 .header-fx.loaded{color:var(--green)}
+
+/* ══════════════════════════════════════════════════════════════
+   FILTERS SECTION
+══════════════════════════════════════════════════════════════ */
+.filters-section{
+  margin-bottom:20px;
+}
+
+.filters-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px 16px;
+}
+
+.filter-group{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:1 1 140px;
+  min-width:120px;
+}
+
+.filter-group label{
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  color:var(--muted);
+  white-space:nowrap;
+}
+
+.filter-group select{
+  flex:1;
+  padding:6px 28px 6px 10px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  color:var(--text);
+  outline:none;
+  cursor:pointer;
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6880'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+  transition:border-color .2s,box-shadow .2s;
+  min-width:80px;
+}
+
+.filter-group select:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-dim);
+}
+
+.filter-group select option{
+  background:var(--surface2);
+  color:var(--text);
+}
+
+.filter-group select:disabled{
+  opacity:0.4;
+  cursor:not-allowed;
+}
+
+.filter-clear-btn{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding:5px 12px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  color:var(--muted);
+  cursor:pointer;
+  transition:color .2s,border-color .2s,background .2s;
+  white-space:nowrap;
+}
+
+.filter-clear-btn:hover{
+  color:var(--text);
+  border-color:var(--border-h);
+  background:var(--surface3);
+}
+
+.filter-clear-btn.has-filters{
+  color:var(--accent);
+  border-color:rgba(232,197,71,0.3);
+}
+
+.filter-clear-btn.has-filters:hover{
+  background:var(--accent-dim);
+}
+
+.filter-divider{
+  width:1px;
+  height:24px;
+  background:var(--border);
+  flex-shrink:0;
+}
+
+/* ── Active filter pills ── */
+.active-filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+  padding-left:4px;
+}
+
+.filter-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:11px;
+  padding:3px 8px 3px 10px;
+  background:var(--accent-dim);
+  border:1px solid rgba(232,197,71,0.2);
+  border-radius:99px;
+  color:var(--accent);
+}
+
+.filter-pill .remove{
+  cursor:pointer;
+  opacity:0.6;
+  transition:opacity .2s;
+  font-size:12px;
+  line-height:1;
+}
+
+.filter-pill .remove:hover{
+  opacity:1;
+}
 
 /* ══════════════════════════════════════════════════════════════
    LAYOUT
@@ -303,7 +446,7 @@ body::before{
    SEARCH
 ══════════════════════════════════════════════════════════════ */
 .search-section{
-  margin-bottom:24px;
+  margin-bottom:16px;
 }
 
 .search-bar{
@@ -338,7 +481,7 @@ body::before{
 
 .search-hint{
   font-size:12px;color:var(--muted2);
-  margin-top:8px;
+  margin-top:6px;
   padding-left:4px;
 }
 
@@ -598,6 +741,10 @@ body::before{
   }
   .sidebar-items{max-height:calc(50vh - 220px)}
   .detail-rate-grid{grid-template-columns:1fr 1fr}
+  .filters-row{flex-direction:column;align-items:stretch}
+  .filter-group{flex:1 1 auto}
+  .filter-divider{display:none}
+  .filter-clear-btn{align-self:flex-end}
 }
 
 .sidebar-handle{display:none}
@@ -629,6 +776,62 @@ body::before{
   <!-- ── MAIN CONTENT ──────────────────────────────────────────────────────── -->
   <div class="main-content">
 
+    <!-- ── FILTERS ───────────────────────────────────────────────────────────── -->
+    <div class="filters-section">
+      <div class="filters-row">
+        
+        <!-- City Filter -->
+        <div class="filter-group">
+          <label>City</label>
+          <select id="filter-city" onchange="applyFilters()">
+            <option value="">All Cities</option>
+            {% for city in cities %}
+            <option value="{{ city }}">{{ city }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <!-- Supplier Filter -->
+        <div class="filter-group">
+          <label>Supplier</label>
+          <select id="filter-supplier" onchange="applyFilters()">
+            <option value="">All Suppliers</option>
+            {% for supplier in suppliers %}
+            <option value="{{ supplier }}">{{ supplier }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <!-- Service Type Filter -->
+        <div class="filter-group">
+          <label>Type</label>
+          <select id="filter-type" onchange="applyFilters()">
+            <option value="">All Types</option>
+            {% for type in service_types %}
+            <option value="{{ type }}">{{ type }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <!-- Clear Filters Button -->
+        <button class="filter-clear-btn" id="clear-filters-btn" onclick="clearAllFilters()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/>
+          </svg>
+          Clear Filters
+        </button>
+      </div>
+
+      <!-- Active Filters Display -->
+      <div class="active-filters" id="active-filters"></div>
+    </div>
+
     <!-- Search -->
     <div class="search-section">
       <div class="search-bar">
@@ -637,21 +840,21 @@ body::before{
           <path d="m21 21-4.35-4.35"/>
         </svg>
         <input type="text" id="search-input" 
-               placeholder="Search services by name, destination, or type…"
-               oninput="debouncedSearch()"
+               placeholder="Search services (e.g. 'airport to hotel', 'phuket transfer')…"
+               oninput="handleSearchInput()"
                autofocus>
         <button class="btn btn-primary" onclick="doSearch()">
           <span id="search-spinner" style="display:none" class="spinner"></span>
           Search
         </button>
       </div>
-      <div class="search-hint" id="search-hint">Type at least 2 characters to search</div>
+      <div class="search-hint" id="search-hint">Search for services by name, destination, supplier, or type</div>
     </div>
 
     <!-- Results -->
     <div class="results-header">
       <span class="count" id="result-count"></span>
-      <button class="clear-btn" onclick="clearSearch()" id="clear-btn" style="display:none">Clear results</button>
+      <button class="clear-btn" onclick="clearResults()" id="clear-btn" style="display:none">Clear results</button>
     </div>
     <div id="results-list"></div>
 
@@ -718,6 +921,9 @@ body::before{
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
+      <button class="btn btn-ghost btn-sm" id="export-btn" onclick="exportToExcel()">
+        ⬇ Export to Excel
+      </button>
       <button class="btn btn-primary btn-sm" id="copy-btn" onclick="copyQuotation()">
         Copy to Clipboard
       </button>
@@ -727,7 +933,7 @@ body::before{
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     JAVASCRIPT (with DEBUG statements)
+     JAVASCRIPT
 ═══════════════════════════════════════════════════════════════════════════ -->
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -736,15 +942,12 @@ let cart         = [];
 let selectedService = null;
 let allResults   = [];
 let searchTimeout = null;
-
-
+let searchQuery  = '';
 
 // ── AUTH-AWARE FETCH ──────────────────────────────────────────────────────────
 async function apiFetch(url) {
-
   const r = await fetch(url);
   if (r.status === 401) { 
-
     window.location.href = '/login'; 
     return null; 
   }
@@ -782,27 +985,93 @@ function thbToUsd(thb) {
   return (rate && thb) ? (thb / rate).toFixed(2) : null;
 }
 
-// ── SEARCH ────────────────────────────────────────────────────────────────────
-function debouncedSearch() {
+// ── FILTERS ────────────────────────────────────────────────────────────────────
+function applyFilters() {
+  updateActiveFilters();
+  // If there's a search query, re-search with filters
+  if (searchQuery && searchQuery.length > 0) {
+    doSearch();
+  }
+}
 
-  clearTimeout(searchTimeout);
-  const q = document.getElementById('search-input').value.trim();
-
-  if (q.length < 2) {
-    document.getElementById('search-hint').textContent = 'Type at least 2 characters to search';
+function updateActiveFilters() {
+  const container = document.getElementById('active-filters');
+  const city = document.getElementById('filter-city').value;
+  const supplier = document.getElementById('filter-supplier').value;
+  const type = document.getElementById('filter-type').value;
+  
+  let filters = [];
+  if (city) filters.push({ label: `City: ${city}`, key: 'city', value: city });
+  if (supplier) filters.push({ label: `Supplier: ${supplier}`, key: 'supplier', value: supplier });
+  if (type) filters.push({ label: `Type: ${type}`, key: 'type', value: type });
+  
+  if (filters.length === 0) {
+    container.innerHTML = '';
+    document.getElementById('clear-filters-btn').classList.remove('has-filters');
     return;
   }
-  document.getElementById('search-hint').textContent = 'Searching…';
+  
+  document.getElementById('clear-filters-btn').classList.add('has-filters');
+  
+  container.innerHTML = filters.map(f => `
+    <span class="filter-pill">
+      ${f.label}
+      <span class="remove" onclick="removeFilter('${f.key}')">×</span>
+    </span>
+  `).join('');
+}
+
+function removeFilter(key) {
+  if (key === 'city') document.getElementById('filter-city').value = '';
+  if (key === 'supplier') document.getElementById('filter-supplier').value = '';
+  if (key === 'type') document.getElementById('filter-type').value = '';
+  applyFilters();
+}
+
+function clearAllFilters() {
+  document.getElementById('filter-city').value = '';
+  document.getElementById('filter-supplier').value = '';
+  document.getElementById('filter-type').value = '';
+  updateActiveFilters();
+  if (searchQuery && searchQuery.length > 0) {
+    doSearch();
+  }
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+function handleSearchInput() {
+  clearTimeout(searchTimeout);
+  const q = document.getElementById('search-input').value.trim();
+  searchQuery = q;
+  
+  // Show hint
+  const hint = document.getElementById('search-hint');
+  if (q.length === 0) {
+    hint.textContent = 'Search for services by name, destination, supplier, or type';
+    // If there are filters, still search
+    const hasFilters = document.getElementById('filter-city').value || 
+                       document.getElementById('filter-supplier').value || 
+                       document.getElementById('filter-type').value;
+    if (hasFilters) {
+      searchTimeout = setTimeout(() => doSearch(), 100);
+    }
+    return;
+  }
+  
+  hint.textContent = 'Searching…';
   searchTimeout = setTimeout(() => {
     doSearch();
-  }, 400);
+  }, 300);
 }
 
 async function doSearch() {
   const q = document.getElementById('search-input').value.trim();
-  if (q.length < 2) {
-    return;
-  }
+  const city = document.getElementById('filter-city').value;
+  const supplier = document.getElementById('filter-supplier').value;
+  const type = document.getElementById('filter-type').value;
+  
+  searchQuery = q;
 
   const spinner = document.getElementById('search-spinner');
   spinner.style.display = 'inline-block';
@@ -810,56 +1079,73 @@ async function doSearch() {
   const list = document.getElementById('results-list');
   list.innerHTML = `<div class="empty-state"><span class="spinner" style="margin-right:0;display:inline-block;width:24px;height:24px;border-width:3px"></span><br>Searching…</div>`;
 
-  const url = `/quotation/api/search?q=${encodeURIComponent(q)}&limit=50`;
+  const params = new URLSearchParams();
+  if (q) params.append('q', q);
+  if (city) params.append('city', city);
+  if (supplier) params.append('supplier', supplier);
+  if (type) params.append('service_type', type);
+  params.append('limit', '100');
+
+  const url = `/quotation/api/search?${params.toString()}`;
+  console.log('Searching with URL:', url);
   
   const r = await apiFetch(url);
   spinner.style.display = 'none';
 
-  if (!r) {
-    return;
-  }
+  if (!r) return;
   
-  const data = await r.json();
+  try {
+    const data = await r.json();
+    console.log('Search results:', data.length);
 
-  if (data.error) {
-    list.innerHTML = `<div class="empty-state">Error: ${data.error}</div>`;
-    return;
+    if (data.error) {
+      list.innerHTML = `<div class="empty-state">Error: ${data.error}</div>`;
+      return;
+    }
+
+    allResults = data;
+    for (const svc of allResults) {
+      svc._selectedRate = null;
+      svc._selectedAddons = [];
+    }
+    selectedService = null;
+
+    document.getElementById('result-count').textContent = `${data.length} result${data.length > 1 ? 's' : ''}`;
+    document.getElementById('clear-btn').style.display = data.length ? 'inline' : 'none';
+
+    if (!data.length) {
+      list.innerHTML = `<div class="empty-state">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        No services found
+        <div class="sub">Try adjusting your search or filters</div>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = data.map((svc, i) => renderResultCard(svc, i)).join('');
+  } catch (e) {
+    console.error('Search error:', e);
+    list.innerHTML = `<div class="empty-state">Error processing search results</div>`;
   }
-
-  allResults = data;
-  for (const svc of allResults) {
-    svc._selectedRate = null;
-    svc._selectedAddons = [];
-  }
-  selectedService = null;
-
-  document.getElementById('result-count').textContent = `${data.length} result${data.length > 1 ? 's' : ''}`;
-  document.getElementById('clear-btn').style.display = data.length ? 'inline' : 'none';
-  document.getElementById('search-hint').textContent = data.length ? '' : 'No results found — try a different search';
-
-  if (!data.length) {
-    list.innerHTML = `<div class="empty-state">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-      </svg>
-      No services found
-    </div>`;
-    return;
-  }
-
-  list.innerHTML = data.map((svc, i) => renderResultCard(svc, i)).join('');
 }
 
-function clearSearch() {
+function clearResults() {
   document.getElementById('search-input').value = '';
+  searchQuery = '';
   document.getElementById('results-list').innerHTML = '';
   document.getElementById('result-count').textContent = '';
   document.getElementById('clear-btn').style.display = 'none';
-  document.getElementById('search-hint').textContent = 'Type at least 2 characters to search';
+  document.getElementById('search-hint').textContent = 'Search for services by name, destination, supplier, or type';
   allResults = [];
   selectedService = null;
+  
+  // Also clear filters
+  clearAllFilters();
 }
 
+// ── RENDER FUNCTIONS ──────────────────────────────────────────────────────────
 function renderResultCard(svc, idx) {
   const isSelected = selectedService === svc.id;
   const pricePreview = svc.rates && svc.rates.length 
@@ -898,7 +1184,6 @@ function renderServiceDetail(svc) {
 
   let html = '';
 
-  // Private rates
   if (privateRates.length) {
     html += `<div class="detail-section">
       <div class="detail-section-title">🚗 Private (per vehicle)</div>
@@ -924,7 +1209,6 @@ function renderServiceDetail(svc) {
     html += `</div></div>`;
   }
 
-  // SIC rates
   if (sicRates.length) {
     html += `<div class="detail-section">
       <div class="detail-section-title">👥 SIC (per person, join tour)</div>
@@ -952,7 +1236,6 @@ function renderServiceDetail(svc) {
     html += `</div></div>`;
   }
 
-  // Add-ons
   if (svc.addons && svc.addons.length) {
     html += `<div class="detail-section detail-addons">
       <div class="detail-section-title">➕ Add-ons</div>`;
@@ -971,7 +1254,6 @@ function renderServiceDetail(svc) {
     html += `</div>`;
   }
 
-  // Notes
   if (svc.notes) {
     html += `<div style="font-size:12px;color:var(--muted);margin-top:8px">📝 ${escHtml(svc.notes)}</div>`;
   }
@@ -996,24 +1278,17 @@ function renderServiceDetail(svc) {
 
 // ── SERVICE INTERACTION ──────────────────────────────────────────────────────
 function toggleService(id) {
-  
-  // If clicking the same card, deselect it
   if (selectedService === id) {
     selectedService = null;
     const card = document.querySelector(`.result-card[data-service-id="${id}"]`);
-    if (card) {
-      card.classList.remove('selected');
-    } else {
-    }
+    if (card) card.classList.remove('selected');
     return;
   }
   
-  // Close other cards
   document.querySelectorAll('.result-card.selected').forEach(el => {
     el.classList.remove('selected');
   });
   
-  // Select this card
   selectedService = id;
   const card = document.querySelector(`.result-card[data-service-id="${id}"]`);
   if (card) {
@@ -1022,7 +1297,6 @@ function toggleService(id) {
     return;
   }
   
-  // Update hint
   const svc = allResults.find(s => s.id === id);
   if (svc) {
     if (!svc._selectedRate) {
@@ -1033,17 +1307,13 @@ function toggleService(id) {
       document.getElementById(`add-hint-${id}`).textContent = 
         `Selected: ${svc._selectedRate.vehicle || svc._selectedRate.paxCategory} — ฿${svc._selectedRate.price.toLocaleString()}`;
     }
-  } else {
   }
 }
 
 function selectRate(serviceId, rateType, vehicle, price, paxInfo) {
   const svc = allResults.find(s => s.id === serviceId);
-  if (!svc) {
-    return;
-  }
+  if (!svc) return;
 
-  // Toggle: if clicking the same rate, deselect it
   if (svc._selectedRate && 
       svc._selectedRate.rateType === rateType && 
       svc._selectedRate.vehicle === vehicle &&
@@ -1053,21 +1323,17 @@ function selectRate(serviceId, rateType, vehicle, price, paxInfo) {
     svc._selectedRate = { rateType, vehicle, paxInfo, price, paxCategory: vehicle };
   }
 
-
-  // Re-render the detail section
   const card = document.querySelector(`.result-card[data-service-id="${serviceId}"]`);
   if (card) {
     const detail = card.querySelector('.service-detail');
     if (detail) {
       detail.innerHTML = renderServiceDetail(svc);
     }
-    // Update selected state on the card
     if (svc._selectedRate) {
       card.classList.add('selected');
     }
   }
 
-  // Update button state
   const btn = document.getElementById(`add-btn-${serviceId}`);
   const hint = document.getElementById(`add-hint-${serviceId}`);
   if (svc._selectedRate) {
@@ -1081,9 +1347,7 @@ function selectRate(serviceId, rateType, vehicle, price, paxInfo) {
 
 function toggleAddon(serviceId, addonName, price) {
   const svc = allResults.find(s => s.id === serviceId);
-  if (!svc) {
-    return;
-  }
+  if (!svc) return;
   if (!svc._selectedAddons) svc._selectedAddons = [];
   
   const idx = svc._selectedAddons.findIndex(a => a.name === addonName);
@@ -1125,11 +1389,9 @@ function addToCartFromDetail(serviceId) {
   };
 
   cart.push(cartItem);
-  
   renderCart();
   updateCartTotals();
   
-  // Feedback
   const btn = document.getElementById(`add-btn-${serviceId}`);
   if (btn) {
     const orig = btn.textContent;
@@ -1230,9 +1492,7 @@ function toggleSidebar() {
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
 function showModal() {
-  if (!cart.length) {
-    return;
-  }
+  if (!cart.length) return;
   renderQuotationText();
   document.getElementById('quotation-modal').classList.add('visible');
   document.body.style.overflow = 'hidden';
@@ -1243,8 +1503,6 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
-
-
 function buildQuotationText() {
   const today = new Date().toLocaleDateString('en-GB', {
     day:'2-digit', month:'short', year:'numeric', timeZone:'Asia/Bangkok'
@@ -1254,11 +1512,13 @@ function buildQuotationText() {
   const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
   const commissionAmount = subtotal / (comm / 100);
   const grandTotal = roundToNearestHalf(commissionAmount);
+
   const div = '─'.repeat(30);
 
   const lines = [
-    `*VAYO AURA — Service Quotation*`,
+    `*Vayo Aura — Service Quotation*`,
     `Date: ${today}`,
+    `USD Rate: 1 USD = ฿${usdRate.toFixed(2)}`,
     div, '',
   ];
 
@@ -1270,19 +1530,22 @@ function buildQuotationText() {
     if (item.addons.length) {
       lines.push(`   Add-ons: ${item.addons.map(a => a.name).join(', ')}`);
     }
+    const addonStr = item.addonTotal ? ` (+ ฿${item.addonTotal.toLocaleString()} add-ons)` : '';
+    lines.push(`   Subtotal: ฿${item.totalPrice.toLocaleString()}${addonStr}`);
+    if (itemUsd) lines.push(`   ≈ $${itemUsd} USD`);
+    lines.push('');
   });
 
   const grandUsd = thbToUsd(grandTotal);
   lines.push(div);
+  lines.push(`Subtotal: ฿${subtotal.toLocaleString()}`);
+  if (comm > 0) {
+    lines.push(`Commission (${comm}%): ฿${(subtotal * (comm / 100)).toLocaleString()}`);
+  }
   lines.push(`*GRAND TOTAL: ฿${grandTotal.toLocaleString()}*`);
   if (grandUsd) lines.push(`*≈ $${grandUsd} USD*`);
   lines.push(div);
   lines.push('');
-  lines.push(`_All prices in Thai Baht (THB)_`);
-  lines.push(`_Prices are indicative and subject to availability_`);
-  lines.push('');
-  lines.push(`For bookings & queries:`);
-  lines.push(`+66 960 877 457 | info@vayoaura.com`);
   return lines.join('\n');
 }
 
@@ -1304,6 +1567,85 @@ async function copyQuotation() {
   }
   btn.textContent = '✓ Copied!';
   setTimeout(() => btn.textContent = 'Copy to Clipboard', 2200);
+}
+
+// ── EXCEL EXPORT ──────────────────────────────────────────────────────────────
+// Builds a 3-column sheet — Service | Price (THB) | Price (USD) — with prices as
+// real numeric cells (sortable/summable in Excel). Uses SheetJS; if the CDN
+// failed to load, falls back to a UTF-8 CSV so the button never dead-ends.
+function exportToExcel() {
+  if (!cart.length) return;
+
+  const today = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok'
+  });
+  // en-CA gives YYYY-MM-DD — clean for filenames.
+  const fileDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+  const comm = parseFloat(document.getElementById('commission-input').value) || 0;
+  const usdRate = getUsdRate();
+
+  const subtotal = cart.reduce((s, it) => s + it.totalPrice, 0);
+  const commissionAmount = comm === 0 ? subtotal : subtotal + (subtotal / (comm / 100));
+  const grandTotal = roundToNearestHalf(commissionAmount);
+
+  // Pack every detail of a line item into one cell.
+  const describe = (it) => {
+    let d = it.name;
+    const meta = [it.rateType, it.vehicle].filter(Boolean).join(' · ');
+    if (meta) d += ` — ${meta}`;
+    const place = [it.destination, it.serviceType].filter(Boolean).join(', ');
+    if (place) d += ` (${place})`;
+    if (it.addons && it.addons.length) d += ` + ${it.addons.map(a => a.name).join(', ')}`;
+    return d;
+  };
+  // Return a finite USD number, or '' (keeps the cell blank, never NaN/0).
+  const usdVal = (thb) => { const u = parseFloat(thbToUsd(thb)); return isFinite(u) ? u : ''; };
+
+  // Array-of-arrays → worksheet. Numbers stay numbers.
+  const aoa = [
+    ['Vayo Aura — Service Quotation'],
+    ['Date', today],
+    [],
+    ['Service', 'Price (THB)', 'Price (USD)'],
+  ];
+  cart.forEach((it) => aoa.push([describe(it), it.totalPrice, usdVal(it.totalPrice)]));
+  aoa.push([]);
+  aoa.push(['Subtotal', subtotal, usdVal(subtotal)]);
+  if (comm > 0) aoa.push([`Commission (${comm}%)`, subtotal / (comm / 100), '']);
+  aoa.push(['GRAND TOTAL', grandTotal, usdVal(grandTotal)]);
+
+  const filename = `VIKRAM_Quotation_${fileDate}.xlsx`;
+  const btn = document.getElementById('export-btn');
+
+  if (typeof XLSX !== 'undefined') {
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{ wch: 52 }, { wch: 14 }, { wch: 14 }];  // column widths
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Quotation');
+    XLSX.writeFile(wb, filename);
+  } else {
+    exportCsvFallback(aoa, filename.replace(/\.xlsx$/, '.csv'));
+  }
+
+  if (btn) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ Exported!';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  }
+}
+
+// CSV fallback — UTF-8 BOM so Excel renders ฿ and aligns columns correctly.
+function exportCsvFallback(aoa, filename) {
+  const esc = (v) => {
+    const s = (v == null ? '' : String(v));
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = '\uFEFF' + aoa.map(row => row.map(esc).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
@@ -1335,6 +1677,8 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// Update active filters on page load
+updateActiveFilters();
 </script>
 </body>
 </html>
