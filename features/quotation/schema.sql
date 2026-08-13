@@ -165,6 +165,49 @@ CREATE TABLE IF NOT EXISTS addons (
 );
 
 -- =============================================================================
+-- TABLE: attraction_products
+-- One row per attraction / package option, sourced from Attractions.xlsx.
+-- Deliberately named "attraction_products" (NOT "attractions") to avoid any
+-- confusion with the unrelated CMS "attractions" media page_key in main.py.
+--
+-- Ticket-only net prices live here. Transfer legs are NOT stored here and
+-- have NO foreign key into this table — they are looked up at query time
+-- from `services` by matching city == attraction_products.city AND
+-- service_type IN ('Transfer', 'On Disposal ( WC)', 'On Disposal ( IC)').
+-- This is a deliberate v1 design choice (city-match dropdown), see
+-- features/attraction_quotation/router.py for the lookup logic. A curated
+-- explicit-mapping table may replace/augment this later.
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS attraction_products (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    city              TEXT    NOT NULL,   -- must align with services.destination values
+
+    -- Raw attraction name as it appeared in the Excel, kept verbatim for audit/search
+    attraction_name   TEXT    NOT NULL,
+
+    -- Derived split of attraction_name, e.g.
+    --   "Safari World - Package A (Safari+Marine+Lunch)"
+    --   -> package_group = "Safari World"
+    --   -> package_label = "Package A (Safari+Marine+Lunch)"
+    -- package_label is NULL when the name had no " - " split (single-option attraction).
+    package_group     TEXT    NOT NULL,
+    package_label     TEXT,
+
+    adult_net_price   INTEGER NOT NULL CHECK(adult_net_price > 0),
+    child_net_price   INTEGER CHECK(child_net_price IS NULL OR child_net_price > 0),
+    senior_price      INTEGER CHECK(senior_price IS NULL OR senior_price > 0),
+
+    supplier          TEXT    NOT NULL,
+    remarks           TEXT,
+
+    -- Traceability back to the source Excel row, for debugging bad imports
+    source_row        INTEGER,
+
+    created_at        TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+-- =============================================================================
 -- INDEXES — speeds up the search queries the frontend will run
 -- =============================================================================
 
@@ -203,6 +246,16 @@ CREATE INDEX IF NOT EXISTS idx_zone_surcharges_service
 -- Join: addons → services
 CREATE INDEX IF NOT EXISTS idx_addons_service
     ON addons(service_id);
+
+-- attraction_products: city / supplier / name / group filters
+CREATE INDEX IF NOT EXISTS idx_attraction_products_city
+    ON attraction_products(city);
+CREATE INDEX IF NOT EXISTS idx_attraction_products_supplier
+    ON attraction_products(supplier);
+CREATE INDEX IF NOT EXISTS idx_attraction_products_name
+    ON attraction_products(attraction_name COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS idx_attraction_products_group
+    ON attraction_products(package_group COLLATE NOCASE);
 
 -- =============================================================================
 -- SEED DATA: companies (insert once, ignore if already there)

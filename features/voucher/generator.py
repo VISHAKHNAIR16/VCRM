@@ -369,7 +369,7 @@ def _html_to_pdf(
                 presentational_hints=True,
                 zoom=zoom,
                 optimize_size=optimize_options,
-                resolution=150 if not optimize_for_speed else 96,  # Higher resolution for better quality
+                resolution=350 if not optimize_for_speed else 300,  # Higher resolution for better quality
             )
         )
         log.info("PDF generated successfully: %d bytes (optimization: %s)", 
