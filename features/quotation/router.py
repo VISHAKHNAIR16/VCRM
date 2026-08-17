@@ -38,6 +38,14 @@ from fastapi.templating import Jinja2Templates
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 log = logging.getLogger("vikram.quotation")
+
+# NOTE ON THE IMPORT BELOW:
+# catalog_search imports THIS module (`from . import router`) to reuse
+# search_services()/_tokenize_query()/get_filter_options() rather than
+# duplicating that logic. To avoid a circular import at module-load time,
+# catalog_search is imported lazily, inside the route handlers that need it
+# (see api_catalog_search / unified_quotation_page below), not at the top
+# of this file.
 router = APIRouter()
 BASE = Path(__file__).parent
 DB_PATH = BASE / "quotation.db"
@@ -457,3 +465,130 @@ async def api_filter_options(request: Request):
         return get_filter_options()
     except FileNotFoundError:
         return JSONResponse({"error": "Database unavailable"}, status_code=503)
+
+
+# ── Unified catalog search (Step 1 of the quotation/quotation-attractions merge) ──
+#
+# This is the endpoint the single search bar calls. It returns BOTH transfers
+# and attraction tickets in one ranked list — see catalog_search.py for the
+# full rationale and result shape. It is intentionally additive: the existing
+# /api/search (transfers-only) and features/quotation_attractions' own search
+# endpoint are untouched, so nothing that currently depends on them breaks
+# while the frontend migration (Steps 2-3) is rolled out behind the scenes.
+
+@router.get("/api/catalog-search")
+@_api_guard
+async def api_catalog_search(
+    request: Request,
+    q: str = Query(default="", description="Free-text search across transfers and attraction tickets"),
+    city: str = Query(default="", description="Optional exact-match city/destination filter"),
+    supplier: str = Query(default="", description="Optional exact-match supplier filter"),
+    type: str = Query(default="all", description="'all' | 'transfer' | 'attraction'"),
+    limit: int = Query(default=100, ge=1, le=200),
+):
+    """
+    Search transfers AND attraction tickets in a single call and return one
+    ranked, normalized result list — the backing endpoint for the unified
+    search bar (client requirement: "search once, add either as one entity").
+    """
+    # Imported lazily to avoid a circular import (catalog_search imports this
+    # module for search_services / _tokenize_query / get_filter_options).
+    from . import catalog_search
+
+    try:
+        results = catalog_search.search_catalog(
+            query=q,
+            city=city or None,
+            supplier=supplier or None,
+            result_type=type,
+            limit=limit,
+        )
+        return results
+    except FileNotFoundError as e:
+        log.error(f"Database not found: {e}")
+        return JSONResponse({"error": "Database unavailable"}, status_code=503)
+    except Exception as e:
+        log.error(f"Unified catalog search error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@router.get("/api/catalog-filter-options")
+@_api_guard
+async def api_catalog_filter_options(request: Request):
+    """
+    Combined City/Supplier dropdown options across both transfers and
+    attraction tickets, for the unified search page's filter bar.
+    """
+    from . import catalog_search
+
+    try:
+        return catalog_search.get_unified_filter_options()
+    except FileNotFoundError:
+        return JSONResponse({"error": "Database unavailable"}, status_code=503)
+
+
+# ── Attraction pricing endpoints (Step 2 of the merge) ─────────────────────────
+#
+# Before this, attraction ticket pricing (features/quotation_attractions/pricing.py)
+# was only reachable from the separate /quotation-attractions page. The unified
+# search bar (Step 1) can now find attraction results, but the frontend cart
+# still needs a way to (a) price a ticket for a given pax mix, and (b) fetch the
+# "add a transfer to this ticket" combo options for the advanced bundle flow
+# (client requirement #2). These two endpoints expose exactly that, reusing the
+# existing, already-correct pricing.py logic untouched — no pricing rules are
+# duplicated or reimplemented here.
+
+@router.get("/api/attraction/{attraction_id}")
+@_api_guard
+async def api_get_attraction(
+    request: Request,
+    attraction_id: int,
+    adults: int = Query(default=1, ge=0),
+    children: int = Query(default=0, ge=0),
+    seniors: int = Query(default=0, ge=0),
+):
+    """
+    Full detail for a single attraction ticket, priced for the given pax mix.
+    Used when a user opens an attraction result card and picks pax counts,
+    mirroring how a transfer's rate options are fetched today.
+    """
+    from features.quotation_attractions import db as attractions_db, pricing as attractions_pricing
+
+    attraction = attractions_db.get_attraction_by_id(attraction_id)
+    if not attraction:
+        return JSONResponse({"error": "Attraction not found"}, status_code=404)
+
+    priced = attractions_pricing.calculate_ticket_only(
+        attraction, adult_count=adults, child_count=children, senior_count=seniors
+    )
+    return {"attraction": attraction, "pricing": priced}
+
+
+@router.get("/api/attraction/{attraction_id}/transfer-options")
+@_api_guard
+async def api_attraction_transfer_options(
+    request: Request,
+    attraction_id: int,
+    adults: int = Query(default=1, ge=0),
+    children: int = Query(default=0, ge=0),
+    seniors: int = Query(default=0, ge=0),
+):
+    """
+    "Add a transfer to this ticket" combo options for the given attraction and
+    pax mix — cheapest first. This backs the advanced bundle flow: a contextual
+    action on an attraction cart line item, rather than a separate page/mode.
+
+    Returns ticket-only total alongside each priced transfer option so the
+    frontend can show "Ticket alone: ฿X" vs "Ticket + Transfer: ฿Y" side by
+    side without a second round trip.
+    """
+    from features.quotation_attractions import db as attractions_db, pricing as attractions_pricing
+
+    attraction = attractions_db.get_attraction_by_id(attraction_id)
+    if not attraction:
+        return JSONResponse({"error": "Attraction not found"}, status_code=404)
+
+    result = attractions_pricing.get_all_transfer_options_with_pricing(
+        attraction, adult_count=adults, child_count=children, senior_count=seniors
+    )
+    return result

@@ -486,12 +486,51 @@ body::before{
 }
 
 /* ══════════════════════════════════════════════════════════════
-   RESULTS
+   RESULTS & BRIGHT STANDOUT TAGS
 ══════════════════════════════════════════════════════════════ */
 .results-header{
   display:flex;justify-content:space-between;align-items:center;
   margin-bottom:14px;
 }
+
+/* ── BRIGHT VIBRANT TAG STYLES ── */
+.badge-type{
+  font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.05em;
+  padding:3px 9px;border-radius:6px;
+}
+.badge-type-transfer{
+  background:rgba(6,182,212,0.18) !important;
+  border:1px solid rgba(34,211,238,0.5) !important;
+  color:#22d3ee !important;
+  box-shadow:0 0 8px rgba(6,182,212,0.2) !important;
+}
+.badge-type-attraction{
+  background:rgba(245,158,11,0.18) !important;
+  border:1px solid rgba(251,191,36,0.5) !important;
+  color:#fbbf24 !important;
+  box-shadow:0 0 8px rgba(245,158,11,0.2) !important;
+}
+.badge-type-transfer_bundle, .badge-type-attraction_bundle{
+  background:rgba(217,70,239,0.18) !important;
+  border:1px solid rgba(232,121,249,0.5) !important;
+  color:#f0abfc !important;
+  box-shadow:0 0 8px rgba(217,70,239,0.2) !important;
+}
+
+.cart-item-kind{
+  display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.04em;padding:3px 8px;border-radius:6px;margin-bottom:6px;
+}
+.cart-item-kind-transfer{
+  background:rgba(6,182,212,0.18);border:1px solid rgba(34,211,238,0.5);color:#22d3ee;
+}
+.cart-item-kind-attraction{
+  background:rgba(245,158,11,0.18);border:1px solid rgba(251,191,36,0.5);color:#fbbf24;
+}
+.cart-item-kind-attraction_bundle, .cart-item-kind-transfer_bundle{
+  background:rgba(217,70,239,0.18);border:1px solid rgba(232,121,249,0.5);color:#f0abfc;
+}
+
 .results-header .count{
   font-size:13px;color:var(--muted);
 }
@@ -752,6 +791,69 @@ body::before{
 .service-detail::-webkit-scrollbar{width:4px}
 .service-detail::-webkit-scrollbar-track{background:transparent}
 .service-detail::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:99px}
+
+.type-chip-row{display:flex;gap:8px;margin-top:10px}
+.type-chip{
+  padding:6px 14px;border-radius:99px;font-size:12.5px;font-weight:500;
+  border:1px solid var(--border);background:var(--surface2);color:var(--muted);
+  cursor:pointer;transition:all .15s ease;user-select:none;
+}
+.type-chip:hover{border-color:var(--border-h);color:var(--text)}
+.type-chip.active{
+  background:var(--accent-dim);border-color:rgba(232,197,71,0.4);color:var(--accent);
+}
+
+.pax-bar{
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:12px 16px;margin-bottom:14px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+}
+.pax-bar .pax-bar-label{font-size:12px;color:var(--muted);font-weight:500;margin-right:2px}
+.pax-field{display:flex;align-items:center;gap:8px}
+.pax-field label{font-size:12.5px;color:var(--muted)}
+.pax-field input{
+  width:56px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);
+  background:var(--surface3);color:var(--text);font-size:13px;text-align:center;
+}
+.pax-field input:focus{outline:none;border-color:var(--accent)}
+.pax-bar-hint{font-size:11.5px;color:var(--muted2);margin-left:auto}
+
+.ticket-breakdown{margin-top:6px}
+.ticket-breakdown-row{
+  display:flex;justify-content:space-between;font-size:13px;color:var(--muted);
+  padding:4px 0;
+}
+.ticket-breakdown-row .val{color:var(--text)}
+.ticket-total-row{
+  display:flex;justify-content:space-between;font-size:14.5px;font-weight:600;
+  padding:8px 0;margin-top:4px;border-top:1px solid var(--border);color:var(--text);
+}
+
+.combo-toggle-btn{
+  width:100%;margin-top:10px;padding:9px 12px;border-radius:8px;
+  border:1px dashed var(--border-h);background:transparent;color:var(--muted);
+  font-size:12.5px;font-weight:500;cursor:pointer;transition:all .15s ease;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.combo-toggle-btn:hover{border-color:var(--accent);color:var(--accent)}
+.combo-toggle-btn.open{color:var(--accent);border-color:var(--accent);border-style:solid}
+
+.combo-options{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.combo-option{
+  padding:10px 12px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface2);cursor:pointer;transition:all .15s ease;
+}
+.combo-option:hover{border-color:var(--border-h);background:var(--surface3)}
+.combo-option.selected{border-color:var(--accent);background:var(--accent-dim2)}
+.combo-option-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.combo-option-name{font-size:13px;font-weight:500;color:var(--text)}
+.combo-option-price{font-size:13.5px;font-weight:600;color:var(--accent)}
+.combo-option-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.combo-option-note{
+  font-size:11px;color:var(--red);margin-top:4px;
+  background:var(--red-bg);border-radius:5px;padding:4px 7px;
+}
+.combo-empty{font-size:12.5px;color:var(--muted2);padding:8px 2px}
 </style>
 </head>
 <body>
@@ -806,19 +908,6 @@ body::before{
 
         <div class="filter-divider"></div>
 
-        <!-- Service Type Filter -->
-        <div class="filter-group">
-          <label>Type</label>
-          <select id="filter-type" onchange="applyFilters()">
-            <option value="">All Types</option>
-            {% for type in service_types %}
-            <option value="{{ type }}">{{ type }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="filter-divider"></div>
-
         <!-- Clear Filters Button -->
         <button class="filter-clear-btn" id="clear-filters-btn" onclick="clearAllFilters()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -826,6 +915,13 @@ body::before{
           </svg>
           Clear Filters
         </button>
+      </div>
+
+      <!-- Result-type chips -->
+      <div class="type-chip-row" id="type-chip-row">
+        <div class="type-chip active" data-type="all" onclick="setResultType('all')">All</div>
+        <div class="type-chip" data-type="transfer" onclick="setResultType('transfer')">Transfers</div>
+        <div class="type-chip" data-type="attraction" onclick="setResultType('attraction')">Attraction Tickets</div>
       </div>
 
       <!-- Active Filters Display -->
@@ -840,7 +936,7 @@ body::before{
           <path d="m21 21-4.35-4.35"/>
         </svg>
         <input type="text" id="search-input" 
-               placeholder="Search services (e.g. 'airport to hotel', 'phuket transfer')…"
+               placeholder="Search anything — transfers or attraction tickets (e.g. 'phuket airport', 'safari world')…"
                oninput="handleSearchInput()"
                autofocus>
         <button class="btn btn-primary" onclick="doSearch()">
@@ -848,7 +944,25 @@ body::before{
           Search
         </button>
       </div>
-      <div class="search-hint" id="search-hint">Search for services by name, destination, supplier, or type</div>
+      <div class="search-hint" id="search-hint">Search once — transfers and attraction tickets both show up here</div>
+    </div>
+
+    <!-- Pax count bar -->
+    <div class="pax-bar">
+      <span class="pax-bar-label">Pax for pricing:</span>
+      <div class="pax-field">
+        <label for="pax-adults">Adults</label>
+        <input type="number" id="pax-adults" value="1" min="0" step="1" oninput="onPaxChanged()">
+      </div>
+      <div class="pax-field">
+        <label for="pax-children">Children</label>
+        <input type="number" id="pax-children" value="0" min="0" step="1" oninput="onPaxChanged()">
+      </div>
+      <div class="pax-field">
+        <label for="pax-seniors">Seniors</label>
+        <input type="number" id="pax-seniors" value="0" min="0" step="1" oninput="onPaxChanged()">
+      </div>
+      <span class="pax-bar-hint">Applies to attraction ticket &amp; combo pricing</span>
     </div>
 
     <!-- Results -->
@@ -931,25 +1045,53 @@ body::before{
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════════════════════════════════════════ -->
+<script src="/static/quotation/cart-model.js"></script>
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let fxRate       = null;
-let cart         = [];
-let selectedService = null;
-let allResults   = [];
+let fxRate        = null;
+let cart          = [];           
+let selectedCard  = null;         
+let allResults    = [];           
 let searchTimeout = null;
-let searchQuery  = '';
+let searchQuery   = '';
+let activeResultType = 'all';     
+
+const cardState = {};
+
+function cardKey(item) {
+  return `${item.type}:${item.id}`;
+}
+
+function getCardState(key) {
+  if (!cardState[key]) {
+    cardState[key] = {
+      selectedRate: null,
+      selectedAddons: [],
+      ticketPricing: null,   
+      comboOpen: false,
+      comboSearchQuery: '',
+      comboResults: null,        
+      comboLoading: false,
+      selectedAttraction: null,  
+    };
+  }
+  return cardState[key];
+}
+
+function currentPax() {
+  return {
+    adults: parseInt(document.getElementById('pax-adults').value, 10) || 0,
+    children: parseInt(document.getElementById('pax-children').value, 10) || 0,
+    seniors: parseInt(document.getElementById('pax-seniors').value, 10) || 0,
+  };
+}
 
 // ── AUTH-AWARE FETCH ──────────────────────────────────────────────────────────
 async function apiFetch(url) {
   const r = await fetch(url);
-  if (r.status === 401) { 
-    window.location.href = '/login'; 
-    return null; 
+  if (r.status === 401) {
+    window.location.href = '/login';
+    return null;
   }
   return r;
 }
@@ -985,34 +1127,64 @@ function thbToUsd(thb) {
   return (rate && thb) ? (thb / rate).toFixed(2) : null;
 }
 
+// ── FILTER OPTIONS ────────────────────────────────────────────────────────────
+async function loadUnifiedFilterOptions() {
+  const r = await apiFetch('/quotation/api/catalog-filter-options');
+  if (!r) return;
+  try {
+    const data = await r.json();
+    if (data.error) return;
+    populateSelect('filter-city', data.cities, 'All Cities');
+    populateSelect('filter-supplier', data.suppliers, 'All Suppliers');
+  } catch (e) {
+    console.error('Failed to load unified filter options:', e);
+  }
+}
+
+function populateSelect(id, values, placeholder) {
+  const el = document.getElementById(id);
+  const current = el.value;
+  el.innerHTML = `<option value="">${placeholder}</option>` +
+    values.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+  if (values.includes(current)) el.value = current;
+}
+
+// ── RESULT-TYPE CHIPS ──────────────────────────────────────────────────────────
+function setResultType(type) {
+  activeResultType = type;
+  document.querySelectorAll('.type-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.type === type);
+  });
+  applyFilters();
+}
+
 // ── FILTERS ────────────────────────────────────────────────────────────────────
 function applyFilters() {
   updateActiveFilters();
-  // If there's a search query, re-search with filters
-  if (searchQuery && searchQuery.length > 0) {
-    doSearch();
-  }
+  doSearch();
 }
 
 function updateActiveFilters() {
   const container = document.getElementById('active-filters');
   const city = document.getElementById('filter-city').value;
   const supplier = document.getElementById('filter-supplier').value;
-  const type = document.getElementById('filter-type').value;
-  
+
   let filters = [];
-  if (city) filters.push({ label: `City: ${city}`, key: 'city', value: city });
-  if (supplier) filters.push({ label: `Supplier: ${supplier}`, key: 'supplier', value: supplier });
-  if (type) filters.push({ label: `Type: ${type}`, key: 'type', value: type });
-  
+  if (city) filters.push({ label: `City: ${city}`, key: 'city' });
+  if (supplier) filters.push({ label: `Supplier: ${supplier}`, key: 'supplier' });
+  if (activeResultType !== 'all') {
+    const label = activeResultType === 'transfer' ? 'Transfers only' : 'Attraction Tickets only';
+    filters.push({ label, key: 'type' });
+  }
+
   if (filters.length === 0) {
     container.innerHTML = '';
     document.getElementById('clear-filters-btn').classList.remove('has-filters');
     return;
   }
-  
+
   document.getElementById('clear-filters-btn').classList.add('has-filters');
-  
+
   container.innerHTML = filters.map(f => `
     <span class="filter-pill">
       ${f.label}
@@ -1024,53 +1196,43 @@ function updateActiveFilters() {
 function removeFilter(key) {
   if (key === 'city') document.getElementById('filter-city').value = '';
   if (key === 'supplier') document.getElementById('filter-supplier').value = '';
-  if (key === 'type') document.getElementById('filter-type').value = '';
-  applyFilters();
+  if (key === 'type') setResultType('all');
+  else applyFilters();
 }
 
 function clearAllFilters() {
   document.getElementById('filter-city').value = '';
   document.getElementById('filter-supplier').value = '';
-  document.getElementById('filter-type').value = '';
+  activeResultType = 'all';
+  document.querySelectorAll('.type-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.type === 'all');
+  });
   updateActiveFilters();
-  if (searchQuery && searchQuery.length > 0) {
-    doSearch();
-  }
+  doSearch();
 }
 
-// ── SEARCH ────────────────────────────────────────────────────────────────────
 // ── SEARCH ────────────────────────────────────────────────────────────────────
 function handleSearchInput() {
   clearTimeout(searchTimeout);
   const q = document.getElementById('search-input').value.trim();
   searchQuery = q;
-  
-  // Show hint
+
   const hint = document.getElementById('search-hint');
   if (q.length === 0) {
-    hint.textContent = 'Search for services by name, destination, supplier, or type';
-    // If there are filters, still search
-    const hasFilters = document.getElementById('filter-city').value || 
-                       document.getElementById('filter-supplier').value || 
-                       document.getElementById('filter-type').value;
-    if (hasFilters) {
-      searchTimeout = setTimeout(() => doSearch(), 100);
-    }
+    hint.textContent = 'Search once — transfers and attraction tickets both show up here';
+    searchTimeout = setTimeout(() => doSearch(), 100);
     return;
   }
-  
+
   hint.textContent = 'Searching…';
-  searchTimeout = setTimeout(() => {
-    doSearch();
-  }, 300);
+  searchTimeout = setTimeout(() => doSearch(), 300);
 }
 
 async function doSearch() {
   const q = document.getElementById('search-input').value.trim();
   const city = document.getElementById('filter-city').value;
   const supplier = document.getElementById('filter-supplier').value;
-  const type = document.getElementById('filter-type').value;
-  
+
   searchQuery = q;
 
   const spinner = document.getElementById('search-spinner');
@@ -1083,20 +1245,18 @@ async function doSearch() {
   if (q) params.append('q', q);
   if (city) params.append('city', city);
   if (supplier) params.append('supplier', supplier);
-  if (type) params.append('service_type', type);
+  params.append('type', activeResultType);
   params.append('limit', '100');
 
-  const url = `/quotation/api/search?${params.toString()}`;
-  console.log('Searching with URL:', url);
-  
+  const url = `/quotation/api/catalog-search?${params.toString()}`;
+
   const r = await apiFetch(url);
   spinner.style.display = 'none';
 
   if (!r) return;
-  
+
   try {
     const data = await r.json();
-    console.log('Search results:', data.length);
 
     if (data.error) {
       list.innerHTML = `<div class="empty-state">Error: ${data.error}</div>`;
@@ -1104,13 +1264,9 @@ async function doSearch() {
     }
 
     allResults = data;
-    for (const svc of allResults) {
-      svc._selectedRate = null;
-      svc._selectedAddons = [];
-    }
-    selectedService = null;
+    selectedCard = null;
 
-    document.getElementById('result-count').textContent = `${data.length} result${data.length > 1 ? 's' : ''}`;
+    document.getElementById('result-count').textContent = `${data.length} result${data.length !== 1 ? 's' : ''}`;
     document.getElementById('clear-btn').style.display = data.length ? 'inline' : 'none';
 
     if (!data.length) {
@@ -1118,13 +1274,13 @@ async function doSearch() {
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        No services found
+        No results found
         <div class="sub">Try adjusting your search or filters</div>
       </div>`;
       return;
     }
 
-    list.innerHTML = data.map((svc, i) => renderResultCard(svc, i)).join('');
+    list.innerHTML = data.map((item, i) => renderResultCard(item, i)).join('');
   } catch (e) {
     console.error('Search error:', e);
     list.innerHTML = `<div class="empty-state">Error processing search results</div>`;
@@ -1137,70 +1293,193 @@ function clearResults() {
   document.getElementById('results-list').innerHTML = '';
   document.getElementById('result-count').textContent = '';
   document.getElementById('clear-btn').style.display = 'none';
-  document.getElementById('search-hint').textContent = 'Search for services by name, destination, supplier, or type';
+  document.getElementById('search-hint').textContent = 'Search once — transfers and attraction tickets both show up here';
   allResults = [];
-  selectedService = null;
-  
-  // Also clear filters
+  selectedCard = null;
   clearAllFilters();
 }
 
-// ── RENDER FUNCTIONS ──────────────────────────────────────────────────────────
-function renderResultCard(svc, idx) {
-  const isSelected = selectedService === svc.id;
-  const pricePreview = svc.rates && svc.rates.length 
-    ? `from ฿${Math.min(...svc.rates.map(r => r.price_thb)).toLocaleString()}`
-    : 'No rates';
+async function onPaxChanged() {
+  if (!selectedCard) return;
+  const item = allResults.find(r => cardKey(r) === selectedCard);
+  if (!item) return;
+
+  const state = getCardState(selectedCard);
+
+  if (item.type === 'attraction') {
+    state.ticketPricing = null;
+    await refreshExpandedCard(item);
+  } else if (item.type === 'transfer') {
+    if (state.selectedAttraction) {
+       state.selectedAttraction.pricing = null;
+       const detailEl = document.getElementById(`detail-${selectedCard}`);
+       if (detailEl) detailEl.innerHTML = renderCardDetail(item);
+       
+       await fetchComboAttractionPricing(selectedCard, state.selectedAttraction.item);
+       
+       if (selectedCard === cardKey(item)) {
+         document.getElementById(`detail-${selectedCard}`).innerHTML = renderCardDetail(item);
+       }
+    }
+  }
+}
+
+// ── HELPER: YONA BEACH SUPPLIER CHECK ─────────────────────────────────────────
+function isYonaBeachSupplier(itemOrAttraction) {
+  if (!itemOrAttraction) return false;
+  const sup = (itemOrAttraction.supplier || itemOrAttraction.raw?.supplier || '').toLowerCase();
+  const name = (itemOrAttraction.name || itemOrAttraction.attraction_name || itemOrAttraction.raw?.attraction_name || '').toLowerCase();
+  return sup.includes('yona beach') || sup.includes('yona') || name.includes('yona beach');
+}
+
+// ── HELPER: BASE RATES & REMARKS RENDERER ─────────────────────────────────────
+function renderBasePricesAndRemarks(attraction, pricing) {
+  if (!attraction && !pricing) return '';
+  
+  const adultPrice = attraction?.adult_net_price ?? attraction?.price_adult ?? attraction?.adult_price ?? attraction?.price_thb_adult ?? pricing?.rates?.Adult ?? pricing?.rates?.adult ?? pricing?.adult_price ?? pricing?.adult_net_price;
+  const childPrice = attraction?.child_net_price ?? attraction?.price_child ?? attraction?.child_price ?? attraction?.price_thb_child ?? pricing?.rates?.Child ?? pricing?.rates?.child ?? pricing?.child_price ?? pricing?.child_net_price;
+  const seniorPrice = attraction?.senior_price ?? attraction?.price_senior ?? attraction?.price_thb_senior ?? pricing?.rates?.Senior ?? pricing?.rates?.senior ?? pricing?.senior_price;
+
+  const remarks = attraction?.remarks || attraction?.remark || attraction?.notes || attraction?.description || pricing?.remarks || pricing?.notes || '';
+
+  const isYona = isYonaBeachSupplier(attraction) || isYonaBeachSupplier(pricing);
+
+  let priceGridHtml = '';
+  if (isYona) {
+    const pkgPrice = adultPrice;
+    priceGridHtml = `
+    
+      <div style="background:var(--surface3); padding:10px; border-radius:6px; text-align:center; border:1px solid var(--accent-dim);">
+        <div style="font-size:11px; color:var(--accent); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Single Package Deal Rate</div>
+        <div style="font-size:16px; font-weight:800; color:var(--text); margin-top:2px;">
+          ${pkgPrice != null && !isNaN(pkgPrice) ? '฿' + Number(pkgPrice).toLocaleString() : '—'}
+        </div>
+        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">Fixed flat package deal (Not per adult/child/senior)</div>
+      </div>
+    `;
+  } else {
+    priceGridHtml = `
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-bottom:${remarks ? '8px' : '0'};">
+        <div style="background:var(--surface3); padding:8px; border-radius:6px; text-align:center; border:1px solid var(--border);">
+          <div style="font-size:10.5px; color:var(--muted); font-weight:600; text-transform:uppercase;">Adult</div>
+          <div style="font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">
+            ${adultPrice != null && !isNaN(adultPrice) ? '฿' + Number(adultPrice).toLocaleString() : '—'}
+          </div>
+        </div>
+        
+        <div style="background:var(--surface3); padding:8px; border-radius:6px; text-align:center; border:1px solid var(--border);">
+          <div style="font-size:10.5px; color:var(--muted); font-weight:600; text-transform:uppercase;">Child</div>
+          <div style="font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">
+            ${childPrice != null && !isNaN(childPrice) ? '฿' + Number(childPrice).toLocaleString() : '—'}
+          </div>
+        </div>
+
+        <div style="background:var(--surface3); padding:8px; border-radius:6px; text-align:center; border:1px solid var(--border);">
+          <div style="font-size:10.5px; color:var(--muted); font-weight:600; text-transform:uppercase;">Senior</div>
+          <div style="font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">
+            ${seniorPrice != null && !isNaN(seniorPrice) ? '฿' + Number(seniorPrice).toLocaleString() : '—'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   return `
-<div class="result-card ${isSelected ? 'selected' : ''}" 
+    <div class="base-rates-box" style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:12px;">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Database Unit Rates (Fixed Base Prices)
+      </div>
+      
+      ${priceGridHtml}
+
+      ${remarks ? `
+        <div style="font-size:11.5px; color:var(--text); background:var(--accent-dim2); border-left:3px solid var(--accent); padding:6px 10px; border-radius:0 4px 4px 0; margin-top:6px;">
+          <strong style="color:var(--accent);">Remarks:</strong> ${escHtml(remarks)}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+// ── RENDER: RESULT CARD ────────────────────────────────────────────────────────
+function renderResultCard(item, idx) {
+  const key = cardKey(item);
+  const isSelected = selectedCard === key;
+  
+  let priceFrom = item.price_from;
+  if (priceFrom == null) {
+    if (item.type === 'attraction') {
+      priceFrom = item.raw?.adult_net_price ?? item.raw?.price_adult ?? item.adult_net_price;
+    } else if (item.type === 'transfer') {
+      const rates = item.raw?.rates || [];
+      if (rates.length) {
+        priceFrom = Math.min(...rates.map(r => r.price_thb));
+      }
+    }
+  }
+  const pricePreview = priceFrom != null && !isNaN(priceFrom) ? `from ฿${Number(priceFrom).toLocaleString()}` : 'See options';
+  
+  const typeBadgeClass = item.type === 'transfer' ? 'badge-type-transfer' : (item.type === 'attraction' ? 'badge-type-attraction' : 'badge-type-transfer_bundle');
+  const typeBadgeLabel = item.type === 'transfer' ? 'Transfer' : (item.type === 'attraction' ? 'Attraction' : 'Transfer + Bundle');
+
+  return `
+<div class="result-card ${isSelected ? 'selected' : ''}"
      style="animation-delay:${Math.min(idx * 50, 400)}ms"
-     data-service-id="${svc.id}">
-  <div class="result-card-top" onclick="toggleService(${svc.id})">
+     data-card-key="${key}">
+  <div class="result-card-top" onclick="toggleCard('${key}')">
     <div>
-      <div class="result-card-name">${escHtml(svc.name)}</div>
+      <div class="result-card-name">${escHtml(item.name)}</div>
       <div class="result-card-meta">
-        <span class="badge badge-dest">${escHtml(svc.destination)}</span>
-        <span class="badge">${escHtml(svc.service_type)}</span>
-        ${svc.supplier ? `<span class="badge" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--muted)">${escHtml(svc.supplier)}</span>` : ''}
-        ${svc.tour_code ? `<span class="badge">${escHtml(svc.tour_code)}</span>` : ''}
-        ${svc.duration ? `<span>${escHtml(svc.duration)}</span>` : ''}
+        <span class="badge badge-type ${typeBadgeClass}">${typeBadgeLabel}</span>
+        ${item.city ? `<span class="badge badge-dest">${escHtml(item.city)}</span>` : ''}
+        ${item.supplier ? `<span class="badge" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--muted)">${escHtml(item.supplier)}</span>` : ''}
+        <span>${escHtml(item.subtitle || '')}</span>
       </div>
     </div>
     <div class="result-card-price-preview">
       <strong>${pricePreview}</strong>
     </div>
   </div>
-  <div class="service-detail">
-    ${renderServiceDetail(svc)}
+  <div class="service-detail" id="detail-${key}">
+    ${isSelected ? renderCardDetail(item) : ''}
   </div>
 </div>`;
 }
 
-function renderServiceDetail(svc) {
+function renderCardDetail(item) {
+  return item.type === 'transfer' ? renderTransferDetail(item) : renderAttractionDetail(item);
+}
+
+// ── RENDER: TRANSFER DETAIL ────────────────────────────────────────────────────
+function renderTransferDetail(item) {
+  const svc = item.raw;
+  const key = cardKey(item);
+  const state = getCardState(key);
   const rates = svc.rates || [];
   const privateRates = rates.filter(r => r.rate_type === 'Private');
   const sicRates = rates.filter(r => r.rate_type === 'SIC');
 
   let html = '';
 
+  // 1. Private Rates
   if (privateRates.length) {
     html += `<div class="detail-section">
       <div class="detail-section-title">🚗 Private (per vehicle)</div>
       <div class="detail-rate-grid">`;
     const byVehicle = {};
     for (const r of privateRates) {
-      const key = r.vehicle || 'N/A';
-      if (!byVehicle[key]) byVehicle[key] = [];
-      byVehicle[key].push(r);
+      const veh = r.vehicle || 'N/A';
+      if (!byVehicle[veh]) byVehicle[veh] = [];
+      byVehicle[veh].push(r);
     }
     for (const [vehicle, rows] of Object.entries(byVehicle)) {
       const bestPrice = Math.min(...rows.map(r => r.price_thb));
       const paxInfo = rows.map(r => r.pax_range).filter(Boolean).join(', ');
-      const isSelected = svc._selectedRate && svc._selectedRate.vehicle === vehicle && svc._selectedRate.rateType === 'Private';
+      const isSel = state.selectedRate && state.selectedRate.vehicle === vehicle && state.selectedRate.rateType === 'Private';
       html += `
-        <div class="rate-option ${isSelected ? 'selected' : ''}" 
-             onclick="event.stopPropagation();selectRate(${svc.id}, 'Private', '${escHtml(vehicle)}', ${bestPrice}, '${escHtml(paxInfo)}')">
+        <div class="rate-option ${isSel ? 'selected' : ''}"
+             onclick="event.stopPropagation();selectRate('${key}', 'Private', '${escHtml(vehicle)}', ${bestPrice}, '${escHtml(paxInfo)}')">
           <div class="vehicle">${escHtml(vehicle)}</div>
           <div class="pax-info">${paxInfo || 'All pax'}</div>
           <div class="price">฿${bestPrice.toLocaleString()}</div>
@@ -1209,6 +1488,7 @@ function renderServiceDetail(svc) {
     html += `</div></div>`;
   }
 
+  // 2. SIC Rates
   if (sicRates.length) {
     html += `<div class="detail-section">
       <div class="detail-section-title">👥 SIC (per person, join tour)</div>
@@ -1216,19 +1496,19 @@ function renderServiceDetail(svc) {
     const adults = sicRates.find(r => r.pax_category === 'Adult');
     const children = sicRates.find(r => r.pax_category === 'Child');
     if (adults) {
-      const isSelected = svc._selectedRate && svc._selectedRate.rateType === 'SIC' && svc._selectedRate.paxCategory === 'Adult';
+      const isSel = state.selectedRate && state.selectedRate.rateType === 'SIC' && state.selectedRate.paxCategory === 'Adult';
       html += `
-        <div class="rate-option ${isSelected ? 'selected' : ''}" 
-             onclick="event.stopPropagation();selectRate(${svc.id}, 'SIC', 'Adult', ${adults.price_thb}, '')">
+        <div class="rate-option ${isSel ? 'selected' : ''}"
+             onclick="event.stopPropagation();selectRate('${key}', 'SIC', 'Adult', ${adults.price_thb}, '')">
           <div class="vehicle">Adult</div>
           <div class="price">฿${adults.price_thb.toLocaleString()}</div>
         </div>`;
     }
     if (children) {
-      const isSelected = svc._selectedRate && svc._selectedRate.rateType === 'SIC' && svc._selectedRate.paxCategory === 'Child';
+      const isSel = state.selectedRate && state.selectedRate.rateType === 'SIC' && state.selectedRate.paxCategory === 'Child';
       html += `
-        <div class="rate-option ${isSelected ? 'selected' : ''}" 
-             onclick="event.stopPropagation();selectRate(${svc.id}, 'SIC', 'Child', ${children.price_thb}, '')">
+        <div class="rate-option ${isSel ? 'selected' : ''}"
+             onclick="event.stopPropagation();selectRate('${key}', 'SIC', 'Child', ${children.price_thb}, '')">
           <div class="vehicle">Child</div>
           <div class="price">฿${children.price_thb.toLocaleString()}</div>
         </div>`;
@@ -1236,177 +1516,575 @@ function renderServiceDetail(svc) {
     html += `</div></div>`;
   }
 
+  // 3. Add-ons
   if (svc.addons && svc.addons.length) {
     html += `<div class="detail-section detail-addons">
       <div class="detail-section-title">➕ Add-ons</div>`;
     for (const addon of svc.addons) {
       const price = addon.price_adult || addon.price_child || 0;
-      const isChecked = svc._selectedAddons && svc._selectedAddons.some(a => a.name === addon.addon_name);
+      const isChecked = state.selectedAddons.some(a => a.name === addon.addon_name);
       html += `
         <div class="addon-option">
-          <input type="checkbox" id="addon-${svc.id}-${addon.addon_name}" 
+          <input type="checkbox" id="addon-${key}-${escHtml(addon.addon_name)}"
                  ${isChecked ? 'checked' : ''}
-                 onchange="toggleAddon(${svc.id}, '${escHtml(addon.addon_name)}', ${price})">
-          <label for="addon-${svc.id}-${addon.addon_name}">${escHtml(addon.addon_name)}</label>
+                 onchange="toggleAddon('${key}', '${escHtml(addon.addon_name)}', ${price})">
+          <label for="addon-${key}-${escHtml(addon.addon_name)}">${escHtml(addon.addon_name)}</label>
           <span class="addon-price">฿${price.toLocaleString()}</span>
         </div>`;
     }
     html += `</div>`;
   }
 
-  if (svc.notes) {
-    html += `<div style="font-size:12px;color:var(--muted);margin-top:8px">📝 ${escHtml(svc.notes)}</div>`;
+  // 4. Optional Attraction Combo Search
+  html += `
+  <div class="detail-section" style="margin-top:16px; border-top:1px dashed var(--border); padding-top:16px;">
+    <button class="combo-toggle-btn ${state.comboOpen ? 'open' : ''}"
+            onclick="event.stopPropagation();toggleTransferCombo('${key}')">
+      ${state.comboOpen ? '▲ Hide Optional Attraction' : '+ Add Optional Attraction Ticket'}
+    </button>
+  `;
+
+  if (state.comboOpen) {
+    html += `<div class="combo-options" style="margin-top:12px;">`;
+
+    if (state.selectedAttraction) {
+       const attr = state.selectedAttraction.item;
+       const pricing = state.selectedAttraction.pricing;
+       
+       html += `<div class="combo-option selected" style="cursor:default;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                      <strong>${escHtml(attr.name)}</strong>
+                      <button class="btn btn-danger-ghost btn-sm" onclick="event.stopPropagation();clearComboAttraction('${key}')">Remove</button>
+                  </div>`;
+
+       // Render database unit rates & remarks regardless of pax count
+       html += renderBasePricesAndRemarks(attr.raw, pricing);
+
+       if (!pricing) {
+          html += `<div style="padding: 8px 0;"><span class="spinner" style="width:14px;height:14px;"></span> Calculating...</div>`;
+       } else {
+          html += `<div class="ticket-breakdown" style="margin-top: 8px; background:var(--surface3); padding:8px; border-radius:6px;">`;
+          if (pricing.breakdown && pricing.breakdown.length) {
+              pricing.breakdown.forEach(b => {
+                 html += `<div class="ticket-breakdown-row"><span>${escHtml(b.label)}</span><span class="val">฿${b.subtotal.toLocaleString()}</span></div>`;
+              });
+          } else {
+              html += `<div style="font-size:12px;color:var(--muted2);">No pax selected (check Adult/Child/Senior counts above).</div>`;
+          }
+          html += `<div class="ticket-total-row" style="margin-top:4px; padding-top:4px; border-top:1px solid var(--border);">
+                     <span>Attraction Total</span><span>฿${pricing.total.toLocaleString()}</span>
+                   </div>
+                 </div>`;
+       }
+       html += `</div>`;
+    } else {
+       // Search bar with separate results container to prevent focus loss
+       html += `
+        <div class="search-bar" style="padding: 4px 12px; margin-bottom: 8px;">
+          <input type="text" id="combo-input-${key}"
+                 placeholder="Search full attraction database..."
+                 value="${escHtml(state.comboSearchQuery)}"
+                 oninput="handleComboSearchInput('${key}', this.value)"
+                 style="font-size: 13px; padding: 8px 0;">
+          <span id="combo-spinner-${key}" class="spinner" style="width:14px;height:14px;margin-right:6px;display:none;"></span>
+        </div>
+        <div id="combo-results-${key}">
+          ${renderComboResultsList(key)}
+        </div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  // 5. Total Button and Hints
+  let totalBtnPrice = state.selectedRate ? state.selectedRate.price : 0;
+  state.selectedAddons.forEach(a => totalBtnPrice += a.price);
+  if (state.selectedAttraction && state.selectedAttraction.pricing) {
+     totalBtnPrice += state.selectedAttraction.pricing.total;
   }
 
-  const hasSelected = svc._selectedRate !== null;
-  const hintText = hasSelected 
-    ? `Selected: ${svc._selectedRate.vehicle || svc._selectedRate.paxCategory} — ฿${svc._selectedRate.price.toLocaleString()}`
+  const hasSelected = state.selectedRate !== null;
+  const btnText = (state.comboOpen && state.selectedAttraction) ? `Add Transfer + Bundle` : `Add to Cart`;
+  const hintText = hasSelected
+    ? `Total: ฿${totalBtnPrice.toLocaleString()}`
     : 'Select a rate above first';
 
   html += `
-    <button class="btn btn-primary detail-add-btn" id="add-btn-${svc.id}" 
-            onclick="event.stopPropagation();addToCartFromDetail(${svc.id})" 
+    <button class="btn btn-primary detail-add-btn" id="add-btn-${key}"
+            onclick="event.stopPropagation();addTransferToCart('${key}')"
             ${!hasSelected ? 'disabled' : ''}>
-      Add to Cart
+      ${btnText}
     </button>
-    <div style="font-size:11px;color:var(--muted2);margin-top:4px;text-align:center" id="add-hint-${svc.id}">
+    <div style="font-size:11px;color:var(--muted2);margin-top:4px;text-align:center" id="add-hint-${key}">
       ${hintText}
     </div>`;
 
   return html;
 }
 
-// ── SERVICE INTERACTION ──────────────────────────────────────────────────────
-function toggleService(id) {
-  if (selectedService === id) {
-    selectedService = null;
-    const card = document.querySelector(`.result-card[data-service-id="${id}"]`);
-    if (card) card.classList.remove('selected');
-    return;
-  }
-  
-  document.querySelectorAll('.result-card.selected').forEach(el => {
-    el.classList.remove('selected');
-  });
-  
-  selectedService = id;
-  const card = document.querySelector(`.result-card[data-service-id="${id}"]`);
-  if (card) {
-    card.classList.add('selected');
-  } else {
-    return;
-  }
-  
-  const svc = allResults.find(s => s.id === id);
-  if (svc) {
-    if (!svc._selectedRate) {
-      document.getElementById(`add-btn-${id}`).disabled = true;
-      document.getElementById(`add-hint-${id}`).textContent = 'Select a rate above first';
+let comboSearchTimeout = null;
+
+async function toggleTransferCombo(key) {
+    const state = getCardState(key);
+    state.comboOpen = !state.comboOpen;
+    const item = allResults.find(r => cardKey(r) === key);
+    document.getElementById(`detail-${key}`).innerHTML = renderCardDetail(item);
+}
+
+// ── FIXED COMBO SEARCH (NO INPUT FOCUS LOSS) ──────────────────────────────────
+function handleComboSearchInput(key, query) {
+    const state = getCardState(key);
+    state.comboSearchQuery = query;
+
+    const spinner = document.getElementById(`combo-spinner-${key}`);
+    if (spinner) spinner.style.display = 'inline-block';
+
+    clearTimeout(comboSearchTimeout);
+    comboSearchTimeout = setTimeout(() => doComboSearch(key, query), 300);
+}
+
+async function doComboSearch(key, query) {
+    const state = getCardState(key);
+    const spinner = document.getElementById(`combo-spinner-${key}`);
+    const resultsEl = document.getElementById(`combo-results-${key}`);
+
+    if (!query.trim()) {
+        state.comboResults = null;
+        if (spinner) spinner.style.display = 'none';
+        if (resultsEl) resultsEl.innerHTML = `<div class="combo-empty">Type to search for optional attractions to add.</div>`;
+        return;
+    }
+
+    const params = new URLSearchParams({ q: query, type: 'attraction', limit: '20' });
+    const r = await apiFetch(`/quotation/api/catalog-search?${params.toString()}`);
+    if (spinner) spinner.style.display = 'none';
+    
+    if (r) {
+        try {
+            const data = await r.json();
+            state.comboResults = data.error ? [] : data;
+        } catch (e) {
+            state.comboResults = [];
+        }
     } else {
-      document.getElementById(`add-btn-${id}`).disabled = false;
-      document.getElementById(`add-hint-${id}`).textContent = 
-        `Selected: ${svc._selectedRate.vehicle || svc._selectedRate.paxCategory} — ฿${svc._selectedRate.price.toLocaleString()}`;
+        state.comboResults = [];
     }
+
+    if (resultsEl) {
+        resultsEl.innerHTML = renderComboResultsList(key);
+    }
+}
+
+function renderComboResultsList(key) {
+    const state = getCardState(key);
+    if (!state.comboResults) {
+        return `<div class="combo-empty">Type to search for optional attractions to add.</div>`;
+    }
+    if (state.comboResults.length === 0) {
+        return `<div class="combo-empty">No attractions found.</div>`;
+    }
+
+    let html = `<div style="max-height: 200px; overflow-y: auto; display:flex; flex-direction:column; gap:4px;">`;
+    state.comboResults.forEach(attr => {
+        html += `<div class="combo-option" onclick="event.stopPropagation();selectComboAttraction('${key}', '${cardKey(attr)}')">
+                   <div class="combo-option-name">${escHtml(attr.name)}</div>
+                   <div class="combo-option-meta">${escHtml(attr.city)}</div>
+                 </div>`;
+    });
+    html += `</div>`;
+    return html;
+}
+
+async function selectComboAttraction(transferKey, attrKey) {
+    const state = getCardState(transferKey);
+    const attrItem = state.comboResults.find(r => cardKey(r) === attrKey);
+    if (!attrItem) return;
+
+    state.selectedAttraction = { item: attrItem, pricing: null };
+    const transferItem = allResults.find(r => cardKey(r) === transferKey);
+    document.getElementById(`detail-${transferKey}`).innerHTML = renderCardDetail(transferItem);
+
+    await fetchComboAttractionPricing(transferKey, attrItem);
+
+    if (selectedCard === transferKey) {
+        document.getElementById(`detail-${transferKey}`).innerHTML = renderCardDetail(transferItem);
+    }
+}
+
+async function fetchComboAttractionPricing(transferKey, attrItem) {
+    const state = getCardState(transferKey);
+    const pax = currentPax();
+    const params = new URLSearchParams({ adults: pax.adults, children: pax.children, seniors: pax.seniors });
+
+    const r = await apiFetch(`/quotation/api/attraction/${attrItem.id}?${params.toString()}`);
+    if (r) {
+        try {
+            const data = await r.json();
+            if (!data.error && state.selectedAttraction && state.selectedAttraction.item.id === attrItem.id) {
+                if (isYonaBeachSupplier(attrItem) || isYonaBeachSupplier(attrItem.raw)) {
+                  const pkgPrice = attrItem.raw?.adult_net_price || attrItem.raw?.price_adult || data.pricing?.rates?.Adult || data.pricing?.total || 0;
+                  state.selectedAttraction.pricing = {
+                    total: pkgPrice,
+                    breakdown: [{ label: '1 x Single Package Deal', subtotal: pkgPrice }]
+                  };
+                } else {
+                  state.selectedAttraction.pricing = data.pricing;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch combo pricing:', e);
+        }
+    }
+}
+
+function clearComboAttraction(key) {
+    const state = getCardState(key);
+    state.selectedAttraction = null;
+    const item = allResults.find(r => cardKey(r) === key);
+    document.getElementById(`detail-${key}`).innerHTML = renderCardDetail(item);
+}
+
+// ── RENDER: ATTRACTION DETAIL ──────────────────────────────────────────────────
+function renderAttractionDetail(item) {
+  const key = cardKey(item);
+  const state = getCardState(key);
+
+  const attraction = item.raw;
+  let pricing = state.ticketPricing;
+
+  const isYona = isYonaBeachSupplier(item) || isYonaBeachSupplier(attraction);
+
+  if (isYona) {
+    const pkgPrice = attraction?.adult_net_price ?? attraction?.price_adult ?? attraction?.adult_price ?? 0;
+    pricing = {
+      total: pkgPrice,
+      breakdown: [{ label: '1 x Single Package Deal', subtotal: pkgPrice }]
+    };
+    state.ticketPricing = pricing;
+  }
+
+  let html = `<div class="detail-section">`;
+
+  // Always show base database rates & remarks regardless of pax
+  html += renderBasePricesAndRemarks(attraction, pricing);
+
+  if (!pricing && !isYona) {
+    html += `<div class="empty-state" style="padding:15px 0"><span class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block"></span> Loading pricing details…</div></div>`;
+    return html;
+  }
+
+  html += `<div class="detail-section-title">${isYona ? '🎟 Package Pricing' : '🎟 Ticket Breakdown for Selected Pax'}</div>
+    <div class="ticket-breakdown">`;
+
+  if (!pricing.breakdown || !pricing.breakdown.length) {
+    html += `<div style="font-size:12.5px;color:var(--muted2)">No pax selected — set adults/children/seniors in top bar.</div>`;
+  } else {
+    for (const line of pricing.breakdown) {
+      html += `<div class="ticket-breakdown-row"><span>${escHtml(line.label)}</span><span class="val">฿${line.subtotal.toLocaleString()}</span></div>`;
+    }
+  }
+  html += `<div class="ticket-total-row"><span>Ticket Total</span><span>฿${pricing.total.toLocaleString()}</span></div>`;
+  html += `</div></div>`;
+
+  const disabled = (!pricing.breakdown || !pricing.breakdown.length) ? 'disabled' : '';
+  html += `
+    <button class="btn btn-primary detail-add-btn" id="add-btn-${key}"
+            onclick="event.stopPropagation();addAttractionTicketToCart('${key}')" ${disabled}>
+      Add Ticket to Cart
+    </button>`;
+
+  return html;
+}
+
+async function refreshExpandedCard(item) {
+  const key = cardKey(item);
+  const detailEl = document.getElementById(`detail-${key}`);
+  if (detailEl) detailEl.innerHTML = renderAttractionDetail(item); 
+  await fetchAttractionPricing(item);
+  if (detailEl) detailEl.innerHTML = renderCardDetail(item);
+}
+
+// ── CARD INTERACTION ─────────────────────────────────────────────────────────
+async function toggleCard(key) {
+  if (selectedCard === key) {
+    selectedCard = null;
+    const card = document.querySelector(`.result-card[data-card-key="${key}"]`);
+    if (card) {
+      card.classList.remove('selected');
+      document.getElementById(`detail-${key}`).innerHTML = '';
+    }
+    return;
+  }
+
+  document.querySelectorAll('.result-card.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.service-detail').forEach(el => el.innerHTML = '');
+
+  selectedCard = key;
+  const card = document.querySelector(`.result-card[data-card-key="${key}"]`);
+  if (!card) return;
+  card.classList.add('selected');
+
+  const item = allResults.find(r => cardKey(r) === key);
+  if (!item) return;
+
+  const detailEl = document.getElementById(`detail-${key}`);
+
+  if (item.type === 'transfer') {
+    detailEl.innerHTML = renderTransferDetail(item);
+    return;
+  }
+
+  detailEl.innerHTML = renderAttractionDetail(item);
+  await fetchAttractionPricing(item);
+  if (selectedCard === key) { 
+    detailEl.innerHTML = renderCardDetail(item);
   }
 }
 
-function selectRate(serviceId, rateType, vehicle, price, paxInfo) {
-  const svc = allResults.find(s => s.id === serviceId);
-  if (!svc) return;
+async function fetchAttractionPricing(item) {
+  const key = cardKey(item);
+  const state = getCardState(key);
+  const pax = currentPax();
+  const params = new URLSearchParams({ adults: pax.adults, children: pax.children, seniors: pax.seniors });
 
-  if (svc._selectedRate && 
-      svc._selectedRate.rateType === rateType && 
-      svc._selectedRate.vehicle === vehicle &&
-      svc._selectedRate.price === price) {
-    svc._selectedRate = null;
-  } else {
-    svc._selectedRate = { rateType, vehicle, paxInfo, price, paxCategory: vehicle };
-  }
-
-  const card = document.querySelector(`.result-card[data-service-id="${serviceId}"]`);
-  if (card) {
-    const detail = card.querySelector('.service-detail');
-    if (detail) {
-      detail.innerHTML = renderServiceDetail(svc);
+  const r = await apiFetch(`/quotation/api/attraction/${item.id}?${params.toString()}`);
+  if (!r) return;
+  try {
+    const data = await r.json();
+    if (!data.error) {
+      if (isYonaBeachSupplier(item) || isYonaBeachSupplier(item.raw)) {
+        const pkgPrice = item.raw?.adult_net_price || item.raw?.price_adult || data.pricing?.rates?.Adult || data.pricing?.total || 0;
+        state.ticketPricing = {
+          total: pkgPrice,
+          breakdown: [{ label: '1 x Single Package Deal', subtotal: pkgPrice }]
+        };
+      } else {
+        state.ticketPricing = data.pricing;
+      }
     }
-    if (svc._selectedRate) {
-      card.classList.add('selected');
-    }
-  }
-
-  const btn = document.getElementById(`add-btn-${serviceId}`);
-  const hint = document.getElementById(`add-hint-${serviceId}`);
-  if (svc._selectedRate) {
-    if (btn) btn.disabled = false;
-    if (hint) hint.textContent = `Selected: ${svc._selectedRate.vehicle || svc._selectedRate.paxCategory} — ฿${svc._selectedRate.price.toLocaleString()}`;
-  } else {
-    if (btn) btn.disabled = true;
-    if (hint) hint.textContent = 'Select a rate above first';
+  } catch (e) {
+    console.error('Failed to fetch attraction pricing:', e);
   }
 }
 
-function toggleAddon(serviceId, addonName, price) {
-  const svc = allResults.find(s => s.id === serviceId);
-  if (!svc) return;
-  if (!svc._selectedAddons) svc._selectedAddons = [];
-  
-  const idx = svc._selectedAddons.findIndex(a => a.name === addonName);
+// ── RATE / ADDON SELECTION ────────────────────────────────────────────────────
+function selectRate(key, rateType, vehicle, price, paxInfo) {
+  const item = allResults.find(r => cardKey(r) === key);
+  if (!item) return;
+  const state = getCardState(key);
+
+  if (state.selectedRate &&
+      state.selectedRate.rateType === rateType &&
+      state.selectedRate.vehicle === vehicle &&
+      state.selectedRate.price === price) {
+    state.selectedRate = null;
+  } else {
+    state.selectedRate = { rateType, vehicle, paxInfo, price, paxCategory: vehicle };
+  }
+
+  const detailEl = document.getElementById(`detail-${key}`);
+  if (detailEl) detailEl.innerHTML = renderCardDetail(item);
+}
+
+function toggleAddon(key, addonName, price) {
+  const state = getCardState(key);
+  const idx = state.selectedAddons.findIndex(a => a.name === addonName);
   if (idx >= 0) {
-    svc._selectedAddons.splice(idx, 1);
+    state.selectedAddons.splice(idx, 1);
   } else {
-    svc._selectedAddons.push({ name: addonName, price });
+    state.selectedAddons.push({ name: addonName, price });
   }
 }
 
-function addToCartFromDetail(serviceId) {
-  const svc = allResults.find(s => s.id === serviceId);
-  if (!svc) {
-    alert('Service not found.');
-    return;
-  }
-  if (!svc._selectedRate) {
-    alert('Please select a rate first.');
-    return;
+// ── ADD TO CART ───────────────────────────────────────────────────────────────
+function flashAddedButton(key) {
+  const btn = document.getElementById(`add-btn-${key}`);
+  if (!btn) return;
+  const orig = btn.textContent;
+  btn.textContent = '✓ Added!';
+  btn.style.background = 'var(--green)';
+  btn.style.color = '#0a0a0f';
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.style.background = '';
+    btn.style.color = '';
+  }, 1500);
+}
+
+function addTransferToCart(key) {
+  const item = allResults.find(r => cardKey(r) === key);
+  const state = getCardState(key);
+  if (!item) { alert('Service not found.'); return; }
+  if (!state.selectedRate) { alert('Please select a rate first.'); return; }
+
+  let cartItem;
+  if (state.selectedAttraction && state.selectedAttraction.pricing) {
+    // Add as combined Transfer + Bundle
+    cartItem = makeTransferBundleCartItem(
+      item.raw, 
+      state.selectedRate, 
+      state.selectedAttraction.item.raw, 
+      state.selectedAttraction.pricing, 
+      state.selectedAddons
+    );
+    // Enrich with structured breakdown for cart renderer
+    cartItem.transferDetails = {
+      rateType: state.selectedRate.rateType,
+      vehicle: state.selectedRate.vehicle,
+      paxCategory: state.selectedRate.paxCategory,
+      paxInfo: state.selectedRate.paxInfo,
+      price: state.selectedRate.price,
+      addons: state.selectedAddons || []
+    };
+    cartItem.attractionDetails = {
+      name: state.selectedAttraction.item.name,
+      pricing: state.selectedAttraction.pricing,
+      pax: currentPax(),
+      raw: state.selectedAttraction.item.raw
+    };
+  } else {
+    // Add as standard Transfer
+    cartItem = makeTransferCartItem(
+      item.raw, 
+      state.selectedRate, 
+      state.selectedAddons
+    );
+    cartItem.transferDetails = {
+      rateType: state.selectedRate.rateType,
+      vehicle: state.selectedRate.vehicle,
+      paxCategory: state.selectedRate.paxCategory,
+      paxInfo: state.selectedRate.paxInfo,
+      price: state.selectedRate.price,
+      addons: state.selectedAddons || []
+    };
   }
 
-  const { rateType, vehicle, price, paxCategory } = svc._selectedRate;
-  const addons = svc._selectedAddons || [];
-  const addonTotal = addons.reduce((sum, a) => sum + a.price, 0);
+  cart.push(cartItem);
+  renderCart();
+  updateCartTotals();
+  flashAddedButton(key);
+}
 
-  const cartItem = {
-    id: Date.now() + Math.random(),
-    serviceId: svc.id,
-    name: svc.name,
-    destination: svc.destination,
-    serviceType: svc.service_type,
-    rateType: rateType,
-    vehicle: vehicle || paxCategory || 'N/A',
-    basePrice: price,
-    addons: [...addons],
-    addonTotal: addonTotal,
-    totalPrice: price + addonTotal,
-    quantity: 1,
+function addAttractionTicketToCart(key) {
+  const item = allResults.find(r => cardKey(r) === key);
+  const state = getCardState(key);
+  if (!item || !state.ticketPricing) { alert('Pricing not loaded yet.'); return; }
+  if (!state.ticketPricing.breakdown || !state.ticketPricing.breakdown.length) { alert('Set at least one adult/child/senior first.'); return; }
+
+  const cartItem = makeAttractionCartItem(item.raw, state.ticketPricing, []);
+  cartItem.attractionDetails = {
+    name: item.name,
+    pricing: state.ticketPricing,
+    pax: currentPax(),
+    raw: item.raw
   };
 
   cart.push(cartItem);
   renderCart();
   updateCartTotals();
-  
-  const btn = document.getElementById(`add-btn-${serviceId}`);
-  if (btn) {
-    const orig = btn.textContent;
-    btn.textContent = '✓ Added!';
-    btn.style.background = 'var(--green)';
-    btn.style.color = '#0a0a0f';
-    setTimeout(() => {
-      btn.textContent = orig;
-      btn.style.background = '';
-      btn.style.color = '';
-    }, 1500);
-  }
+  flashAddedButton(key);
 }
 
-// ── CART ──────────────────────────────────────────────────────────────────────
+// ── CART RENDERER WITH COLUMN PRICE BREAKDOWN ────────────────────────────────
+function describeCartItemMeta(item) {
+  if (item.type === 'transfer') {
+    return [item.meta.destination, item.meta.serviceType, item.meta.rateType, item.meta.vehicle]
+      .filter(Boolean).join(' · ');
+  }
+  if (item.type === 'attraction') {
+    const p = item.meta.paxSummary;
+    return [item.meta.city, `${p.adults}A/${p.children}C/${p.seniors}S`].filter(Boolean).join(' · ');
+  }
+  const p = item.meta.paxSummary;
+  return [item.meta.city, item.meta.transferName, `${p.adults}A/${p.children}C/${p.seniors}S`]
+    .filter(Boolean).join(' · ');
+}
+
+function cartItemKindLabel(type) {
+  return { 
+    transfer: 'Transfer', 
+    attraction: 'Attraction Ticket', 
+    attraction_bundle: 'Transfer + Bundle', 
+    transfer_bundle: 'Transfer + Bundle' 
+  }[type] || 'Transfer + Bundle';
+}
+
+function renderCartItemBreakdown(item) {
+  let html = '';
+
+  // 1. Attraction Breakdown Section
+  const attrPricing = item.attractionDetails?.pricing || item.ticketPricing || item.pricing;
+  
+  if (attrPricing && attrPricing.breakdown && attrPricing.breakdown.length > 0) {
+    html += `
+      <div class="cart-breakdown-section" style="margin-top:8px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#fbbf24; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+          <span>🎟️ Attraction Ticket Breakdown</span>
+          <span style="font-family:monospace; color:var(--text);">฿${(attrPricing.total || 0).toLocaleString()}</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px; font-size:11.5px;">
+    `;
+    
+    attrPricing.breakdown.forEach(line => {
+      let label = line.label || `${line.paxType || 'Pax'} (${line.count} x ฿${line.unitPrice})`;
+      let subtotal = line.subtotal != null ? line.subtotal : (line.count * line.unitPrice);
+      
+      html += `
+        <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; border-bottom:1px dashed rgba(255,255,255,0.05); padding-bottom:3px;">
+          <span style="color:var(--text); font-weight:500;">${escHtml(label)}</span>
+          <span style="font-family:monospace; font-weight:600; color:var(--green); text-align:right;">= ฿${subtotal.toLocaleString()}</span>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  }
+
+  // 2. Transfer Breakdown Section
+  const transfer = item.transferDetails || item.meta;
+  if (transfer && (transfer.vehicle || transfer.rateType || item.type === 'transfer' || item.type === 'transfer_bundle' || item.type === 'attraction_bundle')) {
+    const rateName = transfer.vehicle || transfer.rateType || 'Transfer Service';
+    const ratePrice = transfer.price != null ? transfer.price : (item.transferPrice || 0);
+    const addons = transfer.addons || item.addons || [];
+    let addonsTotal = 0;
+    
+    html += `
+      <div class="cart-breakdown-section" style="margin-top:8px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#22d3ee; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+          <span>🚗 Transfer Service Breakdown</span>
+          <span style="font-family:monospace; color:var(--text);">฿${(ratePrice + addons.reduce((acc, a) => acc + (a.price || 0), 0)).toLocaleString()}</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px; font-size:11.5px;">
+          <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center;">
+            <span style="color:var(--text);">${escHtml(rateName)} ${transfer.paxInfo ? `<span style="color:var(--muted); font-size:10.5px;">(${escHtml(transfer.paxInfo)})</span>` : ''}</span>
+            <span style="font-family:monospace; font-weight:600; color:#22d3ee; text-align:right;">= ฿${ratePrice.toLocaleString()}</span>
+          </div>
+    `;
+
+    if (addons && addons.length > 0) {
+      addons.forEach(addon => {
+        addonsTotal += (addon.price || 0);
+        html += `
+          <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; color:var(--muted);">
+            <span>+ ${escHtml(addon.name)}</span>
+            <span style="font-family:monospace; font-weight:500; text-align:right;">= ฿${(addon.price || 0).toLocaleString()}</span>
+          </div>
+        `;
+      });
+    }
+
+    html += `
+        </div>
+      </div>
+    `;
+  }
+
+  return html;
+}
+
 function renderCart() {
   const container = document.getElementById('cart-items');
   const count = document.getElementById('cart-count');
@@ -1415,7 +2093,7 @@ function renderCart() {
     container.innerHTML = `
       <div style="text-align:center;color:var(--muted2);font-size:13px;padding:40px 0;">
         No items added yet.<br>
-        Search for services and click <strong>Add to Cart</strong>.
+        Search for transfers or attraction tickets and add them here.
       </div>`;
     count.textContent = '0 items';
     document.getElementById('generate-btn').disabled = true;
@@ -1430,19 +2108,25 @@ function renderCart() {
     return `
     <div class="cart-item">
       <div class="cart-item-top">
-        <div class="cart-item-name">${escHtml(item.name)}</div>
+        <div>
+          <span class="cart-item-kind cart-item-kind-${item.type}">${cartItemKindLabel(item.type)}</span>
+          <div class="cart-item-name">${escHtml(item.name)}</div>
+        </div>
         <button class="cart-item-remove" onclick="removeFromCart(${idx})" title="Remove">✕</button>
       </div>
       <div class="cart-item-details">
-        <span>${escHtml(item.destination)}</span>
-        <span>${escHtml(item.serviceType)}</span>
-        <span>${escHtml(item.rateType)}</span>
-        <span>${escHtml(item.vehicle)}</span>
+        <span>${escHtml(describeCartItemMeta(item))}</span>
       </div>
-      ${item.addons.length ? `<div class="cart-item-details" style="color:var(--accent-dim)">+ ${item.addons.map(a => a.name).join(', ')}</div>` : ''}
-      <div class="cart-item-price">
-        ฿${item.totalPrice.toLocaleString()}
-        ${usd ? `<span class="usd">≈ $${usd}</span>` : ''}
+
+      <!-- Formatted Column Breakdown -->
+      ${renderCartItemBreakdown(item)}
+
+      <div class="cart-item-price" style="margin-top:10px; display:flex; justify-content:space-between; align-items:baseline; border-top:1px solid var(--border); padding-top:8px;">
+        <span style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600;">Subtotal</span>
+        <div>
+          ฿${item.totalPrice.toLocaleString()}
+          ${usd ? `<span class="usd">≈ $${usd}</span>` : ''}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1458,15 +2142,10 @@ function clearCart() {
   cart = [];
   renderCart();
   updateCartTotals();
-  for (const svc of allResults) {
-    svc._selectedRate = null;
-    svc._selectedAddons = [];
-    const btn = document.getElementById(`add-btn-${svc.id}`);
-    if (btn) btn.disabled = true;
-    const hint = document.getElementById(`add-hint-${svc.id}`);
-    if (hint) hint.textContent = 'Select a rate above first';
-  }
-  document.querySelectorAll('.rate-option.selected').forEach(el => el.classList.remove('selected'));
+  for (const key of Object.keys(cardState)) delete cardState[key];
+  selectedCard = null;
+  document.querySelectorAll('.result-card.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.service-detail').forEach(el => el.innerHTML = '');
 }
 
 function roundToNearestHalf(value) {
@@ -1475,10 +2154,7 @@ function roundToNearestHalf(value) {
 
 function updateCartTotals() {
   const comm = parseFloat(document.getElementById('commission-input').value) || 100;
-  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const commissionAmount = subtotal / (comm / 100);
-  const total =  roundToNearestHalf(commissionAmount);
-
+  const total = cartGrandTotal(cart, comm);
   const usd = thbToUsd(total);
   document.getElementById('cart-total').innerHTML = `
     ฿${total.toLocaleString()}
@@ -1509,9 +2185,8 @@ function buildQuotationText() {
   });
   const comm = parseFloat(document.getElementById('commission-input').value) || 100;
   const usdRate = getUsdRate();
-  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const commissionAmount = subtotal / (comm / 100);
-  const grandTotal = roundToNearestHalf(commissionAmount);
+  const subtotal = cartSubtotal(cart);
+  const grandTotal = cartGrandTotal(cart, comm);
 
   const div = '─'.repeat(30);
 
@@ -1525,9 +2200,8 @@ function buildQuotationText() {
   cart.forEach((item, i) => {
     const itemUsd = thbToUsd(item.totalPrice);
     lines.push(`*${i+1}. ${item.name}*`);
-    lines.push(`   Type: ${item.rateType} · ${item.vehicle}`);
-    lines.push(`   ${item.destination} · ${item.serviceType}`);
-    if (item.addons.length) {
+    lines.push(`   ${cartItemKindLabel(item.type)} · ${describeCartItemMeta(item)}`);
+    if (item.addons && item.addons.length) {
       lines.push(`   Add-ons: ${item.addons.map(a => a.name).join(', ')}`);
     }
     const addonStr = item.addonTotal ? ` (+ ฿${item.addonTotal.toLocaleString()} add-ons)` : '';
@@ -1570,38 +2244,28 @@ async function copyQuotation() {
 }
 
 // ── EXCEL EXPORT ──────────────────────────────────────────────────────────────
-// Builds a 3-column sheet — Service | Price (THB) | Price (USD) — with prices as
-// real numeric cells (sortable/summable in Excel). Uses SheetJS; if the CDN
-// failed to load, falls back to a UTF-8 CSV so the button never dead-ends.
 function exportToExcel() {
   if (!cart.length) return;
 
   const today = new Date().toLocaleDateString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok'
   });
-  // en-CA gives YYYY-MM-DD — clean for filenames.
   const fileDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
   const comm = parseFloat(document.getElementById('commission-input').value) || 0;
-  const usdRate = getUsdRate();
 
-  const subtotal = cart.reduce((s, it) => s + it.totalPrice, 0);
+  const subtotal = cartSubtotal(cart);
   const commissionAmount = comm === 0 ? subtotal : subtotal + (subtotal / (comm / 100));
   const grandTotal = roundToNearestHalf(commissionAmount);
 
-  // Pack every detail of a line item into one cell.
   const describe = (it) => {
-    let d = it.name;
-    const meta = [it.rateType, it.vehicle].filter(Boolean).join(' · ');
+    let d = `[${cartItemKindLabel(it.type)}] ${it.name}`;
+    const meta = describeCartItemMeta(it);
     if (meta) d += ` — ${meta}`;
-    const place = [it.destination, it.serviceType].filter(Boolean).join(', ');
-    if (place) d += ` (${place})`;
     if (it.addons && it.addons.length) d += ` + ${it.addons.map(a => a.name).join(', ')}`;
     return d;
   };
-  // Return a finite USD number, or '' (keeps the cell blank, never NaN/0).
   const usdVal = (thb) => { const u = parseFloat(thbToUsd(thb)); return isFinite(u) ? u : ''; };
 
-  // Array-of-arrays → worksheet. Numbers stay numbers.
   const aoa = [
     ['Vayo Aura — Service Quotation'],
     ['Date', today],
@@ -1619,7 +2283,7 @@ function exportToExcel() {
 
   if (typeof XLSX !== 'undefined') {
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = [{ wch: 52 }, { wch: 14 }, { wch: 14 }];  // column widths
+    ws['!cols'] = [{ wch: 60 }, { wch: 14 }, { wch: 14 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Quotation');
     XLSX.writeFile(wb, filename);
@@ -1634,7 +2298,6 @@ function exportToExcel() {
   }
 }
 
-// CSV fallback — UTF-8 BOM so Excel renders ฿ and aligns columns correctly.
 function exportCsvFallback(aoa, filename) {
   const esc = (v) => {
     const s = (v == null ? '' : String(v));
@@ -1658,16 +2321,15 @@ function escHtml(str) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 loadFx();
+loadUnifiedFilterOptions();
 
-// Handle Enter key on search
 document.getElementById('search-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { 
-    e.preventDefault(); 
-    doSearch(); 
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    doSearch();
   }
 });
 
-// Close sidebar on mobile when clicking outside
 document.addEventListener('click', (e) => {
   const sidebar = document.getElementById('sidebar');
   if (window.innerWidth <= 820 && sidebar.classList.contains('open')) {
@@ -1677,8 +2339,8 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Update active filters on page load
 updateActiveFilters();
+doSearch();
 </script>
 </body>
 </html>

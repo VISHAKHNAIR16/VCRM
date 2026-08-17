@@ -46,8 +46,8 @@ app.include_router(quotation_router, prefix="/quotation", tags=["quotation"])
 from features.vstudio.router import router as vstudio_router
 app.include_router(vstudio_router, prefix="/vstudio", tags=["vstudio"])
 
-from features.quotation_attractions.router import router as quotation_attractions_router
-app.include_router(quotation_attractions_router, prefix="/quotation-attractions", tags=["quotation-attractions"])
+# from features.quotation_attractions.router import router as quotation_attractions_router
+# app.include_router(quotation_attractions_router, prefix="/quotation-attractions", tags=["quotation-attractions"])
 
 # ========== CONFIGURATION ==========
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
