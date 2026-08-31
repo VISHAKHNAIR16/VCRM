@@ -1072,7 +1072,7 @@ function getCardState(key) {
       comboSearchQuery: '',
       comboResults: null,        
       comboLoading: false,
-      selectedAttraction: null,  
+      selectedAttractions: [],   // array of { item, pricing } — supports adding multiple attractions
     };
   }
   return cardState[key];
@@ -1310,13 +1310,15 @@ async function onPaxChanged() {
     state.ticketPricing = null;
     await refreshExpandedCard(item);
   } else if (item.type === 'transfer') {
-    if (state.selectedAttraction) {
-       state.selectedAttraction.pricing = null;
+    if (state.selectedAttractions && state.selectedAttractions.length) {
+       state.selectedAttractions.forEach(sel => { sel.pricing = null; });
        const detailEl = document.getElementById(`detail-${selectedCard}`);
        if (detailEl) detailEl.innerHTML = renderCardDetail(item);
-       
-       await fetchComboAttractionPricing(selectedCard, state.selectedAttraction.item);
-       
+
+       await Promise.all(
+         state.selectedAttractions.map((sel, i) => fetchComboAttractionPricing(selectedCard, sel.item, i))
+       );
+
        if (selectedCard === cardKey(item)) {
          document.getElementById(`detail-${selectedCard}`).innerHTML = renderCardDetail(item);
        }
@@ -1324,12 +1326,19 @@ async function onPaxChanged() {
   }
 }
 
-// ── HELPER: YONA BEACH SUPPLIER CHECK ─────────────────────────────────────────
+// ── HELPER: SINGLE PACKAGE-RATE SUPPLIER CHECK ─────────────────────────────────
+// Some suppliers only ever sell ONE flat package price (no separate
+// adult/child/senior split). Their cards should render a single "Package
+// Deal Rate" instead of the normal Adult/Child/Senior price grid.
+// To opt another supplier into this same single-rate card treatment, just
+// add their name (lowercase) to this list — nothing else needs to change.
+const SINGLE_PACKAGE_RATE_SUPPLIERS = ['yona beach', 'yona', 'guide sai'];
+
 function isYonaBeachSupplier(itemOrAttraction) {
   if (!itemOrAttraction) return false;
   const sup = (itemOrAttraction.supplier || itemOrAttraction.raw?.supplier || '').toLowerCase();
   const name = (itemOrAttraction.name || itemOrAttraction.attraction_name || itemOrAttraction.raw?.attraction_name || '').toLowerCase();
-  return sup.includes('yona beach') || sup.includes('yona') || name.includes('yona beach');
+  return SINGLE_PACKAGE_RATE_SUPPLIERS.some(s => sup.includes(s) || name.includes(s));
 }
 
 // ── HELPER: BASE RATES & REMARKS RENDERER ─────────────────────────────────────
@@ -1535,26 +1544,32 @@ function renderTransferDetail(item) {
     html += `</div>`;
   }
 
-  // 4. Optional Attraction Combo Search
+  // 4. Optional Attraction Combo Search (supports adding MULTIPLE attractions)
+  const attractionCount = state.selectedAttractions.length;
+  const toggleLabel = state.comboOpen
+    ? '▲ Hide Optional Attractions'
+    : (attractionCount ? `+ Add Optional Attraction Ticket (${attractionCount} added)` : '+ Add Optional Attraction Ticket');
+
   html += `
   <div class="detail-section" style="margin-top:16px; border-top:1px dashed var(--border); padding-top:16px;">
     <button class="combo-toggle-btn ${state.comboOpen ? 'open' : ''}"
             onclick="event.stopPropagation();toggleTransferCombo('${key}')">
-      ${state.comboOpen ? '▲ Hide Optional Attraction' : '+ Add Optional Attraction Ticket'}
+      ${toggleLabel}
     </button>
   `;
 
   if (state.comboOpen) {
     html += `<div class="combo-options" style="margin-top:12px;">`;
 
-    if (state.selectedAttraction) {
-       const attr = state.selectedAttraction.item;
-       const pricing = state.selectedAttraction.pricing;
-       
-       html += `<div class="combo-option selected" style="cursor:default;">
+    // ── Render every attraction already added to this combo ──────────────────
+    state.selectedAttractions.forEach((sel, i) => {
+       const attr = sel.item;
+       const pricing = sel.pricing;
+
+       html += `<div class="combo-option selected" style="cursor:default; margin-bottom:8px;">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                       <strong>${escHtml(attr.name)}</strong>
-                      <button class="btn btn-danger-ghost btn-sm" onclick="event.stopPropagation();clearComboAttraction('${key}')">Remove</button>
+                      <button class="btn btn-danger-ghost btn-sm" onclick="event.stopPropagation();clearComboAttraction('${key}', ${i})">Remove</button>
                   </div>`;
 
        // Render database unit rates & remarks regardless of pax count
@@ -1577,21 +1592,26 @@ function renderTransferDetail(item) {
                  </div>`;
        }
        html += `</div>`;
-    } else {
-       // Search bar with separate results container to prevent focus loss
-       html += `
-        <div class="search-bar" style="padding: 4px 12px; margin-bottom: 8px;">
-          <input type="text" id="combo-input-${key}"
-                 placeholder="Search full attraction database..."
-                 value="${escHtml(state.comboSearchQuery)}"
-                 oninput="handleComboSearchInput('${key}', this.value)"
-                 style="font-size: 13px; padding: 8px 0;">
-          <span id="combo-spinner-${key}" class="spinner" style="width:14px;height:14px;margin-right:6px;display:none;"></span>
-        </div>
-        <div id="combo-results-${key}">
-          ${renderComboResultsList(key)}
-        </div>`;
-    }
+    });
+
+    // ── Search bar to add another attraction (always available while open,
+    //    so the user can keep adding as many attractions as they want) ───────
+    html += `
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.05em;margin:${attractionCount ? '12' : '0'}px 0 6px;">
+        ${attractionCount ? 'Add another attraction' : 'Search full attraction database'}
+      </div>
+      <div class="search-bar" style="padding: 4px 12px; margin-bottom: 8px;">
+        <input type="text" id="combo-input-${key}"
+               placeholder="Search full attraction database..."
+               value="${escHtml(state.comboSearchQuery)}"
+               oninput="handleComboSearchInput('${key}', this.value)"
+               style="font-size: 13px; padding: 8px 0;">
+        <span id="combo-spinner-${key}" class="spinner" style="width:14px;height:14px;margin-right:6px;display:none;"></span>
+      </div>
+      <div id="combo-results-${key}">
+        ${renderComboResultsList(key)}
+      </div>`;
+
     html += `</div>`;
   }
   html += `</div>`;
@@ -1599,12 +1619,12 @@ function renderTransferDetail(item) {
   // 5. Total Button and Hints
   let totalBtnPrice = state.selectedRate ? state.selectedRate.price : 0;
   state.selectedAddons.forEach(a => totalBtnPrice += a.price);
-  if (state.selectedAttraction && state.selectedAttraction.pricing) {
-     totalBtnPrice += state.selectedAttraction.pricing.total;
-  }
+  state.selectedAttractions.forEach(sel => {
+    if (sel.pricing) totalBtnPrice += sel.pricing.total;
+  });
 
   const hasSelected = state.selectedRate !== null;
-  const btnText = (state.comboOpen && state.selectedAttraction) ? `Add Transfer + Bundle` : `Add to Cart`;
+  const btnText = (state.comboOpen && attractionCount) ? `Add Transfer + Bundle (${attractionCount})` : `Add to Cart`;
   const hintText = hasSelected
     ? `Total: ฿${totalBtnPrice.toLocaleString()}`
     : 'Select a rate above first';
@@ -1700,18 +1720,26 @@ async function selectComboAttraction(transferKey, attrKey) {
     const attrItem = state.comboResults.find(r => cardKey(r) === attrKey);
     if (!attrItem) return;
 
-    state.selectedAttraction = { item: attrItem, pricing: null };
+    // Push onto the list rather than replacing — supports adding multiple
+    // attractions to the same transfer combo.
+    state.selectedAttractions.push({ item: attrItem, pricing: null });
+    const newIndex = state.selectedAttractions.length - 1;
+
+    // Reset the search box so it's ready for the user to add the next one.
+    state.comboSearchQuery = '';
+    state.comboResults = null;
+
     const transferItem = allResults.find(r => cardKey(r) === transferKey);
     document.getElementById(`detail-${transferKey}`).innerHTML = renderCardDetail(transferItem);
 
-    await fetchComboAttractionPricing(transferKey, attrItem);
+    await fetchComboAttractionPricing(transferKey, attrItem, newIndex);
 
     if (selectedCard === transferKey) {
         document.getElementById(`detail-${transferKey}`).innerHTML = renderCardDetail(transferItem);
     }
 }
 
-async function fetchComboAttractionPricing(transferKey, attrItem) {
+async function fetchComboAttractionPricing(transferKey, attrItem, index) {
     const state = getCardState(transferKey);
     const pax = currentPax();
     const params = new URLSearchParams({ adults: pax.adults, children: pax.children, seniors: pax.seniors });
@@ -1720,15 +1748,16 @@ async function fetchComboAttractionPricing(transferKey, attrItem) {
     if (r) {
         try {
             const data = await r.json();
-            if (!data.error && state.selectedAttraction && state.selectedAttraction.item.id === attrItem.id) {
+            const sel = state.selectedAttractions[index];
+            if (!data.error && sel && sel.item.id === attrItem.id) {
                 if (isYonaBeachSupplier(attrItem) || isYonaBeachSupplier(attrItem.raw)) {
                   const pkgPrice = attrItem.raw?.adult_net_price || attrItem.raw?.price_adult || data.pricing?.rates?.Adult || data.pricing?.total || 0;
-                  state.selectedAttraction.pricing = {
+                  sel.pricing = {
                     total: pkgPrice,
                     breakdown: [{ label: '1 x Single Package Deal', subtotal: pkgPrice }]
                   };
                 } else {
-                  state.selectedAttraction.pricing = data.pricing;
+                  sel.pricing = data.pricing;
                 }
             }
         } catch (e) {
@@ -1737,9 +1766,9 @@ async function fetchComboAttractionPricing(transferKey, attrItem) {
     }
 }
 
-function clearComboAttraction(key) {
+function clearComboAttraction(key, index) {
     const state = getCardState(key);
-    state.selectedAttraction = null;
+    state.selectedAttractions.splice(index, 1);
     const item = allResults.find(r => cardKey(r) === key);
     document.getElementById(`detail-${key}`).innerHTML = renderCardDetail(item);
 }
@@ -1917,30 +1946,52 @@ function addTransferToCart(key) {
   if (!item) { alert('Service not found.'); return; }
   if (!state.selectedRate) { alert('Please select a rate first.'); return; }
 
+  const attractions = state.selectedAttractions || [];
+
   let cartItem;
-  if (state.selectedAttraction && state.selectedAttraction.pricing) {
-    // Add as combined Transfer + Bundle
-    cartItem = makeTransferBundleCartItem(
-      item.raw, 
-      state.selectedRate, 
-      state.selectedAttraction.item.raw, 
-      state.selectedAttraction.pricing, 
-      state.selectedAddons
-    );
-    // Enrich with structured breakdown for cart renderer
-    cartItem.transferDetails = {
-      rateType: state.selectedRate.rateType,
-      vehicle: state.selectedRate.vehicle,
-      paxCategory: state.selectedRate.paxCategory,
-      paxInfo: state.selectedRate.paxInfo,
-      price: state.selectedRate.price,
-      addons: state.selectedAddons || []
-    };
-    cartItem.attractionDetails = {
-      name: state.selectedAttraction.item.name,
-      pricing: state.selectedAttraction.pricing,
+  if (attractions.length) {
+    // Guard: don't add to cart while any attraction's pricing is still loading.
+    if (attractions.some(sel => !sel.pricing)) {
+      alert('Attraction pricing is still loading — please wait a moment and try again.');
+      return;
+    }
+
+    // ── Add as combined Transfer + Bundle (supports 1..N attractions) ────────
+    const transferPrice = state.selectedRate.price;
+    const addonsTotal = (state.selectedAddons || []).reduce((sum, a) => sum + (a.price || 0), 0);
+    const attractionsTotal = attractions.reduce((sum, sel) => sum + (sel.pricing.total || 0), 0);
+
+    const attractionsDetails = attractions.map(sel => ({
+      name: sel.item.name,
+      pricing: sel.pricing,
       pax: currentPax(),
-      raw: state.selectedAttraction.item.raw
+      raw: sel.item.raw
+    }));
+
+    cartItem = {
+      type: attractions.length > 1 ? 'transfer_bundle' : 'transfer_bundle',
+      name: `${item.name}${attractions.length === 1 ? ` + ${attractionsDetails[0].name}` : ` + ${attractions.length} Attractions`}`,
+      totalPrice: transferPrice + addonsTotal + attractionsTotal,
+      addonTotal: addonsTotal,
+      addons: state.selectedAddons || [],
+      transferDetails: {
+        rateType: state.selectedRate.rateType,
+        vehicle: state.selectedRate.vehicle,
+        paxCategory: state.selectedRate.paxCategory,
+        paxInfo: state.selectedRate.paxInfo,
+        price: state.selectedRate.price,
+        addons: state.selectedAddons || []
+      },
+      // Plural — the source of truth for 1..N attractions in this bundle.
+      attractionsDetails,
+      // Singular — kept in sync with the first attraction for backward
+      // compatibility with any code path that only reads the singular field.
+      attractionDetails: attractionsDetails[0],
+      meta: {
+        city: item.raw.destination,
+        transferName: item.name,
+        paxSummary: currentPax()
+      }
     };
   } else {
     // Add as standard Transfer
@@ -2009,38 +2060,50 @@ function cartItemKindLabel(type) {
   }[type] || 'Transfer + Bundle';
 }
 
+function renderAttractionBreakdownBlock(title, attrPricing) {
+  if (!attrPricing || !attrPricing.breakdown || !attrPricing.breakdown.length) return '';
+
+  let html = `
+    <div class="cart-breakdown-section" style="margin-top:8px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+      <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#fbbf24; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+        <span>🎟️ ${escHtml(title)}</span>
+        <span style="font-family:monospace; color:var(--text);">฿${(attrPricing.total || 0).toLocaleString()}</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px; font-size:11.5px;">
+  `;
+
+  attrPricing.breakdown.forEach(line => {
+    let label = line.label || `${line.paxType || 'Pax'} (${line.count} x ฿${line.unitPrice})`;
+    let subtotal = line.subtotal != null ? line.subtotal : (line.count * line.unitPrice);
+
+    html += `
+      <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; border-bottom:1px dashed rgba(255,255,255,0.05); padding-bottom:3px;">
+        <span style="color:var(--text); font-weight:500;">${escHtml(label)}</span>
+        <span style="font-family:monospace; font-weight:600; color:var(--green); text-align:right;">= ฿${subtotal.toLocaleString()}</span>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+    </div>
+  `;
+  return html;
+}
+
 function renderCartItemBreakdown(item) {
   let html = '';
 
-  // 1. Attraction Breakdown Section
-  const attrPricing = item.attractionDetails?.pricing || item.ticketPricing || item.pricing;
-  
-  if (attrPricing && attrPricing.breakdown && attrPricing.breakdown.length > 0) {
-    html += `
-      <div class="cart-breakdown-section" style="margin-top:8px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
-        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#fbbf24; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-          <span>🎟️ Attraction Ticket Breakdown</span>
-          <span style="font-family:monospace; color:var(--text);">฿${(attrPricing.total || 0).toLocaleString()}</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:4px; font-size:11.5px;">
-    `;
-    
-    attrPricing.breakdown.forEach(line => {
-      let label = line.label || `${line.paxType || 'Pax'} (${line.count} x ฿${line.unitPrice})`;
-      let subtotal = line.subtotal != null ? line.subtotal : (line.count * line.unitPrice);
-      
-      html += `
-        <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; border-bottom:1px dashed rgba(255,255,255,0.05); padding-bottom:3px;">
-          <span style="color:var(--text); font-weight:500;">${escHtml(label)}</span>
-          <span style="font-family:monospace; font-weight:600; color:var(--green); text-align:right;">= ฿${subtotal.toLocaleString()}</span>
-        </div>
-      `;
+  // 1. Attraction Breakdown Section(s)
+  if (item.attractionsDetails && item.attractionsDetails.length > 1) {
+    // Multiple attractions bundled onto one transfer — one block per attraction.
+    item.attractionsDetails.forEach(ad => {
+      html += renderAttractionBreakdownBlock(`Attraction Ticket — ${ad.name}`, ad.pricing);
     });
-
-    html += `
-        </div>
-      </div>
-    `;
+  } else {
+    // Single attraction (or legacy cart items from before multi-attraction support).
+    const attrPricing = item.attractionDetails?.pricing || item.ticketPricing || item.pricing;
+    html += renderAttractionBreakdownBlock('Attraction Ticket Breakdown', attrPricing);
   }
 
   // 2. Transfer Breakdown Section
