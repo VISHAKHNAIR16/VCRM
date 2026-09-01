@@ -1753,6 +1753,7 @@ async function fetchComboAttractionPricing(transferKey, attrItem, index) {
                 if (isYonaBeachSupplier(attrItem) || isYonaBeachSupplier(attrItem.raw)) {
                   const pkgPrice = attrItem.raw?.adult_net_price || attrItem.raw?.price_adult || data.pricing?.rates?.Adult || data.pricing?.total || 0;
                   sel.pricing = {
+                    ...(data.pricing || {}),
                     total: pkgPrice,
                     breakdown: [{ label: '1 x Single Package Deal', subtotal: pkgPrice }]
                   };
@@ -1883,7 +1884,12 @@ async function fetchAttractionPricing(item) {
     if (!data.error) {
       if (isYonaBeachSupplier(item) || isYonaBeachSupplier(item.raw)) {
         const pkgPrice = item.raw?.adult_net_price || item.raw?.price_adult || data.pricing?.rates?.Adult || data.pricing?.total || 0;
+        // Keep whatever extra fields the backend's pricing object carries
+        // (e.g. `rates`) — only override total/breakdown to force the flat
+        // single-package view. Downstream code (cart-model.js) may rely on
+        // fields we don't render here, so never discard them wholesale.
         state.ticketPricing = {
+          ...(data.pricing || {}),
           total: pkgPrice,
           breakdown: [{ label: '1 x Single Package Deal', subtotal: pkgPrice }]
         };
@@ -1995,11 +2001,33 @@ function addTransferToCart(key) {
     };
   } else {
     // Add as standard Transfer
-    cartItem = makeTransferCartItem(
-      item.raw, 
-      state.selectedRate, 
-      state.selectedAddons
-    );
+    try {
+      cartItem = makeTransferCartItem(
+        item.raw, 
+        state.selectedRate, 
+        state.selectedAddons
+      );
+      if (!cartItem || typeof cartItem.totalPrice !== 'number' || isNaN(cartItem.totalPrice)) {
+        throw new Error('makeTransferCartItem returned an incomplete cart item');
+      }
+    } catch (e) {
+      // Same safety net as the attraction path: never let a shared
+      // cart-model quirk silently block "Add to Cart".
+      console.warn('makeTransferCartItem failed — using manual fallback cart item:', e);
+      const addonsTotal = (state.selectedAddons || []).reduce((sum, a) => sum + (a.price || 0), 0);
+      cartItem = {
+        type: 'transfer',
+        name: item.name,
+        totalPrice: state.selectedRate.price + addonsTotal,
+        addons: state.selectedAddons || [],
+        meta: {
+          destination: item.raw?.destination,
+          serviceType: item.raw?.service_type,
+          rateType: state.selectedRate.rateType,
+          vehicle: state.selectedRate.vehicle
+        }
+      };
+    }
     cartItem.transferDetails = {
       rateType: state.selectedRate.rateType,
       vehicle: state.selectedRate.vehicle,
@@ -2022,7 +2050,31 @@ function addAttractionTicketToCart(key) {
   if (!item || !state.ticketPricing) { alert('Pricing not loaded yet.'); return; }
   if (!state.ticketPricing.breakdown || !state.ticketPricing.breakdown.length) { alert('Set at least one adult/child/senior first.'); return; }
 
-  const cartItem = makeAttractionCartItem(item.raw, state.ticketPricing, []);
+  let cartItem;
+  try {
+    cartItem = makeAttractionCartItem(item.raw, state.ticketPricing, []);
+    if (!cartItem || typeof cartItem.totalPrice !== 'number' || isNaN(cartItem.totalPrice)) {
+      throw new Error('makeAttractionCartItem returned an incomplete cart item');
+    }
+  } catch (e) {
+    // Safety net: some suppliers (e.g. single flat-package suppliers like
+    // Yona Beach / Guide Sai) carry a pricing shape the shared cart-model
+    // helper doesn't fully expect, which can throw and silently block
+    // "Add to Cart". Build an equivalent cart item by hand here so the
+    // ticket is always added regardless of pricing shape.
+    console.warn('makeAttractionCartItem failed — using manual fallback cart item:', e);
+    cartItem = {
+      type: 'attraction',
+      name: item.name,
+      totalPrice: state.ticketPricing.total,
+      addons: [],
+      meta: {
+        city: item.raw?.city,
+        paxSummary: currentPax()
+      }
+    };
+  }
+
   cartItem.attractionDetails = {
     name: item.name,
     pricing: state.ticketPricing,
@@ -2038,16 +2090,20 @@ function addAttractionTicketToCart(key) {
 
 // ── CART RENDERER WITH COLUMN PRICE BREAKDOWN ────────────────────────────────
 function describeCartItemMeta(item) {
+  // Defensive: `meta` is built by the shared cart-model helper (or our own
+  // manual fallback), and its exact shape can vary by item type/supplier.
+  // Never let a missing field here take down the whole cart render.
+  const meta = item.meta || {};
+  const pax = meta.paxSummary || { adults: 0, children: 0, seniors: 0 };
+
   if (item.type === 'transfer') {
-    return [item.meta.destination, item.meta.serviceType, item.meta.rateType, item.meta.vehicle]
+    return [meta.destination, meta.serviceType, meta.rateType, meta.vehicle]
       .filter(Boolean).join(' · ');
   }
   if (item.type === 'attraction') {
-    const p = item.meta.paxSummary;
-    return [item.meta.city, `${p.adults}A/${p.children}C/${p.seniors}S`].filter(Boolean).join(' · ');
+    return [meta.city, `${pax.adults}A/${pax.children}C/${pax.seniors}S`].filter(Boolean).join(' · ');
   }
-  const p = item.meta.paxSummary;
-  return [item.meta.city, item.meta.transferName, `${p.adults}A/${p.children}C/${p.seniors}S`]
+  return [meta.city, meta.transferName, `${pax.adults}A/${pax.children}C/${pax.seniors}S`]
     .filter(Boolean).join(' · ');
 }
 
