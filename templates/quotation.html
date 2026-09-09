@@ -1,2465 +1,3058 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quotation Tool — VIKRAM</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
-<!-- SheetJS — Excel export -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-/* ══════════════════════════════════════════════════════════════
-   TOKENS
-══════════════════════════════════════════════════════════════ */
-:root{
-  --bg:          #0a0a0f;
-  --surface:     #111118;
-  --surface2:    #16161f;
-  --surface3:    #1c1c28;
-  --border:      rgba(255,255,255,0.07);
-  --border-h:    rgba(255,255,255,0.14);
-  --accent:      #e8c547;
-  --accent-dim:  rgba(232,197,71,0.12);
-  --accent-dim2: rgba(232,197,71,0.06);
-  --accent-glow: rgba(232,197,71,0.18);
-  --text:        #f0ede8;
-  --muted:       #6b6880;
-  --muted2:      #3d3b4a;
-  --green:       #34d399;
-  --green-bg:    rgba(52,211,153,0.08);
-  --green-border:rgba(52,211,153,0.22);
-  --red:         #f87171;
-  --red-bg:      rgba(248,113,113,0.08);
-  --sidebar-width: 380px;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   BASE
-══════════════════════════════════════════════════════════════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
-html{scroll-behavior:smooth}
-
-body{
-  font-family:'DM Sans',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  font-size:15px;
-  line-height:1.6;
-  min-height:100vh;
-  overflow-x:hidden;
-}
-
-body::before{
-  content:'';
-  position:fixed;inset:0;
-  background-image:
-    linear-gradient(rgba(232,197,71,0.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(232,197,71,0.025) 1px,transparent 1px);
-  background-size:60px 60px;
-  pointer-events:none;z-index:0;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   HEADER
-══════════════════════════════════════════════════════════════ */
-.site-header{
-  position:sticky;top:0;z-index:200;
-  background:rgba(10,10,15,0.92);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:16px;
-  padding:0 24px;height:56px;
-}
-
-.header-back{
-  display:flex;align-items:center;gap:6px;
-  font-size:13px;color:var(--muted);
-  text-decoration:none;transition:color .2s;
-}
-.header-back:hover{color:var(--accent)}
-.header-back svg{transition:transform .2s}
-.header-back:hover svg{transform:translateX(-2px)}
-
-.header-sep{width:1px;height:20px;background:var(--border)}
-
-.header-title{
-  font-family:'Syne',sans-serif;
-  font-size:15px;font-weight:700;
-  letter-spacing:.04em;color:var(--text);
-}
-
-.header-fx{
-  margin-left:auto;
-  font-size:12px;color:var(--muted);
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:20px;
-  padding:4px 12px;
-  transition:color .3s;
-}
-.header-fx.loaded{color:var(--green)}
-
-/* ══════════════════════════════════════════════════════════════
-   FILTERS SECTION
-══════════════════════════════════════════════════════════════ */
-.filters-section{
-  margin-bottom:20px;
-}
-
-.filters-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  align-items:center;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:12px 16px;
-}
-
-.filter-group{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex:1 1 140px;
-  min-width:120px;
-}
-
-.filter-group label{
-  font-size:11px;
-  font-weight:600;
-  letter-spacing:0.05em;
-  text-transform:uppercase;
-  color:var(--muted);
-  white-space:nowrap;
-}
-
-.filter-group select{
-  flex:1;
-  padding:6px 28px 6px 10px;
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:6px;
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;
-  color:var(--text);
-  outline:none;
-  cursor:pointer;
-  appearance:none;
-  -webkit-appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6880'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;
-  background-position:right 10px center;
-  transition:border-color .2s,box-shadow .2s;
-  min-width:80px;
-}
-
-.filter-group select:focus{
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--accent-dim);
-}
-
-.filter-group select option{
-  background:var(--surface2);
-  color:var(--text);
-}
-
-.filter-group select:disabled{
-  opacity:0.4;
-  cursor:not-allowed;
-}
-
-.filter-clear-btn{
-  display:flex;
-  align-items:center;
-  gap:4px;
-  padding:5px 12px;
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:6px;
-  font-family:'DM Sans',sans-serif;
-  font-size:12px;
-  color:var(--muted);
-  cursor:pointer;
-  transition:color .2s,border-color .2s,background .2s;
-  white-space:nowrap;
-}
-
-.filter-clear-btn:hover{
-  color:var(--text);
-  border-color:var(--border-h);
-  background:var(--surface3);
-}
-
-.filter-clear-btn.has-filters{
-  color:var(--accent);
-  border-color:rgba(232,197,71,0.3);
-}
-
-.filter-clear-btn.has-filters:hover{
-  background:var(--accent-dim);
-}
-
-.filter-divider{
-  width:1px;
-  height:24px;
-  background:var(--border);
-  flex-shrink:0;
-}
-
-/* ── Active filter pills ── */
-.active-filters{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:8px;
-  padding-left:4px;
-}
-
-.filter-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-  font-size:11px;
-  padding:3px 8px 3px 10px;
-  background:var(--accent-dim);
-  border:1px solid rgba(232,197,71,0.2);
-  border-radius:99px;
-  color:var(--accent);
-}
-
-.filter-pill .remove{
-  cursor:pointer;
-  opacity:0.6;
-  transition:opacity .2s;
-  font-size:12px;
-  line-height:1;
-}
-
-.filter-pill .remove:hover{
-  opacity:1;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   LAYOUT
-══════════════════════════════════════════════════════════════ */
-.app-layout{
-  display:flex;
-  min-height:calc(100vh - 56px);
-  position:relative;z-index:1;
-}
-
-.main-content{
-  flex:1;
-  padding:24px 32px 32px;
-  max-width:calc(100% - var(--sidebar-width));
-  transition:max-width .3s ease;
-}
-
-/* ── Sidebar ──────────────────────────────────────────────────── */
-.sidebar{
-  position:sticky;top:56px;
-  width:var(--sidebar-width);
-  height:calc(100vh - 56px);
-  background:var(--surface);
-  border-left:1px solid var(--border);
-  padding:20px 18px;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  transition:transform .3s ease,width .3s ease;
-  flex-shrink:0;
-}
-
-.sidebar-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:16px;flex-shrink:0;
-}
-.sidebar-header h2{
-  font-family:'Syne',sans-serif;
-  font-size:16px;font-weight:700;
-  color:var(--text);
-}
-.sidebar-header .count{
-  font-size:12px;color:var(--muted);
-  background:var(--surface2);
-  padding:2px 10px;border-radius:99px;
-}
-
-.sidebar-items{
-  flex:1;
-  overflow-y:auto;
-  padding-right:4px;
-  margin-bottom:12px;
-}
-.sidebar-items::-webkit-scrollbar{width:4px}
-.sidebar-items::-webkit-scrollbar-track{background:transparent}
-.sidebar-items::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:99px}
-
-.cart-item{
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:12px 14px;
-  margin-bottom:8px;
-  transition:border-color .2s;
-}
-.cart-item:hover{border-color:var(--border-h)}
-
-.cart-item-top{
-  display:flex;justify-content:space-between;align-items:flex-start;
-  gap:8px;
-}
-.cart-item-name{
-  font-size:13px;font-weight:600;
-  color:var(--text);
-  flex:1;
-}
-.cart-item-remove{
-  background:none;border:none;
-  color:var(--muted2);cursor:pointer;
-  font-size:16px;padding:2px 4px;
-  border-radius:4px;line-height:1;
-  transition:.15s;flex-shrink:0;
-}
-.cart-item-remove:hover{color:var(--red);background:var(--red-bg)}
-
-.cart-item-details{
-  font-size:11px;color:var(--muted);
-  margin-top:4px;
-  display:flex;flex-wrap:wrap;gap:4px 10px;
-}
-.cart-item-details span{display:inline-flex;align-items:center;gap:4px}
-.cart-item-price{
-  font-size:14px;font-weight:700;
-  color:var(--accent);
-  margin-top:6px;
-}
-.cart-item-price .usd{font-size:11px;color:var(--muted);font-weight:400;margin-left:4px}
-
-/* ── Sidebar footer ──────────────────────────────────────────── */
-.sidebar-footer{
-  flex-shrink:0;
-  border-top:1px solid var(--border);
-  padding-top:14px;
-}
-
-.commission-row{
-  display:flex;align-items:center;gap:10px;
-  margin-bottom:8px;
-  flex-wrap:wrap;
-}
-.commission-row label{
-  font-size:12px;color:var(--muted);
-  white-space:nowrap;
-}
-.commission-row input{
-  width:80px;
-  padding:6px 10px;
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:6px;
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;color:var(--text);
-  outline:none;
-}
-.commission-row input:focus{border-color:var(--accent)}
-
-.usd-rate-row{
-  display:flex;align-items:center;gap:10px;
-  margin-bottom:12px;
-  flex-wrap:wrap;
-}
-.usd-rate-row label{
-  font-size:12px;color:var(--muted);
-  white-space:nowrap;
-}
-.usd-rate-row input{
-  width:100px;
-  padding:6px 10px;
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:6px;
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;color:var(--text);
-  outline:none;
-}
-.usd-rate-row input:focus{border-color:var(--accent)}
-.usd-rate-row .hint{
-  font-size:11px;color:var(--muted2);
-}
-
-.sidebar-total{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px 0 4px;
-}
-.sidebar-total .label{font-size:13px;color:var(--muted)}
-.sidebar-total .amount{
-  font-size:20px;font-weight:800;
-  color:var(--text);
-}
-.sidebar-total .amount .usd{
-  font-size:13px;color:var(--muted);font-weight:400;margin-left:6px;
-}
-
-.sidebar-actions{
-  display:flex;gap:8px;margin-top:10px;
-}
-.sidebar-actions .btn{
-  flex:1;justify-content:center;
-}
-
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  padding:9px 16px;border-radius:8px;
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;font-weight:600;
-  cursor:pointer;border:none;
-  transition:background .15s,box-shadow .15s,transform .1s;
-}
-.btn:active{transform:scale(.97)}
-
-.btn-primary{
-  background:var(--accent);color:#0a0a0f;font-weight:700;
-}
-.btn-primary:hover{background:#f0d060;box-shadow:0 4px 16px var(--accent-glow)}
-.btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none}
-
-.btn-ghost{
-  background:transparent;color:var(--muted);
-  border:1px solid var(--border);
-}
-.btn-ghost:hover{color:var(--text);border-color:var(--border-h);background:var(--surface2)}
-
-.btn-danger-ghost{
-  background:transparent;color:var(--muted);
-  border:1px solid var(--muted2);
-}
-.btn-danger-ghost:hover{color:var(--red);border-color:var(--red);background:var(--red-bg)}
-
-.btn-sm{padding:6px 12px;font-size:12px;border-radius:6px}
-
-/* ══════════════════════════════════════════════════════════════
-   SEARCH
-══════════════════════════════════════════════════════════════ */
-.search-section{
-  margin-bottom:16px;
-}
-
-.search-bar{
-  display:flex;gap:12px;align-items:center;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:4px 16px 4px 20px;
-  transition:border-color .2s,box-shadow .2s;
-}
-.search-bar:focus-within{
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--accent-dim);
-}
-
-.search-bar input{
-  flex:1;
-  background:transparent;
-  border:none;
-  outline:none;
-  font-family:'DM Sans',sans-serif;
-  font-size:15px;
-  color:var(--text);
-  padding:12px 0;
-}
-.search-bar input::placeholder{color:var(--muted2)}
-
-.search-bar .btn{
-  flex-shrink:0;
-  padding:8px 20px;
-}
-
-.search-hint{
-  font-size:12px;color:var(--muted2);
-  margin-top:6px;
-  padding-left:4px;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   RESULTS & BRIGHT STANDOUT TAGS
-══════════════════════════════════════════════════════════════ */
-.results-header{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:14px;
-}
-
-/* ── BRIGHT VIBRANT TAG STYLES ── */
-.badge-type{
-  font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.05em;
-  padding:3px 9px;border-radius:6px;
-}
-.badge-type-transfer{
-  background:rgba(6,182,212,0.18) !important;
-  border:1px solid rgba(34,211,238,0.5) !important;
-  color:#22d3ee !important;
-  box-shadow:0 0 8px rgba(6,182,212,0.2) !important;
-}
-.badge-type-attraction{
-  background:rgba(245,158,11,0.18) !important;
-  border:1px solid rgba(251,191,36,0.5) !important;
-  color:#fbbf24 !important;
-  box-shadow:0 0 8px rgba(245,158,11,0.2) !important;
-}
-.badge-type-transfer_bundle, .badge-type-attraction_bundle{
-  background:rgba(217,70,239,0.18) !important;
-  border:1px solid rgba(232,121,249,0.5) !important;
-  color:#f0abfc !important;
-  box-shadow:0 0 8px rgba(217,70,239,0.2) !important;
-}
-
-.cart-item-kind{
-  display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.04em;padding:3px 8px;border-radius:6px;margin-bottom:6px;
-}
-.cart-item-kind-transfer{
-  background:rgba(6,182,212,0.18);border:1px solid rgba(34,211,238,0.5);color:#22d3ee;
-}
-.cart-item-kind-attraction{
-  background:rgba(245,158,11,0.18);border:1px solid rgba(251,191,36,0.5);color:#fbbf24;
-}
-.cart-item-kind-attraction_bundle, .cart-item-kind-transfer_bundle{
-  background:rgba(217,70,239,0.18);border:1px solid rgba(232,121,249,0.5);color:#f0abfc;
-}
-
-.results-header .count{
-  font-size:13px;color:var(--muted);
-}
-.results-header .clear-btn{
-  font-size:12px;color:var(--muted2);
-  background:none;border:none;cursor:pointer;
-  transition:color .2s;
-}
-.results-header .clear-btn:hover{color:var(--text)}
-
-@keyframes cardIn{
-  from{opacity:0;transform:translateY(12px)}
-  to{opacity:1;transform:none}
-}
-
-.result-card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:12px;
-  margin-bottom:10px;
-  padding:16px 20px;
-  cursor:pointer;
-  transition:border-color .2s,box-shadow .2s,background .2s;
-  animation:cardIn .3s ease both;
-  user-select:none;
-}
-.result-card:hover{
-  border-color:var(--border-h);
-  background:var(--surface2);
-}
-.result-card.selected{
-  border-color:var(--accent);
-  box-shadow:0 0 0 1px var(--accent-dim),0 4px 20px rgba(0,0,0,.2);
-}
-
-.result-card-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
-  pointer-events:auto;
-  cursor:pointer;
-}
-.result-card-top .badge{
-  font-size:10px;font-weight:600;
-  padding:1px 8px;border-radius:4px;
-  background:var(--surface3);
-  color:var(--muted);
-  border:1px solid var(--border);
-}
-.result-card-top .badge-dest{
-  background:var(--accent-dim);
-  color:var(--accent);
-  border-color:rgba(232,197,71,0.2);
-}
-
-.result-card-name{
-  font-size:15px;font-weight:600;color:var(--text);
-}
-.result-card-meta{
-  font-size:12px;color:var(--muted);
-  margin-top:4px;
-  display:flex;flex-wrap:wrap;gap:4px 12px;
-}
-.result-card-price-preview{
-  font-size:13px;color:var(--muted2);
-  white-space:nowrap;
-  flex-shrink:0;
-  padding-top:2px;
-}
-.result-card-price-preview strong{color:var(--text)}
-
-/* ── Service detail ──────────────────────────────────────────── */
-.service-detail{
-  margin-top:14px;
-  padding-top:14px;
-  border-top:1px solid var(--border);
-  display:none;
-  pointer-events:auto;
-}
-.result-card.selected .service-detail{display:block}
-
-.detail-section{margin-bottom:14px}
-.detail-section-title{
-  font-size:10px;font-weight:700;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--muted2);
-  margin-bottom:8px;
-}
-
-.detail-rate-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-  gap:8px;
-}
-.rate-option{
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:10px 12px;
-  cursor:pointer;
-  transition:border-color .2s,background .2s;
-  text-align:left;
-  user-select:none;
-}
-.rate-option:hover{border-color:var(--border-h);background:var(--surface3)}
-.rate-option.selected{
-  border-color:var(--accent);
-  background:var(--accent-dim);
-}
-.rate-option .vehicle{
-  font-size:13px;font-weight:600;color:var(--text);
-}
-.rate-option .pax-info{
-  font-size:11px;color:var(--muted);
-}
-.rate-option .price{
-  font-size:14px;font-weight:700;color:var(--accent);
-  margin-top:4px;
-}
-.rate-option .price .per{font-size:11px;font-weight:400;color:var(--muted)}
-
-.detail-addons{margin-top:10px}
-.addon-option{
-  display:flex;align-items:center;gap:10px;
-  padding:6px 0;border-bottom:1px solid var(--border);
-  font-size:13px;
-}
-.addon-option:last-child{border-bottom:none}
-.addon-option input[type="checkbox"]{
-  accent-color:var(--accent);
-  width:16px;height:16px;cursor:pointer;
-}
-.addon-option .addon-price{color:var(--muted);font-size:12px;margin-left:auto}
-
-.detail-add-btn{
-  margin-top:12px;
-  width:100%;
-}
-.detail-add-btn:disabled{opacity:0.4;cursor:not-allowed}
-
-.empty-state{
-  text-align:center;padding:60px 24px;
-  color:var(--muted);
-  background:var(--surface);
-  border:1px dashed var(--border);
-  border-radius:12px;
-}
-.empty-state svg{display:block;margin:0 auto 16px;opacity:.3}
-.empty-state .sub{font-size:13px;color:var(--muted2);margin-top:4px}
-
-/* ══════════════════════════════════════════════════════════════
-   SPINNER
-══════════════════════════════════════════════════════════════ */
-.spinner{
-  display:inline-block;width:16px;height:16px;
-  border:2px solid rgba(10,10,15,.3);
-  border-top-color:#0a0a0f;
-  border-radius:50%;
-  animation:spin .65s linear infinite;
-  vertical-align:middle;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ══════════════════════════════════════════════════════════════
-   MODAL
-══════════════════════════════════════════════════════════════ */
-@keyframes modalBg{from{opacity:0}to{opacity:1}}
-@keyframes modalBox{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:none}}
-
-#quotation-modal{
-  display:none;position:fixed;inset:0;z-index:400;
-  background:rgba(0,0,0,.7);
-  align-items:center;justify-content:center;
-  padding:16px;
-  animation:modalBg .2s ease;
-}
-#quotation-modal.visible{display:flex}
-
-.modal-box{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:16px;
-  width:100%;max-width:600px;
-  max-height:90vh;
-  display:flex;flex-direction:column;
-  box-shadow:0 24px 80px rgba(0,0,0,.6);
-  animation:modalBox .22s ease;
-}
-
-.modal-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:18px 22px 16px;
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.modal-header h3{
-  font-family:'Syne',sans-serif;
-  font-size:17px;font-weight:700;color:var(--text);
-}
-.modal-close{
-  background:none;border:none;
-  color:var(--muted);font-size:20px;cursor:pointer;
-  padding:4px 8px;border-radius:6px;
-  line-height:1;transition:.15s;
-}
-.modal-close:hover{background:var(--surface2);color:var(--text)}
-
-.modal-body{padding:20px 22px;overflow-y:auto;flex:1}
-.modal-footer{
-  padding:14px 22px;border-top:1px solid var(--border);
-  display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;
-}
-
-.quotation-pre{
-  font-family:'Courier New',Courier,monospace;
-  font-size:12.5px;line-height:1.7;
-  white-space:pre-wrap;word-break:break-word;
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;padding:14px 16px;color:var(--text);
-  max-height:300px;overflow-y:auto;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════════════════════════════ */
-@media(max-width:820px){
-  :root{--sidebar-width: 320px}
-  .main-content{padding:16px 16px 24px;max-width:100%}
-  .sidebar{
-    position:fixed;bottom:0;left:0;right:0;top:auto;
-    width:100%;height:50vh;
-    border-left:none;border-top:1px solid var(--border);
-    border-radius:16px 16px 0 0;
-    transform:translateY(calc(100% - 60px));
-    padding:12px 16px;
-    background:rgba(17,17,24,0.98);
-    backdrop-filter:blur(20px);
-    z-index:100;
-  }
-  .sidebar.open{transform:translateY(0)}
-  .sidebar-handle{
-    display:block !important;
-    width:40px;height:4px;
-    background:var(--muted2);
-    border-radius:99px;
-    margin:0 auto 12px;
-    cursor:pointer;
-  }
-  .sidebar-items{max-height:calc(50vh - 220px)}
-  .detail-rate-grid{grid-template-columns:1fr 1fr}
-  .filters-row{flex-direction:column;align-items:stretch}
-  .filter-group{flex:1 1 auto}
-  .filter-divider{display:none}
-  .filter-clear-btn{align-self:flex-end}
-}
-
-.sidebar-handle{display:none}
-
-.service-detail::-webkit-scrollbar{width:4px}
-.service-detail::-webkit-scrollbar-track{background:transparent}
-.service-detail::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:99px}
-
-.type-chip-row{display:flex;gap:8px;margin-top:10px}
-.type-chip{
-  padding:6px 14px;border-radius:99px;font-size:12.5px;font-weight:500;
-  border:1px solid var(--border);background:var(--surface2);color:var(--muted);
-  cursor:pointer;transition:all .15s ease;user-select:none;
-}
-.type-chip:hover{border-color:var(--border-h);color:var(--text)}
-.type-chip.active{
-  background:var(--accent-dim);border-color:rgba(232,197,71,0.4);color:var(--accent);
-}
-
-.pax-bar{
-  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
-  padding:12px 16px;margin-bottom:14px;
-  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
-}
-.pax-bar .pax-bar-label{font-size:12px;color:var(--muted);font-weight:500;margin-right:2px}
-.pax-field{display:flex;align-items:center;gap:8px}
-.pax-field label{font-size:12.5px;color:var(--muted)}
-.pax-field input{
-  width:56px;padding:6px 8px;border-radius:7px;border:1px solid var(--border);
-  background:var(--surface3);color:var(--text);font-size:13px;text-align:center;
-}
-.pax-field input:focus{outline:none;border-color:var(--accent)}
-.pax-bar-hint{font-size:11.5px;color:var(--muted2);margin-left:auto}
-
-.ticket-breakdown{margin-top:6px}
-.ticket-breakdown-row{
-  display:flex;justify-content:space-between;font-size:13px;color:var(--muted);
-  padding:4px 0;
-}
-.ticket-breakdown-row .val{color:var(--text)}
-.ticket-total-row{
-  display:flex;justify-content:space-between;font-size:14.5px;font-weight:600;
-  padding:8px 0;margin-top:4px;border-top:1px solid var(--border);color:var(--text);
-}
-
-.combo-toggle-btn{
-  width:100%;margin-top:10px;padding:9px 12px;border-radius:8px;
-  border:1px dashed var(--border-h);background:transparent;color:var(--muted);
-  font-size:12.5px;font-weight:500;cursor:pointer;transition:all .15s ease;
-  display:flex;align-items:center;justify-content:center;gap:6px;
-}
-.combo-toggle-btn:hover{border-color:var(--accent);color:var(--accent)}
-.combo-toggle-btn.open{color:var(--accent);border-color:var(--accent);border-style:solid}
-
-.combo-options{margin-top:10px;display:flex;flex-direction:column;gap:8px}
-.combo-option{
-  padding:10px 12px;border-radius:8px;border:1px solid var(--border);
-  background:var(--surface2);cursor:pointer;transition:all .15s ease;
-}
-.combo-option:hover{border-color:var(--border-h);background:var(--surface3)}
-.combo-option.selected{border-color:var(--accent);background:var(--accent-dim2)}
-.combo-option-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.combo-option-name{font-size:13px;font-weight:500;color:var(--text)}
-.combo-option-price{font-size:13.5px;font-weight:600;color:var(--accent)}
-.combo-option-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
-.combo-option-note{
-  font-size:11px;color:var(--red);margin-top:4px;
-  background:var(--red-bg);border-radius:5px;padding:4px 7px;
-}
-.combo-empty{font-size:12.5px;color:var(--muted2);padding:8px 2px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quotation Tool — VIKRAM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #16161f;
+      --surface3: #1c1c28;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-h: rgba(255, 255, 255, 0.14);
+      --accent: #e8c547;
+      --accent-dim: rgba(232, 197, 71, 0.12);
+      --accent-dim2: rgba(232, 197, 71, 0.06);
+      --accent-glow: rgba(232, 197, 71, 0.18);
+      --text: #f0ede8;
+      --muted: #6b6880;
+      --muted2: #3d3b4a;
+      --green: #34d399;
+      --green-bg: rgba(52, 211, 153, 0.08);
+      --green-border: rgba(52, 211, 153, 0.22);
+      --red: #f87171;
+      --red-bg: rgba(248, 113, 113, 0.08);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96, 165, 250, 0.12);
+      --sidebar-width: 380px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(232, 197, 71, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232, 197, 71, 0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      height: 56px;
+    }
+
+    .header-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    .header-back:hover {
+      color: var(--accent)
+    }
+
+    .header-back svg {
+      transition: transform .2s
+    }
+
+    .header-back:hover svg {
+      transform: translateX(-2px)
+    }
+
+    .header-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border)
+    }
+
+    .header-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--text);
+    }
+
+    .header-fx {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      transition: color .3s;
+    }
+
+    .header-fx.loaded {
+      color: var(--green)
+    }
+
+    .filters-section {
+      margin-bottom: 20px;
+    }
+
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1 1 140px;
+      min-width: 120px;
+    }
+
+    .filter-group label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .filter-group select {
+      flex: 1;
+      padding: 6px 28px 6px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6880'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color .2s, box-shadow .2s;
+      min-width: 80px;
+    }
+
+    .filter-group select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .filter-clear-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color .2s, border-color .2s, background .2s;
+      white-space: nowrap;
+    }
+
+    .filter-clear-btn:hover {
+      color: var(--text);
+      border-color: var(--border-h);
+      background: var(--surface3);
+    }
+
+    .filter-clear-btn.has-filters {
+      color: var(--accent);
+      border-color: rgba(232, 197, 71, 0.3);
+    }
+
+    .filter-clear-btn.has-filters:hover {
+      background: var(--accent-dim);
+    }
+
+    .filter-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .active-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      padding-left: 4px;
+    }
+
+    .filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 3px 8px 3px 10px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(232, 197, 71, 0.2);
+      border-radius: 99px;
+      color: var(--accent);
+    }
+
+    .filter-pill .remove {
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity .2s;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .filter-pill .remove:hover {
+      opacity: 1;
+    }
+
+    .app-layout {
+      display: flex;
+      min-height: calc(100vh - 56px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 24px 32px 32px;
+      max-width: calc(100% - var(--sidebar-width));
+      transition: max-width .3s ease;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 56px;
+      width: var(--sidebar-width);
+      height: calc(100vh - 56px);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform .3s ease, width .3s ease;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .sidebar-header .count {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 2px 10px;
+      border-radius: 99px;
+    }
+
+    .sidebar-items {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-items::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar-items::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    .sidebar-items::-webkit-scrollbar-thumb {
+      background: var(--muted2);
+      border-radius: 99px
+    }
+
+    .cart-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      transition: border-color .2s;
+    }
+
+    .cart-item:hover {
+      border-color: var(--border-h)
+    }
+
+    .cart-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .cart-item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .cart-item-remove {
+      background: none;
+      border: none;
+      color: var(--muted2);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      line-height: 1;
+      transition: .15s;
+      flex-shrink: 0;
+    }
+
+    .cart-item-remove:hover {
+      color: var(--red);
+      background: var(--red-bg)
+    }
+
+    .cart-item-details {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+    }
+
+    .cart-item-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+
+    .cart-item-price .usd {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: 4px;
+    }
+
+    .sidebar-footer {
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .commission-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .commission-row label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .commission-row input {
+      width: 80px;
+      padding: 6px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .commission-row input:focus {
+      border-color: var(--accent)
+    }
+
+    .usd-rate-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .usd-rate-row label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .usd-rate-row input {
+      width: 100px;
+      padding: 6px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .usd-rate-row input:focus {
+      border-color: var(--accent)
+    }
+
+    .usd-rate-row .hint {
+      font-size: 11px;
+      color: var(--muted2);
+    }
+
+    .sidebar-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0 4px;
+    }
+
+    .sidebar-total .label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .sidebar-total .amount {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .sidebar-total .amount .usd {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: 6px;
+    }
+
+    .sidebar-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .sidebar-actions .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background .15s, box-shadow .15s, transform .1s;
+    }
+
+    .btn:active {
+      transform: scale(.97)
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0a0a0f;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      background: #f0d060;
+      box-shadow: 0 4px 16px var(--accent-glow)
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none
+    }
+
+    .btn-secondary {
+      background: var(--blue);
+      color: #0a0a0f;
+      font-weight: 700;
+    }
+
+    .btn-secondary:hover {
+      background: #7bb8ff;
+      box-shadow: 0 4px 16px rgba(96, 165, 250, 0.3)
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: var(--border-h);
+      background: var(--surface2)
+    }
+
+    .btn-danger-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--muted2);
+    }
+
+    .btn-danger-ghost:hover {
+      color: var(--red);
+      border-color: var(--red);
+      background: var(--red-bg)
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px
+    }
+
+    .search-section {
+      margin-bottom: 16px;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px 16px 4px 20px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .search-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .search-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      padding: 12px 0;
+    }
+
+    .search-bar input::placeholder {
+      color: var(--muted2)
+    }
+
+    .search-bar .btn {
+      flex-shrink: 0;
+      padding: 8px 20px;
+    }
+
+    .search-hint {
+      font-size: 12px;
+      color: var(--muted2);
+      margin-top: 6px;
+      padding-left: 4px;
+    }
+
+    .supplier-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+      animation: cardIn .3s ease both;
+    }
+
+    .supplier-card:hover {
+      border-color: var(--border-h);
+    }
+
+    .supplier-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s;
+      gap: 16px;
+    }
+
+    .supplier-card-header:hover {
+      background: var(--surface2);
+    }
+
+    .supplier-card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .supplier-card-header-left .supplier-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--accent-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      color: var(--accent);
+    }
+
+    .supplier-card-header-left .supplier-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .supplier-card-header-left .supplier-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .supplier-card-header-left .supplier-meta .badge-count {
+      background: var(--surface2);
+      padding: 2px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .supplier-card-header-left .supplier-meta .badge-city {
+      background: var(--accent-dim);
+      padding: 2px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      border: 1px solid rgba(232, 197, 71, 0.15);
+    }
+
+    .supplier-card-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .supplier-card-header-right .expand-icon {
+      font-size: 18px;
+      color: var(--muted2);
+      transition: transform .3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .supplier-card-header-right .expand-icon.open {
+      transform: rotate(180deg);
+    }
+
+    .supplier-card-body {
+      display: none;
+      padding: 0 24px 24px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .supplier-card-body.open {
+      display: block;
+      animation: slideDown .25s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes cardIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .activity-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: start;
+    }
+
+    .activity-row:last-child {
+      border-bottom: none;
+    }
+
+    .activity-row-left {
+      min-width: 0;
+    }
+
+    .activity-row-left .activity-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .activity-row-left .activity-remarks {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .activity-row-left .activity-prices {
+      display: flex;
+      gap: 18px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .activity-row-left .activity-prices .price-item {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .activity-row-left .activity-prices .price-item strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .activity-row-left .activity-prices .price-item .price-value {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .activity-row-left .activity-prices .price-item .price-na {
+      color: var(--muted2);
+      font-size: 12px;
+    }
+
+    .activity-row-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      padding-top: 2px;
+    }
+
+    .activity-row-right .pax-input-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+
+    .activity-row-right .pax-input-group label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .activity-row-right .pax-input-group input {
+      width: 36px;
+      padding: 4px 2px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+    }
+
+    .activity-row-right .pax-input-group input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+
+    .activity-row-right .pax-input-group input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    .activity-row-right .action-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .activity-row-right .btn-ticket-only {
+      padding: 10px 18px;
+      background: var(--accent);
+      color: #0a0a0f;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s ease;
+      white-space: nowrap;
+    }
+
+    .activity-row-right .btn-ticket-only:hover {
+      background: #f0d060;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    .activity-row-right .btn-ticket-only.added {
+      background: var(--green);
+      color: #0a0a0f;
+    }
+
+    .activity-row-right .btn-with-transfer {
+      padding: 10px 18px;
+      background: var(--blue);
+      color: #0a0a0f;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s ease;
+      white-space: nowrap;
+    }
+
+    .activity-row-right .btn-with-transfer:hover {
+      background: #7bb8ff;
+      box-shadow: 0 4px 16px rgba(96, 165, 250, 0.3);
+    }
+
+    .activity-row-right .btn-with-transfer.added {
+      background: var(--green);
+      color: #0a0a0f;
+    }
+
+    .transfer-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+      animation: cardIn .3s ease both;
+    }
+
+    .transfer-card:hover {
+      border-color: var(--border-h);
+    }
+
+    .transfer-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s;
+      gap: 16px;
+    }
+
+    .transfer-card-header:hover {
+      background: var(--surface2);
+    }
+
+    .transfer-card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .transfer-card-header-left .transfer-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(6, 182, 212, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      color: #22d3ee;
+    }
+
+    .transfer-card-header-left .transfer-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .transfer-card-header-left .transfer-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .transfer-card-header-left .transfer-meta .badge-city {
+      background: var(--accent-dim);
+      padding: 2px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      border: 1px solid rgba(232, 197, 71, 0.15);
+    }
+
+    .transfer-card-header-left .transfer-meta .badge-supplier {
+      background: var(--surface2);
+      padding: 2px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .transfer-card-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .transfer-card-header-right .expand-icon {
+      font-size: 18px;
+      color: var(--muted2);
+      transition: transform .3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .transfer-card-header-right .expand-icon.open {
+      transform: rotate(180deg);
+    }
+
+    .transfer-card-body {
+      display: none;
+      padding: 0 24px 24px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .transfer-card-body.open {
+      display: block;
+      animation: slideDown .25s ease;
+    }
+
+    .transfer-rate-section {
+      margin-bottom: 16px;
+    }
+
+    .transfer-rate-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .transfer-rate-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted2);
+      margin-bottom: 8px;
+    }
+
+    .transfer-rate-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+    }
+
+    .transfer-rate-option {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all .15s ease;
+      text-align: left;
+      user-select: none;
+    }
+
+    .transfer-rate-option:hover {
+      border-color: var(--border-h);
+      background: var(--surface3);
+    }
+
+    .transfer-rate-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .transfer-rate-option .vehicle {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .transfer-rate-option .pax-info {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .transfer-rate-option .price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .transfer-rate-option .price .per {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .transfer-addons-section {
+      margin-top: 12px;
+    }
+
+    .transfer-addon-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .transfer-addon-option:last-child {
+      border-bottom: none;
+    }
+
+    .transfer-addon-option input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .transfer-addon-option .addon-price {
+      color: var(--muted);
+      font-size: 12px;
+      margin-left: auto;
+    }
+
+    .transfer-add-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--accent);
+      color: #0a0a0f;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .transfer-add-btn:hover {
+      background: #f0d060;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    .transfer-add-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: var(--surface3);
+      color: var(--muted2);
+    }
+
+    .transfer-add-hint {
+      font-size: 11px;
+      color: var(--muted2);
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    #combo-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(0, 0, 0, 0.8);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: modalBg .2s ease;
+    }
+
+    #combo-modal.visible {
+      display: flex;
+    }
+
+    .combo-modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 720px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .6);
+      animation: modalBox .22s ease;
+    }
+
+    .combo-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .combo-modal-header h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .combo-modal-header .combo-badge {
+      background: var(--blue-dim);
+      color: var(--blue);
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .combo-modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      line-height: 1;
+      transition: .15s;
+    }
+
+    .combo-modal-close:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .combo-modal-body {
+      padding: 20px 22px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .combo-modal-body .combo-attraction-info {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .combo-modal-body .combo-attraction-info .label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .combo-modal-body .combo-attraction-info .name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 2px;
+    }
+
+    .combo-modal-body .combo-attraction-info .pax-summary {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .combo-modal-body .combo-search-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px 16px 4px 20px;
+      margin-bottom: 16px;
+      transition: border-color .2s;
+    }
+
+    .combo-modal-body .combo-search-bar:focus-within {
+      border-color: var(--accent);
+    }
+
+    .combo-modal-body .combo-search-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      padding: 10px 0;
+    }
+
+    .combo-modal-body .combo-search-bar input::placeholder {
+      color: var(--muted2);
+    }
+
+    .combo-modal-body .combo-search-results {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .combo-modal-body .combo-search-results .combo-result-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .combo-modal-body .combo-search-results .combo-result-item:hover {
+      border-color: var(--border-h);
+      background: var(--surface3);
+    }
+
+    .combo-modal-body .combo-search-results .combo-result-item .result-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .combo-modal-body .combo-search-results .combo-result-item .result-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .combo-modal-body .combo-search-results .combo-result-item .result-meta .badge {
+      background: var(--surface3);
+      padding: 1px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      border: 1px solid var(--border);
+    }
+
+    .combo-modal-body .combo-search-results .combo-result-item .result-price {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .combo-modal-body .combo-search-results .combo-empty {
+      text-align: center;
+      padding: 30px 0;
+      color: var(--muted2);
+      font-size: 13px;
+    }
+
+    .combo-modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+    }
+
+    .empty-state svg {
+      display: block;
+      margin: 0 auto 16px;
+      opacity: .3;
+    }
+
+    .empty-state .sub {
+      font-size: 13px;
+      color: var(--muted2);
+      margin-top: 4px;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .results-header .count {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .results-header .clear-btn {
+      font-size: 12px;
+      color: var(--muted2);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color .2s;
+    }
+
+    .results-header .clear-btn:hover {
+      color: var(--text);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(10, 10, 15, .3);
+      border-top-color: #0a0a0f;
+      border-radius: 50%;
+      animation: spin .65s linear infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .type-chip-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .type-chip {
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12.5px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s ease;
+      user-select: none;
+    }
+
+    .type-chip:hover {
+      border-color: var(--border-h);
+      color: var(--text);
+    }
+
+    .type-chip.active {
+      background: var(--accent-dim);
+      border-color: rgba(232, 197, 71, 0.4);
+      color: var(--accent);
+    }
+
+    @keyframes modalBg {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    @keyframes modalBox {
+      from {
+        opacity: 0;
+        transform: scale(.95) translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    #quotation-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 400;
+      background: rgba(0, 0, 0, .7);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: modalBg .2s ease;
+    }
+
+    #quotation-modal.visible {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .6);
+      animation: modalBox .22s ease;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .modal-header h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      line-height: 1;
+      transition: .15s;
+    }
+
+    .modal-close:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 20px 22px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    .quotation-pre {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12.5px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      color: var(--text);
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .cart-breakdown-section {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .cart-breakdown-section .breakdown-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #fbbf24;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cart-breakdown-section .breakdown-title .total {
+      font-family: monospace;
+      color: var(--text);
+    }
+
+    .cart-breakdown-section .breakdown-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+      padding-bottom: 3px;
+      font-size: 11.5px;
+    }
+
+    .cart-breakdown-section .breakdown-row:last-child {
+      border-bottom: none;
+    }
+
+    .cart-breakdown-section .breakdown-row .label {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .cart-breakdown-section .breakdown-row .amount {
+      font-family: monospace;
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    @media(max-width:820px) {
+      :root {
+        --sidebar-width: 320px
+      }
+
+      .main-content {
+        padding: 16px 16px 24px;
+        max-width: 100%
+      }
+
+      .sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        width: 100%;
+        height: 50vh;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        border-radius: 16px 16px 0 0;
+        transform: translateY(calc(100% - 60px));
+        padding: 12px 16px;
+        background: rgba(17, 17, 24, 0.98);
+        backdrop-filter: blur(20px);
+        z-index: 100;
+      }
+
+      .sidebar.open {
+        transform: translateY(0);
+      }
+
+      .sidebar-handle {
+        display: block !important;
+        width: 40px;
+        height: 4px;
+        background: var(--muted2);
+        border-radius: 99px;
+        margin: 0 auto 12px;
+        cursor: pointer;
+      }
+
+      .sidebar-items {
+        max-height: calc(50vh - 220px);
+      }
+
+      .filters-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-group {
+        flex: 1 1 auto;
+      }
+
+      .filter-divider {
+        display: none;
+      }
+
+      .filter-clear-btn {
+        align-self: flex-end;
+      }
+
+      .activity-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .activity-row-right {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .supplier-card-header,
+      .transfer-card-header {
+        padding: 14px 16px;
+      }
+
+      .supplier-card-body,
+      .transfer-card-body {
+        padding: 0 16px 16px 16px;
+      }
+
+      .activity-row-right .pax-input-group {
+        padding: 4px 6px;
+      }
+
+      .activity-row-right .pax-input-group input {
+        width: 32px;
+        font-size: 12px;
+      }
+
+      .transfer-rate-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .combo-modal-box {
+        max-width: 100%;
+        margin: 8px;
+      }
+    }
+
+    .sidebar-handle {
+      display: none;
+    }
+
+    .sidebar-items::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar-items::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    .sidebar-items::-webkit-scrollbar-thumb {
+      background: var(--muted2);
+      border-radius: 99px
+    }
+
+    .combo-modal-body .combo-search-results::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .combo-modal-body .combo-search-results::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    .combo-modal-body .combo-search-results::-webkit-scrollbar-thumb {
+      background: var(--muted2);
+      border-radius: 99px
+    }
+  </style>
 </head>
+
 <body>
-
-<!-- ── HEADER ──────────────────────────────────────────────────────────────── -->
-<header class="site-header">
-  <a href="/home" class="header-back">
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.8"
-            stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    Home
-  </a>
-  <div class="header-sep"></div>
-  <span class="header-title">Quotation Tool</span>
-  <span class="header-fx" id="fx-label">Loading rates…</span>
-</header>
-
-<!-- ── APP LAYOUT ───────────────────────────────────────────────────────────── -->
-<div class="app-layout">
-
-  <!-- ── MAIN CONTENT ──────────────────────────────────────────────────────── -->
-  <div class="main-content">
-
-    <!-- ── FILTERS ───────────────────────────────────────────────────────────── -->
-    <div class="filters-section">
-      <div class="filters-row">
-        
-        <!-- City Filter -->
-        <div class="filter-group">
-          <label>City</label>
-          <select id="filter-city" onchange="applyFilters()">
-            <option value="">All Cities</option>
-            {% for city in cities %}
-            <option value="{{ city }}">{{ city }}</option>
-            {% endfor %}
-          </select>
+  <header class="site-header">
+    <a href="/home" class="header-back"><svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+          stroke-linejoin="round" />
+      </svg>Home</a>
+    <div class="header-sep"></div>
+    <span class="header-title">Quotation Tool</span>
+    <span class="header-fx" id="fx-label">Loading rates…</span>
+  </header>
+  <div class="app-layout">
+    <div class="main-content">
+      <div class="filters-section">
+        <div class="filters-row">
+          <div class="filter-group"><label>City</label><select id="filter-city" onchange="applyFilters()">
+              <option value="">All Cities</option>{% for city in cities %}<option value="{{ city }}">{{ city }}</option>
+              {% endfor %}
+            </select></div>
+          <div class="filter-divider"></div>
+          <div class="filter-group"><label>Supplier</label><select id="filter-supplier" onchange="applyFilters()">
+              <option value="">All Suppliers</option>{% for supplier in suppliers %}<option value="{{ supplier }}">{{
+                supplier }}</option>{% endfor %}
+            </select></div>
+          <div class="filter-divider"></div>
+          <button class="filter-clear-btn" id="clear-filters-btn" onclick="clearAllFilters()"><svg width="12"
+              height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" />
+            </svg>Clear Filters</button>
         </div>
-
-        <div class="filter-divider"></div>
-
-        <!-- Supplier Filter -->
-        <div class="filter-group">
-          <label>Supplier</label>
-          <select id="filter-supplier" onchange="applyFilters()">
-            <option value="">All Suppliers</option>
-            {% for supplier in suppliers %}
-            <option value="{{ supplier }}">{{ supplier }}</option>
-            {% endfor %}
-          </select>
+        <div class="type-chip-row" id="type-chip-row">
+          <div class="type-chip active" data-type="all" onclick="setResultType('all')">All</div>
+          <div class="type-chip" data-type="transfer" onclick="setResultType('transfer')">Transfers</div>
+          <div class="type-chip" data-type="attraction" onclick="setResultType('attraction')">Attraction Tickets</div>
         </div>
-
-        <div class="filter-divider"></div>
-
-        <!-- Clear Filters Button -->
-        <button class="filter-clear-btn" id="clear-filters-btn" onclick="clearAllFilters()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/>
-          </svg>
-          Clear Filters
-        </button>
+        <div class="active-filters" id="active-filters"></div>
       </div>
-
-      <!-- Result-type chips -->
-      <div class="type-chip-row" id="type-chip-row">
-        <div class="type-chip active" data-type="all" onclick="setResultType('all')">All</div>
-        <div class="type-chip" data-type="transfer" onclick="setResultType('transfer')">Transfers</div>
-        <div class="type-chip" data-type="attraction" onclick="setResultType('attraction')">Attraction Tickets</div>
+      <div class="search-section">
+        <div class="search-bar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)"
+            stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg><input type="text" id="search-input"
+            placeholder="Search anything — transfers or attraction tickets (e.g. 'phuket airport', 'safari world')…"
+            oninput="handleSearchInput()" autofocus><button class="btn btn-primary" onclick="doSearch()"><span
+              id="search-spinner" style="display:none" class="spinner"></span>Search</button></div>
+        <div class="search-hint" id="search-hint">Search once — transfers and attraction tickets both show up here</div>
       </div>
-
-      <!-- Active Filters Display -->
-      <div class="active-filters" id="active-filters"></div>
+      <div class="results-header"><span class="count" id="result-count"></span><button class="clear-btn"
+          onclick="clearResults()" id="clear-btn" style="display:none">Clear results</button></div>
+      <div id="results-list"></div>
     </div>
-
-    <!-- Search -->
-    <div class="search-section">
-      <div class="search-bar">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" id="search-input" 
-               placeholder="Search anything — transfers or attraction tickets (e.g. 'phuket airport', 'safari world')…"
-               oninput="handleSearchInput()"
-               autofocus>
-        <button class="btn btn-primary" onclick="doSearch()">
-          <span id="search-spinner" style="display:none" class="spinner"></span>
-          Search
-        </button>
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-handle" onclick="toggleSidebar()"></div>
+      <div class="sidebar-header">
+        <h2>🛒 Cart</h2><span class="count" id="cart-count">0 items</span>
       </div>
-      <div class="search-hint" id="search-hint">Search once — transfers and attraction tickets both show up here</div>
-    </div>
-
-    <!-- Pax count bar -->
-    <div class="pax-bar">
-      <span class="pax-bar-label">Pax for pricing:</span>
-      <div class="pax-field">
-        <label for="pax-adults">Adults</label>
-        <input type="number" id="pax-adults" value="1" min="0" step="1" oninput="onPaxChanged()">
+      <div class="sidebar-items" id="cart-items">
+        <div style="text-align:center;color:var(--muted2);font-size:13px;padding:40px 0;">No items added yet.<br>Search
+          for services and click <strong>Add to Cart</strong>.</div>
       </div>
-      <div class="pax-field">
-        <label for="pax-children">Children</label>
-        <input type="number" id="pax-children" value="0" min="0" step="1" oninput="onPaxChanged()">
-      </div>
-      <div class="pax-field">
-        <label for="pax-seniors">Seniors</label>
-        <input type="number" id="pax-seniors" value="0" min="0" step="1" oninput="onPaxChanged()">
-      </div>
-      <span class="pax-bar-hint">Applies to attraction ticket &amp; combo pricing</span>
-    </div>
-
-    <!-- Results -->
-    <div class="results-header">
-      <span class="count" id="result-count"></span>
-      <button class="clear-btn" onclick="clearResults()" id="clear-btn" style="display:none">Clear results</button>
-    </div>
-    <div id="results-list"></div>
-
-  </div>
-
-  <!-- ── SIDEBAR (Cart) ────────────────────────────────────────────────────── -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-handle" onclick="toggleSidebar()"></div>
-
-    <div class="sidebar-header">
-      <h2>🛒 Cart</h2>
-      <span class="count" id="cart-count">0 items</span>
-    </div>
-
-    <div class="sidebar-items" id="cart-items">
-      <div style="text-align:center;color:var(--muted2);font-size:13px;padding:40px 0;">
-        No items added yet.<br>
-        Search for services and click <strong>Add to Cart</strong>.
-      </div>
-    </div>
-
-    <div class="sidebar-footer">
-      <!-- USD Rate -->
-      <div class="usd-rate-row">
-        <label>USD Rate</label>
-        <input type="number" id="usd-rate-input" value="34.00" min="0" step="0.01"
-               oninput="updateCartTotals()">
-        <span class="hint">THB/USD</span>
-      </div>
-
-      <!-- Commission -->
-      <div class="commission-row">
-        <label>Commission</label>
-        <input type="number" id="commission-input" value="0" min="0" max="100" step="0.5"
-               oninput="updateCartTotals()">
-        <label style="font-size:12px;color:var(--muted2)">%</label>
-      </div>
-
-      <div class="sidebar-total">
-        <span class="label">Total</span>
-        <span class="amount" id="cart-total">฿0</span>
-      </div>
-
-      <div class="sidebar-actions">
-        <button class="btn btn-danger-ghost btn-sm" onclick="clearCart()">Clear</button>
-        <button class="btn btn-primary" onclick="showModal()" id="generate-btn" disabled>
-          Generate Quote
-        </button>
+      <div class="sidebar-footer">
+        <div class="usd-rate-row"><label>USD Rate</label><input type="number" id="usd-rate-input" value="34.00" min="0"
+            step="0.01" oninput="updateCartTotals()"><span class="hint">THB/USD</span></div>
+        <div class="commission-row"><label>Commission</label><input type="number" id="commission-input" value="0"
+            min="0" max="100" step="0.5" oninput="updateCartTotals()"><label
+            style="font-size:12px;color:var(--muted2)">%</label></div>
+        <div class="sidebar-total"><span class="label">Total</span><span class="amount" id="cart-total">฿0</span></div>
+        <div class="sidebar-actions"><button class="btn btn-danger-ghost btn-sm"
+            onclick="clearCart()">Clear</button><button class="btn btn-primary" onclick="showModal()" id="generate-btn"
+            disabled>Generate Quote</button></div>
       </div>
     </div>
   </div>
-
-</div>
-
-<!-- ── MODAL ────────────────────────────────────────────────────────────────── -->
-<div id="quotation-modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>📋 Quotation</h3>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <pre class="quotation-pre" id="quotation-text"></pre>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
-      <button class="btn btn-ghost btn-sm" id="export-btn" onclick="exportToExcel()">
-        ⬇ Export to Excel
-      </button>
-      <button class="btn btn-primary btn-sm" id="copy-btn" onclick="copyQuotation()">
-        Copy to Clipboard
-      </button>
+  <div id="quotation-modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>📋 Quotation</h3><button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <pre class="quotation-pre" id="quotation-text"></pre>
+      </div>
+      <div class="modal-footer"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button><button
+          class="btn btn-ghost btn-sm" id="export-btn" onclick="exportToExcel()">⬇ Export to Excel</button><button
+          class="btn btn-primary btn-sm" id="copy-btn" onclick="copyQuotation()">Copy to Clipboard</button></div>
     </div>
   </div>
-</div>
-
-<script src="/static/quotation/cart-model.js"></script>
-<script>
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let fxRate        = null;
-let cart          = [];           
-let selectedCard  = null;         
-let allResults    = [];           
-let searchTimeout = null;
-let searchQuery   = '';
-let activeResultType = 'all';     
-
-const cardState = {};
-
-function cardKey(item) {
-  return `${item.type}:${item.id}`;
-}
-
-function getCardState(key) {
-  if (!cardState[key]) {
-    cardState[key] = {
-      selectedRate: null,
+  <div id="combo-modal" onclick="if(event.target===this)closeComboModal()">
+    <div class="combo-modal-box">
+      <div class="combo-modal-header">
+        <div>
+          <h3>🎫 Add Transfer to Attraction</h3>
+        </div><span class="combo-badge">Combo</span><button class="combo-modal-close"
+          onclick="closeComboModal()">✕</button>
+      </div>
+      <div class="combo-modal-body" id="combo-modal-body"></div>
+      <div class="combo-modal-footer"><button class="btn btn-ghost btn-sm"
+          onclick="closeComboModal()">Cancel</button><button class="btn btn-primary btn-sm" id="combo-add-btn"
+          onclick="confirmComboAdd()" disabled>Add Combo to Cart</button></div>
+    </div>
+  </div>
+  <script>
+    // ============================================================
+    // STATE
+    // ============================================================
+    let fxRate = null,
+      cart = [],
+      allResults = [],
+      searchTimeout = null,
+      searchQuery = '',
+      activeResultType = 'all';
+    let comboState = {
+      attraction: null,
+      pax: { adults: 0, children: 0, seniors: 0 },
+      selectedTransfer: null, // the transfer service object
+      selectedRates: [], // array of selected rate objects for the combo
       selectedAddons: [],
-      ticketPricing: null,   
-      comboOpen: false,
-      comboSearchQuery: '',
-      comboResults: null,        
-      comboLoading: false,
-      selectedAttractions: [],   // array of { item, pricing } — supports adding multiple attractions
+      searchResults: [],
+      searchQuery: '',
+      isSearching: false
     };
-  }
-  return cardState[key];
-}
+    const transferState = {};
 
-function currentPax() {
-  return {
-    adults: parseInt(document.getElementById('pax-adults').value, 10) || 0,
-    children: parseInt(document.getElementById('pax-children').value, 10) || 0,
-    seniors: parseInt(document.getElementById('pax-seniors').value, 10) || 0,
-  };
-}
+    // ============================================================
+    // HELPERS & API
+    // ============================================================
+    async function apiFetch(url) { const r = await fetch(url); if (r.status === 401) { window.location.href = '/login'; return null; } return r; }
 
-// ── AUTH-AWARE FETCH ──────────────────────────────────────────────────────────
-async function apiFetch(url) {
-  const r = await fetch(url);
-  if (r.status === 401) {
-    window.location.href = '/login';
-    return null;
-  }
-  return r;
-}
+    function escHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
-// ── FX ────────────────────────────────────────────────────────────────────────
-async function loadFx() {
-  try {
-    const r = await apiFetch('/quotation/api/fx');
-    if (!r) return;
-    const d = await r.json();
-    fxRate = d.thb_per_usd;
-    const el = document.getElementById('fx-label');
-    if (fxRate) {
-      el.textContent = `1 USD = ฿${fxRate.toFixed(2)}`;
-      el.classList.add('loaded');
-      document.getElementById('usd-rate-input').value = fxRate.toFixed(2);
-    } else {
-      el.textContent = 'FX unavailable';
-    }
-    updateCartTotals();
-  } catch (e) {
-    document.getElementById('fx-label').textContent = 'FX unavailable';
-  }
-}
+    function getUsdRate() { return parseFloat(document.getElementById('usd-rate-input').value) || 34.00; }
 
-function getUsdRate() {
-  const rate = parseFloat(document.getElementById('usd-rate-input').value) || 34.00;
-  return rate;
-}
+    function thbToUsd(thb) { const rate = getUsdRate(); return (rate && thb) ? (thb / rate).toFixed(2) : null; }
 
-function thbToUsd(thb) {
-  const rate = getUsdRate();
-  return (rate && thb) ? (thb / rate).toFixed(2) : null;
-}
-
-// ── FILTER OPTIONS ────────────────────────────────────────────────────────────
-async function loadUnifiedFilterOptions() {
-  const r = await apiFetch('/quotation/api/catalog-filter-options');
-  if (!r) return;
-  try {
-    const data = await r.json();
-    if (data.error) return;
-    populateSelect('filter-city', data.cities, 'All Cities');
-    populateSelect('filter-supplier', data.suppliers, 'All Suppliers');
-  } catch (e) {
-    console.error('Failed to load unified filter options:', e);
-  }
-}
-
-function populateSelect(id, values, placeholder) {
-  const el = document.getElementById(id);
-  const current = el.value;
-  el.innerHTML = `<option value="">${placeholder}</option>` +
-    values.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
-  if (values.includes(current)) el.value = current;
-}
-
-// ── RESULT-TYPE CHIPS ──────────────────────────────────────────────────────────
-function setResultType(type) {
-  activeResultType = type;
-  document.querySelectorAll('.type-chip').forEach(chip => {
-    chip.classList.toggle('active', chip.dataset.type === type);
-  });
-  applyFilters();
-}
-
-// ── FILTERS ────────────────────────────────────────────────────────────────────
-function applyFilters() {
-  updateActiveFilters();
-  doSearch();
-}
-
-function updateActiveFilters() {
-  const container = document.getElementById('active-filters');
-  const city = document.getElementById('filter-city').value;
-  const supplier = document.getElementById('filter-supplier').value;
-
-  let filters = [];
-  if (city) filters.push({ label: `City: ${city}`, key: 'city' });
-  if (supplier) filters.push({ label: `Supplier: ${supplier}`, key: 'supplier' });
-  if (activeResultType !== 'all') {
-    const label = activeResultType === 'transfer' ? 'Transfers only' : 'Attraction Tickets only';
-    filters.push({ label, key: 'type' });
-  }
-
-  if (filters.length === 0) {
-    container.innerHTML = '';
-    document.getElementById('clear-filters-btn').classList.remove('has-filters');
-    return;
-  }
-
-  document.getElementById('clear-filters-btn').classList.add('has-filters');
-
-  container.innerHTML = filters.map(f => `
-    <span class="filter-pill">
-      ${f.label}
-      <span class="remove" onclick="removeFilter('${f.key}')">×</span>
-    </span>
-  `).join('');
-}
-
-function removeFilter(key) {
-  if (key === 'city') document.getElementById('filter-city').value = '';
-  if (key === 'supplier') document.getElementById('filter-supplier').value = '';
-  if (key === 'type') setResultType('all');
-  else applyFilters();
-}
-
-function clearAllFilters() {
-  document.getElementById('filter-city').value = '';
-  document.getElementById('filter-supplier').value = '';
-  activeResultType = 'all';
-  document.querySelectorAll('.type-chip').forEach(chip => {
-    chip.classList.toggle('active', chip.dataset.type === 'all');
-  });
-  updateActiveFilters();
-  doSearch();
-}
-
-// ── SEARCH ────────────────────────────────────────────────────────────────────
-function handleSearchInput() {
-  clearTimeout(searchTimeout);
-  const q = document.getElementById('search-input').value.trim();
-  searchQuery = q;
-
-  const hint = document.getElementById('search-hint');
-  if (q.length === 0) {
-    hint.textContent = 'Search once — transfers and attraction tickets both show up here';
-    searchTimeout = setTimeout(() => doSearch(), 100);
-    return;
-  }
-
-  hint.textContent = 'Searching…';
-  searchTimeout = setTimeout(() => doSearch(), 300);
-}
-
-async function doSearch() {
-  const q = document.getElementById('search-input').value.trim();
-  const city = document.getElementById('filter-city').value;
-  const supplier = document.getElementById('filter-supplier').value;
-
-  searchQuery = q;
-
-  const spinner = document.getElementById('search-spinner');
-  spinner.style.display = 'inline-block';
-
-  const list = document.getElementById('results-list');
-  list.innerHTML = `<div class="empty-state"><span class="spinner" style="margin-right:0;display:inline-block;width:24px;height:24px;border-width:3px"></span><br>Searching…</div>`;
-
-  const params = new URLSearchParams();
-  if (q) params.append('q', q);
-  if (city) params.append('city', city);
-  if (supplier) params.append('supplier', supplier);
-  params.append('type', activeResultType);
-  params.append('limit', '100');
-
-  const url = `/quotation/api/catalog-search?${params.toString()}`;
-
-  const r = await apiFetch(url);
-  spinner.style.display = 'none';
-
-  if (!r) return;
-
-  try {
-    const data = await r.json();
-
-    if (data.error) {
-      list.innerHTML = `<div class="empty-state">Error: ${data.error}</div>`;
-      return;
+    // ============================================================
+    // FX
+    // ============================================================
+    async function loadFx() {
+      try {
+        const r = await apiFetch('/quotation/api/fx');
+        if (!r) return;
+        const d = await r.json();
+        fxRate = d.thb_per_usd;
+        const el = document.getElementById('fx-label');
+        if (fxRate) {
+          el.textContent = `1 USD = ฿${fxRate.toFixed(2)}`;
+          el.classList.add('loaded');
+          document.getElementById('usd-rate-input').value = fxRate.toFixed(2);
+        } else {
+          el.textContent = 'FX unavailable';
+        }
+        updateCartTotals();
+      } catch (e) { document.getElementById('fx-label').textContent = 'FX unavailable'; }
     }
 
-    allResults = data;
-    selectedCard = null;
-
-    document.getElementById('result-count').textContent = `${data.length} result${data.length !== 1 ? 's' : ''}`;
-    document.getElementById('clear-btn').style.display = data.length ? 'inline' : 'none';
-
-    if (!data.length) {
-      list.innerHTML = `<div class="empty-state">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        No results found
-        <div class="sub">Try adjusting your search or filters</div>
-      </div>`;
-      return;
+    // ============================================================
+    // FILTERS
+    // ============================================================
+    async function loadUnifiedFilterOptions() {
+      const r = await apiFetch('/quotation/api/catalog-filter-options');
+      if (!r) return;
+      try {
+        const data = await r.json();
+        if (data.error) return;
+        populateSelect('filter-city', data.cities, 'All Cities');
+        populateSelect('filter-supplier', data.suppliers, 'All Suppliers');
+      } catch (e) { console.error(e); }
     }
 
-    list.innerHTML = data.map((item, i) => renderResultCard(item, i)).join('');
-  } catch (e) {
-    console.error('Search error:', e);
-    list.innerHTML = `<div class="empty-state">Error processing search results</div>`;
-  }
-}
-
-function clearResults() {
-  document.getElementById('search-input').value = '';
-  searchQuery = '';
-  document.getElementById('results-list').innerHTML = '';
-  document.getElementById('result-count').textContent = '';
-  document.getElementById('clear-btn').style.display = 'none';
-  document.getElementById('search-hint').textContent = 'Search once — transfers and attraction tickets both show up here';
-  allResults = [];
-  selectedCard = null;
-  clearAllFilters();
-}
-
-async function onPaxChanged() {
-  if (!selectedCard) return;
-  const item = allResults.find(r => cardKey(r) === selectedCard);
-  if (!item) return;
-
-  const state = getCardState(selectedCard);
-
-  if (item.type === 'attraction') {
-    state.ticketPricing = null;
-    await refreshExpandedCard(item);
-  } else if (item.type === 'transfer') {
-    if (state.selectedAttractions && state.selectedAttractions.length) {
-       state.selectedAttractions.forEach(sel => { sel.pricing = null; });
-       const detailEl = document.getElementById(`detail-${selectedCard}`);
-       if (detailEl) detailEl.innerHTML = renderCardDetail(item);
-
-       await Promise.all(
-         state.selectedAttractions.map((sel, i) => fetchComboAttractionPricing(selectedCard, sel.item, i))
-       );
-
-       if (selectedCard === cardKey(item)) {
-         document.getElementById(`detail-${selectedCard}`).innerHTML = renderCardDetail(item);
-       }
+    function populateSelect(id, values, placeholder) {
+      const el = document.getElementById(id);
+      const current = el.value;
+      el.innerHTML = `<option value="">${placeholder}</option>` +
+        values.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+      if (values.includes(current)) el.value = current;
     }
-  }
-}
 
-// ── HELPER: SINGLE PACKAGE-RATE SUPPLIER CHECK ─────────────────────────────────
-// Some suppliers only ever sell ONE flat package price (no separate
-// adult/child/senior split). Their cards should render a single "Package
-// Deal Rate" instead of the normal Adult/Child/Senior price grid.
-// To opt another supplier into this same single-rate card treatment, just
-// add their name (lowercase) to this list — nothing else needs to change.
-const SINGLE_PACKAGE_RATE_SUPPLIERS = ['yona beach', 'yona', 'guide sai'];
+    function setResultType(type) {
+      activeResultType = type;
+      document.querySelectorAll('.type-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.type === type);
+      });
+      applyFilters();
+    }
 
-function isYonaBeachSupplier(itemOrAttraction) {
-  if (!itemOrAttraction) return false;
-  const sup = (itemOrAttraction.supplier || itemOrAttraction.raw?.supplier || '').toLowerCase();
-  const name = (itemOrAttraction.name || itemOrAttraction.attraction_name || itemOrAttraction.raw?.attraction_name || '').toLowerCase();
-  return SINGLE_PACKAGE_RATE_SUPPLIERS.some(s => sup.includes(s) || name.includes(s));
-}
+    function applyFilters() { updateActiveFilters(); doSearch(); }
 
-// ── HELPER: BASE RATES & REMARKS RENDERER ─────────────────────────────────────
-function renderBasePricesAndRemarks(attraction, pricing) {
-  if (!attraction && !pricing) return '';
-  
-  const adultPrice = attraction?.adult_net_price ?? attraction?.price_adult ?? attraction?.adult_price ?? attraction?.price_thb_adult ?? pricing?.rates?.Adult ?? pricing?.rates?.adult ?? pricing?.adult_price ?? pricing?.adult_net_price;
-  const childPrice = attraction?.child_net_price ?? attraction?.price_child ?? attraction?.child_price ?? attraction?.price_thb_child ?? pricing?.rates?.Child ?? pricing?.rates?.child ?? pricing?.child_price ?? pricing?.child_net_price;
-  const seniorPrice = attraction?.senior_price ?? attraction?.price_senior ?? attraction?.price_thb_senior ?? pricing?.rates?.Senior ?? pricing?.rates?.senior ?? pricing?.senior_price;
+    function updateActiveFilters() {
+      const container = document.getElementById('active-filters');
+      const city = document.getElementById('filter-city').value;
+      const supplier = document.getElementById('filter-supplier').value;
+      let filters = [];
+      if (city) filters.push({ label: `City: ${city}`, key: 'city' });
+      if (supplier) filters.push({ label: `Supplier: ${supplier}`, key: 'supplier' });
+      if (activeResultType !== 'all') {
+        const label = activeResultType === 'transfer' ? 'Transfers only' : 'Attraction Tickets only';
+        filters.push({ label, key: 'type' });
+      }
+      if (filters.length === 0) {
+        container.innerHTML = '';
+        document.getElementById('clear-filters-btn').classList.remove('has-filters');
+        return;
+      }
+      document.getElementById('clear-filters-btn').classList.add('has-filters');
+      container.innerHTML = filters.map(f =>
+        `<span class="filter-pill">${f.label}<span class="remove" onclick="removeFilter('${f.key}')">×</span></span>`
+      ).join('');
+    }
 
-  const remarks = attraction?.remarks || attraction?.remark || attraction?.notes || attraction?.description || pricing?.remarks || pricing?.notes || '';
+    function removeFilter(key) {
+      if (key === 'city') document.getElementById('filter-city').value = '';
+      if (key === 'supplier') document.getElementById('filter-supplier').value = '';
+      if (key === 'type') setResultType('all');
+      else applyFilters();
+    }
 
-  const isYona = isYonaBeachSupplier(attraction) || isYonaBeachSupplier(pricing);
+    function clearAllFilters() {
+      document.getElementById('filter-city').value = '';
+      document.getElementById('filter-supplier').value = '';
+      activeResultType = 'all';
+      document.querySelectorAll('.type-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.type === 'all');
+      });
+      updateActiveFilters();
+      doSearch();
+    }
 
-  let priceGridHtml = '';
-  if (isYona) {
-    const pkgPrice = adultPrice;
-    priceGridHtml = `
-    
-      <div style="background:var(--surface3); padding:10px; border-radius:6px; text-align:center; border:1px solid var(--accent-dim);">
-        <div style="font-size:11px; color:var(--accent); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Single Package Deal Rate</div>
-        <div style="font-size:16px; font-weight:800; color:var(--text); margin-top:2px;">
-          ${pkgPrice != null && !isNaN(pkgPrice) ? '฿' + Number(pkgPrice).toLocaleString() : '—'}
-        </div>
-        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">Fixed flat package deal (Not per adult/child/senior)</div>
-      </div>
-    `;
-  } else {
-    priceGridHtml = `
-      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-bottom:${remarks ? '8px' : '0'};">
-        <div style="background:var(--surface3); padding:8px; border-radius:6px; text-align:center; border:1px solid var(--border);">
-          <div style="font-size:10.5px; color:var(--muted); font-weight:600; text-transform:uppercase;">Adult</div>
-          <div style="font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">
-            ${adultPrice != null && !isNaN(adultPrice) ? '฿' + Number(adultPrice).toLocaleString() : '—'}
-          </div>
-        </div>
-        
-        <div style="background:var(--surface3); padding:8px; border-radius:6px; text-align:center; border:1px solid var(--border);">
-          <div style="font-size:10.5px; color:var(--muted); font-weight:600; text-transform:uppercase;">Child</div>
-          <div style="font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">
-            ${childPrice != null && !isNaN(childPrice) ? '฿' + Number(childPrice).toLocaleString() : '—'}
-          </div>
-        </div>
+    // ============================================================
+    // SEARCH
+    // ============================================================
+    function handleSearchInput() {
+      clearTimeout(searchTimeout);
+      const q = document.getElementById('search-input').value.trim();
+      searchQuery = q;
+      const hint = document.getElementById('search-hint');
+      if (q.length === 0) {
+        hint.textContent = 'Search once — transfers and attraction tickets both show up here';
+        searchTimeout = setTimeout(() => doSearch(), 100);
+        return;
+      }
+      hint.textContent = 'Searching…';
+      searchTimeout = setTimeout(() => doSearch(), 300);
+    }
 
-        <div style="background:var(--surface3); padding:8px; border-radius:6px; text-align:center; border:1px solid var(--border);">
-          <div style="font-size:10.5px; color:var(--muted); font-weight:600; text-transform:uppercase;">Senior</div>
-          <div style="font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">
-            ${seniorPrice != null && !isNaN(seniorPrice) ? '฿' + Number(seniorPrice).toLocaleString() : '—'}
-          </div>
-        </div>
-      </div>
-    `;
-  }
+    async function doSearch() {
+      const q = document.getElementById('search-input').value.trim();
+      const city = document.getElementById('filter-city').value;
+      const supplier = document.getElementById('filter-supplier').value;
+      searchQuery = q;
+      const spinner = document.getElementById('search-spinner');
+      spinner.style.display = 'inline-block';
+      const list = document.getElementById('results-list');
+      list.innerHTML =
+        `<div class="empty-state"><span class="spinner" style="margin-right:0;display:inline-block;width:24px;height:24px;border-width:3px"></span><br>Searching…</div>`;
+      const params = new URLSearchParams();
+      if (q) params.append('q', q);
+      if (city) params.append('city', city);
+      if (supplier) params.append('supplier', supplier);
+      params.append('type', activeResultType);
+      params.append('limit', '100');
+      const url = `/quotation/api/catalog-search?${params.toString()}`;
+      const r = await apiFetch(url);
+      spinner.style.display = 'none';
+      if (!r) return;
+      try {
+        const data = await r.json();
+        if (data.error) {
+          list.innerHTML = `<div class="empty-state">Error: ${data.error}</div>`;
+          return;
+        }
+        allResults = data;
+        document.getElementById('result-count').textContent =
+          `${data.length} result${data.length !== 1 ? 's' : ''}`;
+        document.getElementById('clear-btn').style.display = data.length ? 'inline' : 'none';
+        if (!data.length) {
+          list.innerHTML =
+            `<div class="empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>No results found<div class="sub">Try adjusting your search or filters</div></div>`;
+          return;
+        }
+        const attractionResults = data.filter(item => item.type === 'attraction');
+        const transferResults = data.filter(item => item.type === 'transfer');
+        if (attractionResults.length === 0 && transferResults.length === 0) {
+          list.innerHTML = `<div class="empty-state">No results found</div>`;
+          return;
+        }
+        let html = '';
+        if (transferResults.length) {
+          html += transferResults.map((item, idx) => renderTransferCard(item, idx)).join('');
+        }
+        if (attractionResults.length) {
+          html += renderAttractionSupplierCards(attractionResults);
+        }
+        list.innerHTML = html;
+        document.querySelectorAll('.supplier-card-header, .transfer-card-header').forEach(header => {
+          header.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-ticket-only') || e.target.closest('.btn-with-transfer') ||
+              e.target.closest('.transfer-rate-option') || e.target.closest('.transfer-addon-option'))
+              return;
+            const body = this.nextElementSibling;
+            const icon = this.querySelector('.expand-icon');
+            if (body) {
+              body.classList.toggle('open');
+              if (icon) icon.classList.toggle('open');
+            }
+          });
+        });
+      } catch (e) {
+        console.error(e);
+        list.innerHTML = `<div class="empty-state">Error processing search results</div>`;
+      }
+    }
 
-  return `
-    <div class="base-rates-box" style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:12px;">
-      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        Database Unit Rates (Fixed Base Prices)
-      </div>
-      
-      ${priceGridHtml}
+    function clearResults() {
+      document.getElementById('search-input').value = '';
+      searchQuery = '';
+      document.getElementById('results-list').innerHTML = '';
+      document.getElementById('result-count').textContent = '';
+      document.getElementById('clear-btn').style.display = 'none';
+      document.getElementById('search-hint').textContent = 'Search once — transfers and attraction tickets both show up here';
+      allResults = [];
+      clearAllFilters();
+    }
 
-      ${remarks ? `
-        <div style="font-size:11.5px; color:var(--text); background:var(--accent-dim2); border-left:3px solid var(--accent); padding:6px 10px; border-radius:0 4px 4px 0; margin-top:6px;">
-          <strong style="color:var(--accent);">Remarks:</strong> ${escHtml(remarks)}
-        </div>
-      ` : ''}
-    </div>
-  `;
-}
-
-// ── RENDER: RESULT CARD ────────────────────────────────────────────────────────
-function renderResultCard(item, idx) {
-  const key = cardKey(item);
-  const isSelected = selectedCard === key;
-  
-  let priceFrom = item.price_from;
-  if (priceFrom == null) {
-    if (item.type === 'attraction') {
-      priceFrom = item.raw?.adult_net_price ?? item.raw?.price_adult ?? item.adult_net_price;
-    } else if (item.type === 'transfer') {
-      const rates = item.raw?.rates || [];
-      if (rates.length) {
+    // ============================================================
+    // RENDER: TRANSFER CARD (main search)
+    // ============================================================
+    function renderTransferCard(item, idx) {
+      const key = `transfer:${item.id}`;
+      const svc = item.raw || {};
+      const rates = svc.rates || [];
+      const privateRates = rates.filter(r => r.rate_type === 'Private');
+      const sicRates = rates.filter(r => r.rate_type === 'SIC');
+      const addons = svc.addons || [];
+      let priceFrom = item.price_from;
+      if (priceFrom == null && rates.length) {
         priceFrom = Math.min(...rates.map(r => r.price_thb));
       }
-    }
-  }
-  const pricePreview = priceFrom != null && !isNaN(priceFrom) ? `from ฿${Number(priceFrom).toLocaleString()}` : 'See options';
-  
-  const typeBadgeClass = item.type === 'transfer' ? 'badge-type-transfer' : (item.type === 'attraction' ? 'badge-type-attraction' : 'badge-type-transfer_bundle');
-  const typeBadgeLabel = item.type === 'transfer' ? 'Transfer' : (item.type === 'attraction' ? 'Attraction' : 'Transfer + Bundle');
-
-  return `
-<div class="result-card ${isSelected ? 'selected' : ''}"
-     style="animation-delay:${Math.min(idx * 50, 400)}ms"
-     data-card-key="${key}">
-  <div class="result-card-top" onclick="toggleCard('${key}')">
-    <div>
-      <div class="result-card-name">${escHtml(item.name)}</div>
-      <div class="result-card-meta">
-        <span class="badge badge-type ${typeBadgeClass}">${typeBadgeLabel}</span>
-        ${item.city ? `<span class="badge badge-dest">${escHtml(item.city)}</span>` : ''}
-        ${item.supplier ? `<span class="badge" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:var(--muted)">${escHtml(item.supplier)}</span>` : ''}
-        <span>${escHtml(item.subtitle || '')}</span>
-      </div>
-    </div>
-    <div class="result-card-price-preview">
-      <strong>${pricePreview}</strong>
-    </div>
-  </div>
-  <div class="service-detail" id="detail-${key}">
-    ${isSelected ? renderCardDetail(item) : ''}
-  </div>
-</div>`;
-}
-
-function renderCardDetail(item) {
-  return item.type === 'transfer' ? renderTransferDetail(item) : renderAttractionDetail(item);
-}
-
-// ── RENDER: TRANSFER DETAIL ────────────────────────────────────────────────────
-function renderTransferDetail(item) {
-  const svc = item.raw;
-  const key = cardKey(item);
-  const state = getCardState(key);
-  const rates = svc.rates || [];
-  const privateRates = rates.filter(r => r.rate_type === 'Private');
-  const sicRates = rates.filter(r => r.rate_type === 'SIC');
-
-  let html = '';
-
-  // 1. Private Rates
-  if (privateRates.length) {
-    html += `<div class="detail-section">
-      <div class="detail-section-title">🚗 Private (per vehicle)</div>
-      <div class="detail-rate-grid">`;
-    const byVehicle = {};
-    for (const r of privateRates) {
-      const veh = r.vehicle || 'N/A';
-      if (!byVehicle[veh]) byVehicle[veh] = [];
-      byVehicle[veh].push(r);
-    }
-    for (const [vehicle, rows] of Object.entries(byVehicle)) {
-      const bestPrice = Math.min(...rows.map(r => r.price_thb));
-      const paxInfo = rows.map(r => r.pax_range).filter(Boolean).join(', ');
-      const isSel = state.selectedRate && state.selectedRate.vehicle === vehicle && state.selectedRate.rateType === 'Private';
-      html += `
-        <div class="rate-option ${isSel ? 'selected' : ''}"
-             onclick="event.stopPropagation();selectRate('${key}', 'Private', '${escHtml(vehicle)}', ${bestPrice}, '${escHtml(paxInfo)}')">
-          <div class="vehicle">${escHtml(vehicle)}</div>
-          <div class="pax-info">${paxInfo || 'All pax'}</div>
-          <div class="price">฿${bestPrice.toLocaleString()}</div>
-        </div>`;
-    }
-    html += `</div></div>`;
-  }
-
-  // 2. SIC Rates
-  if (sicRates.length) {
-    html += `<div class="detail-section">
-      <div class="detail-section-title">👥 SIC (per person, join tour)</div>
-      <div class="detail-rate-grid">`;
-    const adults = sicRates.find(r => r.pax_category === 'Adult');
-    const children = sicRates.find(r => r.pax_category === 'Child');
-    if (adults) {
-      const isSel = state.selectedRate && state.selectedRate.rateType === 'SIC' && state.selectedRate.paxCategory === 'Adult';
-      html += `
-        <div class="rate-option ${isSel ? 'selected' : ''}"
-             onclick="event.stopPropagation();selectRate('${key}', 'SIC', 'Adult', ${adults.price_thb}, '')">
-          <div class="vehicle">Adult</div>
-          <div class="price">฿${adults.price_thb.toLocaleString()}</div>
-        </div>`;
-    }
-    if (children) {
-      const isSel = state.selectedRate && state.selectedRate.rateType === 'SIC' && state.selectedRate.paxCategory === 'Child';
-      html += `
-        <div class="rate-option ${isSel ? 'selected' : ''}"
-             onclick="event.stopPropagation();selectRate('${key}', 'SIC', 'Child', ${children.price_thb}, '')">
-          <div class="vehicle">Child</div>
-          <div class="price">฿${children.price_thb.toLocaleString()}</div>
-        </div>`;
-    }
-    html += `</div></div>`;
-  }
-
-  // 3. Add-ons
-  if (svc.addons && svc.addons.length) {
-    html += `<div class="detail-section detail-addons">
-      <div class="detail-section-title">➕ Add-ons</div>`;
-    for (const addon of svc.addons) {
-      const price = addon.price_adult || addon.price_child || 0;
-      const isChecked = state.selectedAddons.some(a => a.name === addon.addon_name);
-      html += `
-        <div class="addon-option">
-          <input type="checkbox" id="addon-${key}-${escHtml(addon.addon_name)}"
-                 ${isChecked ? 'checked' : ''}
-                 onchange="toggleAddon('${key}', '${escHtml(addon.addon_name)}', ${price})">
-          <label for="addon-${key}-${escHtml(addon.addon_name)}">${escHtml(addon.addon_name)}</label>
-          <span class="addon-price">฿${price.toLocaleString()}</span>
-        </div>`;
-    }
-    html += `</div>`;
-  }
-
-  // 4. Optional Attraction Combo Search (supports adding MULTIPLE attractions)
-  const attractionCount = state.selectedAttractions.length;
-  const toggleLabel = state.comboOpen
-    ? '▲ Hide Optional Attractions'
-    : (attractionCount ? `+ Add Optional Attraction Ticket (${attractionCount} added)` : '+ Add Optional Attraction Ticket');
-
-  html += `
-  <div class="detail-section" style="margin-top:16px; border-top:1px dashed var(--border); padding-top:16px;">
-    <button class="combo-toggle-btn ${state.comboOpen ? 'open' : ''}"
-            onclick="event.stopPropagation();toggleTransferCombo('${key}')">
-      ${toggleLabel}
-    </button>
-  `;
-
-  if (state.comboOpen) {
-    html += `<div class="combo-options" style="margin-top:12px;">`;
-
-    // ── Render every attraction already added to this combo ──────────────────
-    state.selectedAttractions.forEach((sel, i) => {
-       const attr = sel.item;
-       const pricing = sel.pricing;
-
-       html += `<div class="combo-option selected" style="cursor:default; margin-bottom:8px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                      <strong>${escHtml(attr.name)}</strong>
-                      <button class="btn btn-danger-ghost btn-sm" onclick="event.stopPropagation();clearComboAttraction('${key}', ${i})">Remove</button>
-                  </div>`;
-
-       // Render database unit rates & remarks regardless of pax count
-       html += renderBasePricesAndRemarks(attr.raw, pricing);
-
-       if (!pricing) {
-          html += `<div style="padding: 8px 0;"><span class="spinner" style="width:14px;height:14px;"></span> Calculating...</div>`;
-       } else {
-          html += `<div class="ticket-breakdown" style="margin-top: 8px; background:var(--surface3); padding:8px; border-radius:6px;">`;
-          if (pricing.breakdown && pricing.breakdown.length) {
-              pricing.breakdown.forEach(b => {
-                 html += `<div class="ticket-breakdown-row"><span>${escHtml(b.label)}</span><span class="val">฿${b.subtotal.toLocaleString()}</span></div>`;
-              });
-          } else {
-              html += `<div style="font-size:12px;color:var(--muted2);">No pax selected (check Adult/Child/Senior counts above).</div>`;
-          }
-          html += `<div class="ticket-total-row" style="margin-top:4px; padding-top:4px; border-top:1px solid var(--border);">
-                     <span>Attraction Total</span><span>฿${pricing.total.toLocaleString()}</span>
-                   </div>
-                 </div>`;
-       }
-       html += `</div>`;
-    });
-
-    // ── Search bar to add another attraction (always available while open,
-    //    so the user can keep adding as many attractions as they want) ───────
-    html += `
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.05em;margin:${attractionCount ? '12' : '0'}px 0 6px;">
-        ${attractionCount ? 'Add another attraction' : 'Search full attraction database'}
-      </div>
-      <div class="search-bar" style="padding: 4px 12px; margin-bottom: 8px;">
-        <input type="text" id="combo-input-${key}"
-               placeholder="Search full attraction database..."
-               value="${escHtml(state.comboSearchQuery)}"
-               oninput="handleComboSearchInput('${key}', this.value)"
-               style="font-size: 13px; padding: 8px 0;">
-        <span id="combo-spinner-${key}" class="spinner" style="width:14px;height:14px;margin-right:6px;display:none;"></span>
-      </div>
-      <div id="combo-results-${key}">
-        ${renderComboResultsList(key)}
-      </div>`;
-
-    html += `</div>`;
-  }
-  html += `</div>`;
-
-  // 5. Total Button and Hints
-  let totalBtnPrice = state.selectedRate ? state.selectedRate.price : 0;
-  state.selectedAddons.forEach(a => totalBtnPrice += a.price);
-  state.selectedAttractions.forEach(sel => {
-    if (sel.pricing) totalBtnPrice += sel.pricing.total;
-  });
-
-  const hasSelected = state.selectedRate !== null;
-  const btnText = (state.comboOpen && attractionCount) ? `Add Transfer + Bundle (${attractionCount})` : `Add to Cart`;
-  const hintText = hasSelected
-    ? `Total: ฿${totalBtnPrice.toLocaleString()}`
-    : 'Select a rate above first';
-
-  html += `
-    <button class="btn btn-primary detail-add-btn" id="add-btn-${key}"
-            onclick="event.stopPropagation();addTransferToCart('${key}')"
-            ${!hasSelected ? 'disabled' : ''}>
-      ${btnText}
-    </button>
-    <div style="font-size:11px;color:var(--muted2);margin-top:4px;text-align:center" id="add-hint-${key}">
-      ${hintText}
-    </div>`;
-
-  return html;
-}
-
-let comboSearchTimeout = null;
-
-async function toggleTransferCombo(key) {
-    const state = getCardState(key);
-    state.comboOpen = !state.comboOpen;
-    const item = allResults.find(r => cardKey(r) === key);
-    document.getElementById(`detail-${key}`).innerHTML = renderCardDetail(item);
-}
-
-// ── FIXED COMBO SEARCH (NO INPUT FOCUS LOSS) ──────────────────────────────────
-function handleComboSearchInput(key, query) {
-    const state = getCardState(key);
-    state.comboSearchQuery = query;
-
-    const spinner = document.getElementById(`combo-spinner-${key}`);
-    if (spinner) spinner.style.display = 'inline-block';
-
-    clearTimeout(comboSearchTimeout);
-    comboSearchTimeout = setTimeout(() => doComboSearch(key, query), 300);
-}
-
-async function doComboSearch(key, query) {
-    const state = getCardState(key);
-    const spinner = document.getElementById(`combo-spinner-${key}`);
-    const resultsEl = document.getElementById(`combo-results-${key}`);
-
-    if (!query.trim()) {
-        state.comboResults = null;
-        if (spinner) spinner.style.display = 'none';
-        if (resultsEl) resultsEl.innerHTML = `<div class="combo-empty">Type to search for optional attractions to add.</div>`;
-        return;
+      const pricePreview = priceFrom != null && !isNaN(priceFrom) ? `from ฿${Number(priceFrom).toLocaleString()}` :
+        'See options';
+      return `<div class="transfer-card" data-card-key="${key}"><div class="transfer-card-header"><div class="transfer-card-header-left"><div class="transfer-icon">🚗</div><div><div class="transfer-name">${escHtml(item.name)}</div><div class="transfer-meta"><span class="badge-city">${escHtml(item.city || 'N/A')}</span>${item.supplier ? `<span class="badge-supplier">${escHtml(item.supplier)}</span>` : ''}<span style="font-size:12px;color:var(--muted);">${pricePreview}</span></div></div></div><div class="transfer-card-header-right"><span class="expand-icon">▼</span></div></div><div class="transfer-card-body" id="detail-${key}">${renderTransferDetail(item, key, privateRates, sicRates, addons)}</div></div>`;
     }
 
-    const params = new URLSearchParams({ q: query, type: 'attraction', limit: '20' });
-    const r = await apiFetch(`/quotation/api/catalog-search?${params.toString()}`);
-    if (spinner) spinner.style.display = 'none';
-    
-    if (r) {
-        try {
-            const data = await r.json();
-            state.comboResults = data.error ? [] : data;
-        } catch (e) {
-            state.comboResults = [];
+    function renderTransferDetail(item, key, privateRates, sicRates, addons) {
+      let html = '';
+      if (privateRates.length) {
+        html +=
+          `<div class="transfer-rate-section"><div class="transfer-rate-section-title">🚗 Private (per vehicle)</div><div class="transfer-rate-grid">`;
+        const byVehicle = {};
+        privateRates.forEach(r => {
+          const veh = r.vehicle || 'N/A';
+          if (!byVehicle[veh]) byVehicle[veh] = [];
+          byVehicle[veh].push(r);
+        });
+        for (const [vehicle, rows] of Object.entries(byVehicle)) {
+          const bestPrice = Math.min(...rows.map(r => r.price_thb));
+          const paxInfo = rows.map(r => r.pax_range).filter(Boolean).join(', ');
+          html +=
+            `<div class="transfer-rate-option" onclick="selectTransferRate('${key}','Private','${escHtml(vehicle)}',${bestPrice},'${escHtml(paxInfo)}')"><div class="vehicle">${escHtml(vehicle)}</div><div class="pax-info">${paxInfo || 'All pax'}</div><div class="price">฿${bestPrice.toLocaleString()}</div></div>`;
         }
-    } else {
-        state.comboResults = [];
-    }
-
-    if (resultsEl) {
-        resultsEl.innerHTML = renderComboResultsList(key);
-    }
-}
-
-function renderComboResultsList(key) {
-    const state = getCardState(key);
-    if (!state.comboResults) {
-        return `<div class="combo-empty">Type to search for optional attractions to add.</div>`;
-    }
-    if (state.comboResults.length === 0) {
-        return `<div class="combo-empty">No attractions found.</div>`;
-    }
-
-    let html = `<div style="max-height: 200px; overflow-y: auto; display:flex; flex-direction:column; gap:4px;">`;
-    state.comboResults.forEach(attr => {
-        html += `<div class="combo-option" onclick="event.stopPropagation();selectComboAttraction('${key}', '${cardKey(attr)}')">
-                   <div class="combo-option-name">${escHtml(attr.name)}</div>
-                   <div class="combo-option-meta">${escHtml(attr.city)}</div>
-                 </div>`;
-    });
-    html += `</div>`;
-    return html;
-}
-
-async function selectComboAttraction(transferKey, attrKey) {
-    const state = getCardState(transferKey);
-    const attrItem = state.comboResults.find(r => cardKey(r) === attrKey);
-    if (!attrItem) return;
-
-    // Push onto the list rather than replacing — supports adding multiple
-    // attractions to the same transfer combo.
-    state.selectedAttractions.push({ item: attrItem, pricing: null });
-    const newIndex = state.selectedAttractions.length - 1;
-
-    // Reset the search box so it's ready for the user to add the next one.
-    state.comboSearchQuery = '';
-    state.comboResults = null;
-
-    const transferItem = allResults.find(r => cardKey(r) === transferKey);
-    document.getElementById(`detail-${transferKey}`).innerHTML = renderCardDetail(transferItem);
-
-    await fetchComboAttractionPricing(transferKey, attrItem, newIndex);
-
-    if (selectedCard === transferKey) {
-        document.getElementById(`detail-${transferKey}`).innerHTML = renderCardDetail(transferItem);
-    }
-}
-
-async function fetchComboAttractionPricing(transferKey, attrItem, index) {
-    const state = getCardState(transferKey);
-    const pax = currentPax();
-    const params = new URLSearchParams({ adults: pax.adults, children: pax.children, seniors: pax.seniors });
-
-    const r = await apiFetch(`/quotation/api/attraction/${attrItem.id}?${params.toString()}`);
-    if (r) {
-        try {
-            const data = await r.json();
-            const sel = state.selectedAttractions[index];
-            if (!data.error && sel && sel.item.id === attrItem.id) {
-                if (isYonaBeachSupplier(attrItem) || isYonaBeachSupplier(attrItem.raw)) {
-                  const pkgPrice = attrItem.raw?.adult_net_price || attrItem.raw?.price_adult || data.pricing?.rates?.Adult || data.pricing?.total || 0;
-                  sel.pricing = {
-                    ...(data.pricing || {}),
-                    total: pkgPrice,
-                    breakdown: [{ label: '1 x Single Package Deal', subtotal: pkgPrice }]
-                  };
-                } else {
-                  sel.pricing = data.pricing;
-                }
-            }
-        } catch (e) {
-            console.error('Failed to fetch combo pricing:', e);
+        html += `</div></div>`;
+      }
+      if (sicRates.length) {
+        html +=
+          `<div class="transfer-rate-section"><div class="transfer-rate-section-title">👥 SIC (per person, join tour)</div><div class="transfer-rate-grid">`;
+        const adults = sicRates.find(r => r.pax_category === 'Adult');
+        const children = sicRates.find(r => r.pax_category === 'Child');
+        if (adults) {
+          html +=
+            `<div class="transfer-rate-option" onclick="selectTransferRate('${key}','SIC','Adult',${adults.price_thb},'')"><div class="vehicle">Adult</div><div class="price">฿${adults.price_thb.toLocaleString()}</div></div>`;
         }
+        if (children) {
+          html +=
+            `<div class="transfer-rate-option" onclick="selectTransferRate('${key}','SIC','Child',${children.price_thb},'')"><div class="vehicle">Child</div><div class="price">฿${children.price_thb.toLocaleString()}</div></div>`;
+        }
+        html += `</div></div>`;
+      }
+      if (addons.length) {
+        html +=
+          `<div class="transfer-rate-section transfer-addons-section"><div class="transfer-rate-section-title">➕ Add-ons</div>`;
+        for (const addon of addons) {
+          const price = addon.price_adult || addon.price_child || 0;
+          html +=
+            `<div class="transfer-addon-option"><input type="checkbox" id="addon-${key}-${escHtml(addon.addon_name)}" onchange="toggleTransferAddon('${key}','${escHtml(addon.addon_name)}',${price})"><label for="addon-${key}-${escHtml(addon.addon_name)}">${escHtml(addon.addon_name)}</label><span class="addon-price">฿${price.toLocaleString()}</span></div>`;
+        }
+        html += `</div>`;
+      }
+      html +=
+        `<button class="btn transfer-add-btn" onclick="addTransferToCart('${key}')" id="transfer-add-btn-${key}">+ Add to Cart</button><div class="transfer-add-hint" id="transfer-hint-${key}">Select one or more rates above</div>`;
+      return html;
     }
-}
 
-function clearComboAttraction(key, index) {
-    const state = getCardState(key);
-    state.selectedAttractions.splice(index, 1);
-    const item = allResults.find(r => cardKey(r) === key);
-    document.getElementById(`detail-${key}`).innerHTML = renderCardDetail(item);
-}
-
-// ── RENDER: ATTRACTION DETAIL ──────────────────────────────────────────────────
-function renderAttractionDetail(item) {
-  const key = cardKey(item);
-  const state = getCardState(key);
-
-  const attraction = item.raw;
-  let pricing = state.ticketPricing;
-
-  const isYona = isYonaBeachSupplier(item) || isYonaBeachSupplier(attraction);
-
-  if (isYona) {
-    const pkgPrice = attraction?.adult_net_price ?? attraction?.price_adult ?? attraction?.adult_price ?? 0;
-    pricing = {
-      total: pkgPrice,
-      breakdown: [{ label: '1 x Single Package Deal', subtotal: pkgPrice }]
-    };
-    state.ticketPricing = pricing;
-  }
-
-  let html = `<div class="detail-section">`;
-
-  // Always show base database rates & remarks regardless of pax
-  html += renderBasePricesAndRemarks(attraction, pricing);
-
-  if (!pricing && !isYona) {
-    html += `<div class="empty-state" style="padding:15px 0"><span class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block"></span> Loading pricing details…</div></div>`;
-    return html;
-  }
-
-  html += `<div class="detail-section-title">${isYona ? '🎟 Package Pricing' : '🎟 Ticket Breakdown for Selected Pax'}</div>
-    <div class="ticket-breakdown">`;
-
-  if (!pricing.breakdown || !pricing.breakdown.length) {
-    html += `<div style="font-size:12.5px;color:var(--muted2)">No pax selected — set adults/children/seniors in top bar.</div>`;
-  } else {
-    for (const line of pricing.breakdown) {
-      html += `<div class="ticket-breakdown-row"><span>${escHtml(line.label)}</span><span class="val">฿${line.subtotal.toLocaleString()}</span></div>`;
+    // ============================================================
+    // TRANSFER STATE (main card)
+    // ============================================================
+    function getTransferState(key) {
+      if (!transferState[key]) {
+        transferState[key] = { selectedRates: [], selectedAddons: [] };
+      }
+      return transferState[key];
     }
-  }
-  html += `<div class="ticket-total-row"><span>Ticket Total</span><span>฿${pricing.total.toLocaleString()}</span></div>`;
-  html += `</div></div>`;
 
-  const disabled = (!pricing.breakdown || !pricing.breakdown.length) ? 'disabled' : '';
-  html += `
-    <button class="btn btn-primary detail-add-btn" id="add-btn-${key}"
-            onclick="event.stopPropagation();addAttractionTicketToCart('${key}')" ${disabled}>
-      Add Ticket to Cart
-    </button>`;
-
-  return html;
-}
-
-async function refreshExpandedCard(item) {
-  const key = cardKey(item);
-  const detailEl = document.getElementById(`detail-${key}`);
-  if (detailEl) detailEl.innerHTML = renderAttractionDetail(item); 
-  await fetchAttractionPricing(item);
-  if (detailEl) detailEl.innerHTML = renderCardDetail(item);
-}
-
-// ── CARD INTERACTION ─────────────────────────────────────────────────────────
-async function toggleCard(key) {
-  if (selectedCard === key) {
-    selectedCard = null;
-    const card = document.querySelector(`.result-card[data-card-key="${key}"]`);
-    if (card) {
-      card.classList.remove('selected');
-      document.getElementById(`detail-${key}`).innerHTML = '';
-    }
-    return;
-  }
-
-  document.querySelectorAll('.result-card.selected').forEach(el => el.classList.remove('selected'));
-  document.querySelectorAll('.service-detail').forEach(el => el.innerHTML = '');
-
-  selectedCard = key;
-  const card = document.querySelector(`.result-card[data-card-key="${key}"]`);
-  if (!card) return;
-  card.classList.add('selected');
-
-  const item = allResults.find(r => cardKey(r) === key);
-  if (!item) return;
-
-  const detailEl = document.getElementById(`detail-${key}`);
-
-  if (item.type === 'transfer') {
-    detailEl.innerHTML = renderTransferDetail(item);
-    return;
-  }
-
-  detailEl.innerHTML = renderAttractionDetail(item);
-  await fetchAttractionPricing(item);
-  if (selectedCard === key) { 
-    detailEl.innerHTML = renderCardDetail(item);
-  }
-}
-
-async function fetchAttractionPricing(item) {
-  const key = cardKey(item);
-  const state = getCardState(key);
-  const pax = currentPax();
-  const params = new URLSearchParams({ adults: pax.adults, children: pax.children, seniors: pax.seniors });
-
-  const r = await apiFetch(`/quotation/api/attraction/${item.id}?${params.toString()}`);
-  if (!r) return;
-  try {
-    const data = await r.json();
-    if (!data.error) {
-      if (isYonaBeachSupplier(item) || isYonaBeachSupplier(item.raw)) {
-        const pkgPrice = item.raw?.adult_net_price || item.raw?.price_adult || data.pricing?.rates?.Adult || data.pricing?.total || 0;
-        // Keep whatever extra fields the backend's pricing object carries
-        // (e.g. `rates`) — only override total/breakdown to force the flat
-        // single-package view. Downstream code (cart-model.js) may rely on
-        // fields we don't render here, so never discard them wholesale.
-        state.ticketPricing = {
-          ...(data.pricing || {}),
-          total: pkgPrice,
-          breakdown: [{ label: '1 x Single Package Deal', subtotal: pkgPrice }]
-        };
+    function selectTransferRate(key, rateType, vehicle, price, paxInfo) {
+      const state = getTransferState(key);
+      const idx = state.selectedRates.findIndex(r => r.rateType === rateType && r.vehicle === vehicle);
+      if (idx >= 0) {
+        state.selectedRates.splice(idx, 1);
       } else {
-        state.ticketPricing = data.pricing;
+        state.selectedRates.push({ rateType, vehicle, paxInfo, price });
       }
-    }
-  } catch (e) {
-    console.error('Failed to fetch attraction pricing:', e);
-  }
-}
-
-// ── RATE / ADDON SELECTION ────────────────────────────────────────────────────
-function selectRate(key, rateType, vehicle, price, paxInfo) {
-  const item = allResults.find(r => cardKey(r) === key);
-  if (!item) return;
-  const state = getCardState(key);
-
-  if (state.selectedRate &&
-      state.selectedRate.rateType === rateType &&
-      state.selectedRate.vehicle === vehicle &&
-      state.selectedRate.price === price) {
-    state.selectedRate = null;
-  } else {
-    state.selectedRate = { rateType, vehicle, paxInfo, price, paxCategory: vehicle };
-  }
-
-  const detailEl = document.getElementById(`detail-${key}`);
-  if (detailEl) detailEl.innerHTML = renderCardDetail(item);
-}
-
-function toggleAddon(key, addonName, price) {
-  const state = getCardState(key);
-  const idx = state.selectedAddons.findIndex(a => a.name === addonName);
-  if (idx >= 0) {
-    state.selectedAddons.splice(idx, 1);
-  } else {
-    state.selectedAddons.push({ name: addonName, price });
-  }
-}
-
-// ── ADD TO CART ───────────────────────────────────────────────────────────────
-function flashAddedButton(key) {
-  const btn = document.getElementById(`add-btn-${key}`);
-  if (!btn) return;
-  const orig = btn.textContent;
-  btn.textContent = '✓ Added!';
-  btn.style.background = 'var(--green)';
-  btn.style.color = '#0a0a0f';
-  setTimeout(() => {
-    btn.textContent = orig;
-    btn.style.background = '';
-    btn.style.color = '';
-  }, 1500);
-}
-
-function addTransferToCart(key) {
-  const item = allResults.find(r => cardKey(r) === key);
-  const state = getCardState(key);
-  if (!item) { alert('Service not found.'); return; }
-  if (!state.selectedRate) { alert('Please select a rate first.'); return; }
-
-  const attractions = state.selectedAttractions || [];
-
-  let cartItem;
-  if (attractions.length) {
-    // Guard: don't add to cart while any attraction's pricing is still loading.
-    if (attractions.some(sel => !sel.pricing)) {
-      alert('Attraction pricing is still loading — please wait a moment and try again.');
-      return;
+      const card = document.querySelector(`.transfer-card[data-card-key="${key}"]`);
+      if (card) {
+        card.querySelectorAll('.transfer-rate-option').forEach(el => el.classList.remove('selected'));
+        const options = card.querySelectorAll('.transfer-rate-option');
+        options.forEach(el => {
+          const vehicleText = el.querySelector('.vehicle')?.textContent;
+          const priceText = el.querySelector('.price')?.textContent?.replace('฿', '').replace(/,/g, '');
+          const selected = state.selectedRates.some(r => r.vehicle === vehicleText && parseInt(priceText) === r
+            .price);
+          if (selected) el.classList.add('selected');
+        });
+      }
+      updateTransferAddButton(key);
     }
 
-    // ── Add as combined Transfer + Bundle (supports 1..N attractions) ────────
-    const transferPrice = state.selectedRate.price;
-    const addonsTotal = (state.selectedAddons || []).reduce((sum, a) => sum + (a.price || 0), 0);
-    const attractionsTotal = attractions.reduce((sum, sel) => sum + (sel.pricing.total || 0), 0);
-
-    const attractionsDetails = attractions.map(sel => ({
-      name: sel.item.name,
-      pricing: sel.pricing,
-      pax: currentPax(),
-      raw: sel.item.raw
-    }));
-
-    cartItem = {
-      type: attractions.length > 1 ? 'transfer_bundle' : 'transfer_bundle',
-      name: `${item.name}${attractions.length === 1 ? ` + ${attractionsDetails[0].name}` : ` + ${attractions.length} Attractions`}`,
-      totalPrice: transferPrice + addonsTotal + attractionsTotal,
-      addonTotal: addonsTotal,
-      addons: state.selectedAddons || [],
-      transferDetails: {
-        rateType: state.selectedRate.rateType,
-        vehicle: state.selectedRate.vehicle,
-        paxCategory: state.selectedRate.paxCategory,
-        paxInfo: state.selectedRate.paxInfo,
-        price: state.selectedRate.price,
-        addons: state.selectedAddons || []
-      },
-      // Plural — the source of truth for 1..N attractions in this bundle.
-      attractionsDetails,
-      // Singular — kept in sync with the first attraction for backward
-      // compatibility with any code path that only reads the singular field.
-      attractionDetails: attractionsDetails[0],
-      meta: {
-        city: item.raw.destination,
-        transferName: item.name,
-        paxSummary: currentPax()
+    function toggleTransferAddon(key, addonName, price) {
+      const state = getTransferState(key);
+      const idx = state.selectedAddons.findIndex(a => a.name === addonName);
+      if (idx >= 0) {
+        state.selectedAddons.splice(idx, 1);
+      } else {
+        state.selectedAddons.push({ name: addonName, price });
       }
-    };
-  } else {
-    // Add as standard Transfer
-    try {
-      cartItem = makeTransferCartItem(
-        item.raw, 
-        state.selectedRate, 
-        state.selectedAddons
-      );
-      if (!cartItem || typeof cartItem.totalPrice !== 'number' || isNaN(cartItem.totalPrice)) {
-        throw new Error('makeTransferCartItem returned an incomplete cart item');
+      updateTransferAddButton(key);
+    }
+
+    function updateTransferAddButton(key) {
+      const state = getTransferState(key);
+      const btn = document.getElementById(`transfer-add-btn-${key}`);
+      const hint = document.getElementById(`transfer-hint-${key}`);
+      if (state.selectedRates.length) {
+        btn.disabled = false;
+        const total = state.selectedRates.reduce((sum, r) => sum + r.price, 0) +
+          state.selectedAddons.reduce((sum, a) => sum + a.price, 0);
+        if (hint) hint.textContent =
+          `Total: ฿${total.toLocaleString()} (${state.selectedRates.length} vehicle${state.selectedRates.length > 1 ? 's' : ''})`;
+      } else {
+        btn.disabled = true;
+        if (hint) hint.textContent = 'Select one or more rates above';
       }
-    } catch (e) {
-      // Same safety net as the attraction path: never let a shared
-      // cart-model quirk silently block "Add to Cart".
-      console.warn('makeTransferCartItem failed — using manual fallback cart item:', e);
-      const addonsTotal = (state.selectedAddons || []).reduce((sum, a) => sum + (a.price || 0), 0);
-      cartItem = {
+    }
+
+    function addTransferToCart(key) {
+      const state = getTransferState(key);
+      if (!state.selectedRates.length) {
+        alert('Please select at least one rate.');
+        return;
+      }
+      const item = allResults.find(r => `transfer:${r.id}` === key);
+      if (!item) return;
+      const addonsTotal = state.selectedAddons.reduce((sum, a) => sum + a.price, 0);
+      const totalPrice = state.selectedRates.reduce((sum, r) => sum + r.price, 0) + addonsTotal;
+      const rateDetails = state.selectedRates.map(r => ({
+        vehicle: r.vehicle,
+        rateType: r.rateType,
+        price: r.price,
+        paxInfo: r.paxInfo
+      }));
+      const cartItem = {
         type: 'transfer',
         name: item.name,
-        totalPrice: state.selectedRate.price + addonsTotal,
+        totalPrice: totalPrice,
         addons: state.selectedAddons || [],
         meta: {
           destination: item.raw?.destination,
           serviceType: item.raw?.service_type,
-          rateType: state.selectedRate.rateType,
-          vehicle: state.selectedRate.vehicle
+          rateType: 'Multiple',
+          vehicle: rateDetails.map(r => r.vehicle).join(', '),
+          paxSummary: { adults: 1, children: 0, seniors: 0 }
+        },
+        transferDetails: {
+          rates: rateDetails,
+          addons: state.selectedAddons || []
         }
       };
-    }
-    cartItem.transferDetails = {
-      rateType: state.selectedRate.rateType,
-      vehicle: state.selectedRate.vehicle,
-      paxCategory: state.selectedRate.paxCategory,
-      paxInfo: state.selectedRate.paxInfo,
-      price: state.selectedRate.price,
-      addons: state.selectedAddons || []
-    };
-  }
-
-  cart.push(cartItem);
-  renderCart();
-  updateCartTotals();
-  flashAddedButton(key);
-}
-
-function addAttractionTicketToCart(key) {
-  const item = allResults.find(r => cardKey(r) === key);
-  const state = getCardState(key);
-  if (!item || !state.ticketPricing) { alert('Pricing not loaded yet.'); return; }
-  if (!state.ticketPricing.breakdown || !state.ticketPricing.breakdown.length) { alert('Set at least one adult/child/senior first.'); return; }
-
-  let cartItem;
-  try {
-    cartItem = makeAttractionCartItem(item.raw, state.ticketPricing, []);
-    if (!cartItem || typeof cartItem.totalPrice !== 'number' || isNaN(cartItem.totalPrice)) {
-      throw new Error('makeAttractionCartItem returned an incomplete cart item');
-    }
-  } catch (e) {
-    // Safety net: some suppliers (e.g. single flat-package suppliers like
-    // Yona Beach / Guide Sai) carry a pricing shape the shared cart-model
-    // helper doesn't fully expect, which can throw and silently block
-    // "Add to Cart". Build an equivalent cart item by hand here so the
-    // ticket is always added regardless of pricing shape.
-    console.warn('makeAttractionCartItem failed — using manual fallback cart item:', e);
-    cartItem = {
-      type: 'attraction',
-      name: item.name,
-      totalPrice: state.ticketPricing.total,
-      addons: [],
-      meta: {
-        city: item.raw?.city,
-        paxSummary: currentPax()
+      cart.push(cartItem);
+      renderCart();
+      updateCartTotals();
+      const btn = document.getElementById(`transfer-add-btn-${key}`);
+      if (btn) {
+        btn.textContent = '✓ Added!';
+        btn.style.background = 'var(--green)';
+        btn.style.color = '#0a0a0f';
+        setTimeout(() => {
+          btn.textContent = '+ Add to Cart';
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 1500);
       }
-    };
-  }
+      state.selectedRates = [];
+      state.selectedAddons = [];
+      const card = document.querySelector(`.transfer-card[data-card-key="${key}"]`);
+      if (card) {
+        card.querySelectorAll('.transfer-rate-option').forEach(el => el.classList.remove('selected'));
+        card.querySelectorAll('.transfer-addon-option input[type="checkbox"]').forEach(el => el.checked = false);
+      }
+      updateTransferAddButton(key);
+    }
 
-  cartItem.attractionDetails = {
-    name: item.name,
-    pricing: state.ticketPricing,
-    pax: currentPax(),
-    raw: item.raw
-  };
-
-  cart.push(cartItem);
-  renderCart();
-  updateCartTotals();
-  flashAddedButton(key);
-}
-
-// ── CART RENDERER WITH COLUMN PRICE BREAKDOWN ────────────────────────────────
-function describeCartItemMeta(item) {
-  // Defensive: `meta` is built by the shared cart-model helper (or our own
-  // manual fallback), and its exact shape can vary by item type/supplier.
-  // Never let a missing field here take down the whole cart render.
-  const meta = item.meta || {};
-  const pax = meta.paxSummary || { adults: 0, children: 0, seniors: 0 };
-
-  if (item.type === 'transfer') {
-    return [meta.destination, meta.serviceType, meta.rateType, meta.vehicle]
-      .filter(Boolean).join(' · ');
-  }
-  if (item.type === 'attraction') {
-    return [meta.city, `${pax.adults}A/${pax.children}C/${pax.seniors}S`].filter(Boolean).join(' · ');
-  }
-  return [meta.city, meta.transferName, `${pax.adults}A/${pax.children}C/${pax.seniors}S`]
-    .filter(Boolean).join(' · ');
-}
-
-function cartItemKindLabel(type) {
-  return { 
-    transfer: 'Transfer', 
-    attraction: 'Attraction Ticket', 
-    attraction_bundle: 'Transfer + Bundle', 
-    transfer_bundle: 'Transfer + Bundle' 
-  }[type] || 'Transfer + Bundle';
-}
-
-function renderAttractionBreakdownBlock(title, attrPricing) {
-  if (!attrPricing || !attrPricing.breakdown || !attrPricing.breakdown.length) return '';
-
-  let html = `
-    <div class="cart-breakdown-section" style="margin-top:8px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
-      <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#fbbf24; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-        <span>🎟️ ${escHtml(title)}</span>
-        <span style="font-family:monospace; color:var(--text);">฿${(attrPricing.total || 0).toLocaleString()}</span>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:4px; font-size:11.5px;">
-  `;
-
-  attrPricing.breakdown.forEach(line => {
-    let label = line.label || `${line.paxType || 'Pax'} (${line.count} x ฿${line.unitPrice})`;
-    let subtotal = line.subtotal != null ? line.subtotal : (line.count * line.unitPrice);
-
-    html += `
-      <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; border-bottom:1px dashed rgba(255,255,255,0.05); padding-bottom:3px;">
-        <span style="color:var(--text); font-weight:500;">${escHtml(label)}</span>
-        <span style="font-family:monospace; font-weight:600; color:var(--green); text-align:right;">= ฿${subtotal.toLocaleString()}</span>
-      </div>
-    `;
-  });
-
-  html += `
-      </div>
-    </div>
-  `;
-  return html;
-}
-
-function renderCartItemBreakdown(item) {
-  let html = '';
-
-  // 1. Attraction Breakdown Section(s)
-  if (item.attractionsDetails && item.attractionsDetails.length > 1) {
-    // Multiple attractions bundled onto one transfer — one block per attraction.
-    item.attractionsDetails.forEach(ad => {
-      html += renderAttractionBreakdownBlock(`Attraction Ticket — ${ad.name}`, ad.pricing);
-    });
-  } else {
-    // Single attraction (or legacy cart items from before multi-attraction support).
-    const attrPricing = item.attractionDetails?.pricing || item.ticketPricing || item.pricing;
-    html += renderAttractionBreakdownBlock('Attraction Ticket Breakdown', attrPricing);
-  }
-
-  // 2. Transfer Breakdown Section
-  const transfer = item.transferDetails || item.meta;
-  if (transfer && (transfer.vehicle || transfer.rateType || item.type === 'transfer' || item.type === 'transfer_bundle' || item.type === 'attraction_bundle')) {
-    const rateName = transfer.vehicle || transfer.rateType || 'Transfer Service';
-    const ratePrice = transfer.price != null ? transfer.price : (item.transferPrice || 0);
-    const addons = transfer.addons || item.addons || [];
-    let addonsTotal = 0;
-    
-    html += `
-      <div class="cart-breakdown-section" style="margin-top:8px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
-        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#22d3ee; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-          <span>🚗 Transfer Service Breakdown</span>
-          <span style="font-family:monospace; color:var(--text);">฿${(ratePrice + addons.reduce((acc, a) => acc + (a.price || 0), 0)).toLocaleString()}</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:4px; font-size:11.5px;">
-          <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center;">
-            <span style="color:var(--text);">${escHtml(rateName)} ${transfer.paxInfo ? `<span style="color:var(--muted); font-size:10.5px;">(${escHtml(transfer.paxInfo)})</span>` : ''}</span>
-            <span style="font-family:monospace; font-weight:600; color:#22d3ee; text-align:right;">= ฿${ratePrice.toLocaleString()}</span>
-          </div>
-    `;
-
-    if (addons && addons.length > 0) {
-      addons.forEach(addon => {
-        addonsTotal += (addon.price || 0);
-        html += `
-          <div style="display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; color:var(--muted);">
-            <span>+ ${escHtml(addon.name)}</span>
-            <span style="font-family:monospace; font-weight:500; text-align:right;">= ฿${(addon.price || 0).toLocaleString()}</span>
-          </div>
-        `;
+    // ============================================================
+    // RENDER: ATTRACTION SUPPLIER CARDS
+    // ============================================================
+    function renderAttractionSupplierCards(attractions) {
+      const grouped = {};
+      attractions.forEach(item => {
+        const supplier = item.raw?.supplier || item.supplier || 'Unknown';
+        const city = item.raw?.city || item.city || 'Unknown';
+        if (!grouped[supplier]) {
+          grouped[supplier] = { city, items: [] };
+        }
+        grouped[supplier].items.push(item);
       });
+      let html = '';
+      const supplierIcons = {
+        'Ancient City': '🏛️',
+        'Safari World': '🐘',
+        'Dream World': '🎠',
+        'Sea Life & Madame Tussads': '🐠',
+        'Mahanakhon SkyWalk': '🏙️',
+        'Siam Amazing Park': '🎢',
+        'Grand Pearl Dinner Cruise': '🚢',
+        'Chao Phraya Princess': '🚢',
+        'Wonderful Pearl Dinner Cruise': '🚢',
+        'Meridian Sunset Dinner Cruise': '🚢',
+        'Noah Sunset Dinner Cruise': '🚢',
+        'Akara Sky Hanuman': '🐒',
+        'Baiyoke Sky': '🏗️',
+        'Topgolf': '⛳',
+        'Thai Smiles - BKK Sharing': '🚐',
+        'Jurassic World: The Experience': '🦕',
+        'EasyKart Bangkok': '🏎️',
+        'Nongnooch Garden': '🌺',
+        "Ripley's Believe It or Not!": '👻',
+        'Space & Time Cube Pattaya': '🪐',
+        'Tiffany Show': '💃',
+        'Alcazar Show': '💃',
+        'Coral Island Tour by ASN Sea Tours': '🏝️',
+        'ATV & Buggy Adventures': '🏍️',
+        'Colosseum Show': '🎭',
+        'Columbia Pictures Aquaverse': '🌊',
+        'Pattaya Dolphinarium': '🐬',
+        'Khao Kheow Zoo': '🐅',
+        'Light Bullet Shooting': '🔫',
+        'Mini Siam': '🗼',
+        'PADO MEDIA ART SPACE': '🎨',
+        'Family Park': '🐯',
+        'Pattaya Floating Market': '🛶',
+        'Pattaya Kart Speedway': '🏁',
+        'Pattaya Shooting Range @ Tiffany': '🎯',
+        'Ramayana Water Park': '🌊',
+        'Sanctuary of Truth': '🙏',
+        'Sheep Farm': '🐑',
+        'Thai Sky Adventures': '🪂',
+        'The Million Years Stone Park': '⛰️',
+        'Tiger Park Pattaya': '🐯',
+        'Tiger Topia Sri Racha': '🐯',
+        'Under Water World': '🐠',
+        'Andamanda Phuket': '🌊',
+        'Aqua Circus': '🎪',
+        'Aquaria Phuket': '🐠',
+        'Athena Cabaret Show': '💃',
+        'Baan Teelanka (Upside Down House )': '🏠',
+        'Banana Beach Koh Hey': '🏝️',
+        'Dolphins Bay Phuket': '🐬',
+        'Elephant Hug': '🐘',
+        'Erawan Patong': '🏍️',
+        'Flying Hanuman': '🐒',
+        'Hanuman World': '🐒',
+        'Lion Land': '🦁',
+        'Phuket Elephant Home': '🐘',
+        'Phuket Elephant Sanctuary': '🐘',
+        'Siam Niramit Phuket': '🎭',
+        'Simon Cabaret': '💃',
+        'Skyline Flying Kamala': '🪂',
+        'Tiger Kingdom Phuket': '🐯',
+        'Tiger Park Phuket': '🐯',
+        'Rafting Adventure / Sea Land Adventure': '🚣',
+        'Yona Beach Club': '🏖️',
+        'Skyrock Adventure': '🪂',
+        'Phi Phi Island Tour by Good Day': '🏝️',
+        'James Bond Island Tour by Good Day': '🏝️',
+        '3 Khai Island Tour by Good Day': '🏝️',
+        'Krabi 3 Island Tour by Good Day': '🏝️',
+        'Surin Island Day Tour By Good Day': '🏝️',
+        'Similan Island Tour by Good Day': '🏝️',
+        'Coral Island Tour HKT by Good Day': '🏝️',
+        'Koh Tao & Koh Nangyuan Tour By Good Day': '🏝️',
+        'Angthong National Park By Good Day': '🏝️',
+        'Phi Phi Island Tour Krabi by Good Day': '🏝️',
+        '4 Island Tour Krabi by Good Day': '🏝️',
+        '7 Island Tour Krabi by Good Day': '🏝️',
+        'Hong Island Tour by Good Day': '🏝️',
+        'Emerald Pool & Hot Spring by Good Day': '♨️',
+        'Half Day Krabi City Tour by Good Day': '🚐',
+        'Half Day Ao Thalane Tour by Good Day': '🚣',
+        'Phi Phi Island Tour by WangSai': '🏝️',
+        '4 Island Tour Krabi by WangSai': '🏝️',
+        'Hong Island Tour by WangSai': '🏝️',
+        'Thai Smiles - HKT Sharing': '🚐',
+        'Fantasea Show': '🎪',
+        'Carnival Magic': '🎪',
+        'Guide Sai': '🧭',
+        'Bangkok Temples': '🛕',
+        'Ayuthaya Temples': '🛕'
+      };
+      Object.keys(grouped).forEach(supplier => {
+        const group = grouped[supplier];
+        const icon = supplierIcons[supplier] || '🏷️';
+        const count = group.items.length;
+        html +=
+          `<div class="supplier-card"><div class="supplier-card-header"><div class="supplier-card-header-left"><div class="supplier-icon">${icon}</div><div><div class="supplier-name">${escHtml(supplier)}</div><div class="supplier-meta"><span class="badge-count">${count} activity${count > 1 ? 's' : ''}</span><span class="badge-city">${escHtml(group.city)}</span></div></div></div><div class="supplier-card-header-right"><span class="expand-icon">▼</span></div></div><div class="supplier-card-body">${group.items.map((item, idx) => renderActivityRow(item, idx, supplier)).join('')}</div></div>`;
+      });
+      return html;
     }
 
-    html += `
-        </div>
-      </div>
-    `;
-  }
-
-  return html;
-}
-
-function renderCart() {
-  const container = document.getElementById('cart-items');
-  const count = document.getElementById('cart-count');
-
-  if (!cart.length) {
-    container.innerHTML = `
-      <div style="text-align:center;color:var(--muted2);font-size:13px;padding:40px 0;">
-        No items added yet.<br>
-        Search for transfers or attraction tickets and add them here.
-      </div>`;
-    count.textContent = '0 items';
-    document.getElementById('generate-btn').disabled = true;
-    return;
-  }
-
-  count.textContent = `${cart.length} item${cart.length > 1 ? 's' : ''}`;
-  document.getElementById('generate-btn').disabled = false;
-
-  container.innerHTML = cart.map((item, idx) => {
-    const usd = thbToUsd(item.totalPrice);
-    return `
-    <div class="cart-item">
-      <div class="cart-item-top">
-        <div>
-          <span class="cart-item-kind cart-item-kind-${item.type}">${cartItemKindLabel(item.type)}</span>
-          <div class="cart-item-name">${escHtml(item.name)}</div>
-        </div>
-        <button class="cart-item-remove" onclick="removeFromCart(${idx})" title="Remove">✕</button>
-      </div>
-      <div class="cart-item-details">
-        <span>${escHtml(describeCartItemMeta(item))}</span>
-      </div>
-
-      <!-- Formatted Column Breakdown -->
-      ${renderCartItemBreakdown(item)}
-
-      <div class="cart-item-price" style="margin-top:10px; display:flex; justify-content:space-between; align-items:baseline; border-top:1px solid var(--border); padding-top:8px;">
-        <span style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600;">Subtotal</span>
-        <div>
-          ฿${item.totalPrice.toLocaleString()}
-          ${usd ? `<span class="usd">≈ $${usd}</span>` : ''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function removeFromCart(idx) {
-  cart.splice(idx, 1);
-  renderCart();
-  updateCartTotals();
-}
-
-function clearCart() {
-  cart = [];
-  renderCart();
-  updateCartTotals();
-  for (const key of Object.keys(cardState)) delete cardState[key];
-  selectedCard = null;
-  document.querySelectorAll('.result-card.selected').forEach(el => el.classList.remove('selected'));
-  document.querySelectorAll('.service-detail').forEach(el => el.innerHTML = '');
-}
-
-function roundToNearestHalf(value) {
-  return Math.round(value * 2) / 2;
-}
-
-function updateCartTotals() {
-  const comm = parseFloat(document.getElementById('commission-input').value) || 100;
-  const total = cartGrandTotal(cart, comm);
-  const usd = thbToUsd(total);
-  document.getElementById('cart-total').innerHTML = `
-    ฿${total.toLocaleString()}
-    ${usd ? `<span class="usd">≈ $${usd}</span>` : ''}
-  `;
-}
-
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-}
-
-// ── MODAL ─────────────────────────────────────────────────────────────────────
-function showModal() {
-  if (!cart.length) return;
-  renderQuotationText();
-  document.getElementById('quotation-modal').classList.add('visible');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeModal() {
-  document.getElementById('quotation-modal').classList.remove('visible');
-  document.body.style.overflow = '';
-}
-
-function buildQuotationText() {
-  const today = new Date().toLocaleDateString('en-GB', {
-    day:'2-digit', month:'short', year:'numeric', timeZone:'Asia/Bangkok'
-  });
-  const comm = parseFloat(document.getElementById('commission-input').value) || 100;
-  const usdRate = getUsdRate();
-  const subtotal = cartSubtotal(cart);
-  const grandTotal = cartGrandTotal(cart, comm);
-
-  const div = '─'.repeat(30);
-
-  const lines = [
-    `*Vayo Aura — Service Quotation*`,
-    `Date: ${today}`,
-    `USD Rate: 1 USD = ฿${usdRate.toFixed(2)}`,
-    div, '',
-  ];
-
-  cart.forEach((item, i) => {
-    const itemUsd = thbToUsd(item.totalPrice);
-    lines.push(`*${i+1}. ${item.name}*`);
-    lines.push(`   ${cartItemKindLabel(item.type)} · ${describeCartItemMeta(item)}`);
-    if (item.addons && item.addons.length) {
-      lines.push(`   Add-ons: ${item.addons.map(a => a.name).join(', ')}`);
+    function renderActivityRow(item, idx, supplier) {
+      const raw = item.raw || {};
+      const adultPrice = raw.adult_net_price || raw.adult_price || raw.price_adult || 0;
+      const childPrice = raw.child_net_price || raw.child_price || raw.price_child || null;
+      const seniorPrice = raw.senior_price || raw.price_senior || null;
+      const remarks = raw.remarks || raw.remark || raw.notes || '';
+      const name = raw.attraction_name || raw.name || item.name || 'Unnamed';
+      const hasChild = childPrice !== null && childPrice !== undefined && childPrice !== '';
+      const hasSenior = seniorPrice !== null && seniorPrice !== undefined && seniorPrice !== '';
+      const activityId = `act_${supplier}_${idx}_${Date.now()}`;
+      return `<div class="activity-row" data-activity-id="${activityId}"><div class="activity-row-left"><div class="activity-name">${escHtml(name)}</div>${remarks ? `<div class="activity-remarks">${escHtml(remarks)}</div>` : ''}<div class="activity-prices"><span class="price-item"><strong>Adult</strong> <span class="price-value">฿${Number(adultPrice).toLocaleString()}</span></span>${hasChild ? `<span class="price-item"><strong>Child</strong> <span class="price-value">฿${Number(childPrice).toLocaleString()}</span></span>` : `<span class="price-item"><strong>Child</strong> <span class="price-na">—</span></span>`}${hasSenior ? `<span class="price-item"><strong>Senior</strong> <span class="price-value">฿${Number(seniorPrice).toLocaleString()}</span></span>` : `<span class="price-item"><strong>Senior</strong> <span class="price-na">—</span></span>`}</div></div><div class="activity-row-right"><div class="pax-input-group"><label>A</label><input type="number" class="pax-adult" value="0" min="0" step="1" data-activity="${activityId}"></div>${hasChild ? `<div class="pax-input-group"><label>C</label><input type="number" class="pax-child" value="0" min="0" step="1" data-activity="${activityId}"></div>` : ''}${hasSenior ? `<div class="pax-input-group"><label>S</label><input type="number" class="pax-senior" value="0" min="0" step="1" data-activity="${activityId}"></div>` : ''}<div class="action-buttons"><button class="btn-ticket-only" data-activity="${activityId}" onclick="addAttractionTicketOnly('${activityId}','${escHtml(supplier)}','${escHtml(name)}',${adultPrice},${childPrice || 'null'},${seniorPrice || 'null'})">🎫 Tickets Only</button><button class="btn-with-transfer" data-activity="${activityId}" onclick="openComboModal('${activityId}','${escHtml(supplier)}','${escHtml(name)}',${adultPrice},${childPrice || 'null'},${seniorPrice || 'null'})">🚗 With Transfer</button></div></div></div>`;
     }
-    const addonStr = item.addonTotal ? ` (+ ฿${item.addonTotal.toLocaleString()} add-ons)` : '';
-    lines.push(`   Subtotal: ฿${item.totalPrice.toLocaleString()}${addonStr}`);
-    if (itemUsd) lines.push(`   ≈ $${itemUsd} USD`);
-    lines.push('');
-  });
 
-  const grandUsd = thbToUsd(grandTotal);
-  lines.push(div);
-  lines.push(`Subtotal: ฿${subtotal.toLocaleString()}`);
-  if (comm > 0) {
-    lines.push(`Commission (${comm}%): ฿${(subtotal * (comm / 100)).toLocaleString()}`);
-  }
-  lines.push(`*GRAND TOTAL: ฿${grandTotal.toLocaleString()}*`);
-  if (grandUsd) lines.push(`*≈ $${grandUsd} USD*`);
-  lines.push(div);
-  lines.push('');
-  return lines.join('\n');
-}
+    // ============================================================
+    // ATTRACTION TICKET ONLY
+    // ============================================================
+    function addAttractionTicketOnly(activityId, supplier, name, adultPrice, childPrice, seniorPrice) {
+      const row = document.querySelector(`.activity-row[data-activity-id="${activityId}"]`);
+      if (!row) return;
+      const adultInput = row.querySelector('.pax-adult');
+      const childInput = row.querySelector('.pax-child');
+      const seniorInput = row.querySelector('.pax-senior');
+      const adults = parseInt(adultInput?.value || 0, 10);
+      const children = parseInt(childInput?.value || 0, 10);
+      const seniors = parseInt(seniorInput?.value || 0, 10);
+      if (adults === 0 && children === 0 && seniors === 0) {
+        alert('Please set at least 1 pax for this activity.');
+        return;
+      }
+      let total = (adults * adultPrice) + (children * (childPrice || 0)) + (seniors * (seniorPrice || 0));
+      if (total === 0) {
+        alert('Please enter valid pax numbers.');
+        return;
+      }
+      const breakdown = [];
+      if (adults > 0) breakdown.push({ label: `${adults} x Adult (฿${adultPrice.toLocaleString()})`, subtotal: adults *
+          adultPrice });
+      if (children > 0 && childPrice) breakdown.push({ label: `${children} x Child (฿${childPrice.toLocaleString()})`,
+        subtotal: children * childPrice });
+      if (seniors > 0 && seniorPrice) breakdown.push({ label: `${seniors} x Senior (฿${seniorPrice.toLocaleString()})`,
+        subtotal: seniors * seniorPrice });
+      const cartItem = {
+        type: 'attraction',
+        name: `${supplier} - ${name}`,
+        totalPrice: total,
+        addons: [],
+        meta: {
+          supplier: supplier,
+          city: 'Attraction',
+          paxSummary: { adults, children, seniors }
+        },
+        attractionDetails: {
+          name: name,
+          pricing: { total: total, breakdown: breakdown },
+          pax: { adults, children, seniors }
+        }
+      };
+      cart.push(cartItem);
+      renderCart();
+      updateCartTotals();
+      const btn = row.querySelector('.btn-ticket-only');
+      if (btn) {
+        btn.classList.add('added');
+        btn.textContent = '✓ Added';
+        setTimeout(() => {
+          btn.classList.remove('added');
+          btn.textContent = '🎫 Tickets Only';
+          if (adultInput) adultInput.value = 0;
+          if (childInput) childInput.value = 0;
+          if (seniorInput) seniorInput.value = 0;
+        }, 1500);
+      }
+    }
 
-function renderQuotationText() {
-  document.getElementById('quotation-text').textContent = buildQuotationText();
-}
+    // ============================================================
+    // COMBO MODAL (with multiple transfer selection)
+    // ============================================================
+    function openComboModal(activityId, supplier, name, adultPrice, childPrice, seniorPrice) {
+      const row = document.querySelector(`.activity-row[data-activity-id="${activityId}"]`);
+      if (!row) return;
+      const adultInput = row.querySelector('.pax-adult');
+      const childInput = row.querySelector('.pax-child');
+      const seniorInput = row.querySelector('.pax-senior');
+      const adults = parseInt(adultInput?.value || 0, 10);
+      const children = parseInt(childInput?.value || 0, 10);
+      const seniors = parseInt(seniorInput?.value || 0, 10);
+      if (adults === 0 && children === 0 && seniors === 0) {
+        alert('Please set at least 1 pax for this activity.');
+        return;
+      }
+      comboState.attraction = {
+        activityId,
+        supplier,
+        name,
+        adultPrice,
+        childPrice,
+        seniorPrice,
+        raw: {
+          adult_net_price: adultPrice,
+          child_net_price: childPrice || null,
+          senior_price: seniorPrice || null,
+          attraction_name: name,
+          supplier: supplier
+        }
+      };
+      comboState.pax = { adults, children, seniors };
+      comboState.selectedTransfer = null;
+      comboState.selectedRates = [];
+      comboState.selectedAddons = [];
+      comboState.searchResults = [];
+      comboState.searchQuery = '';
+      comboState.isSearching = false;
+      renderComboModal();
+      document.getElementById('combo-modal').classList.add('visible');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        const input = document.getElementById('combo-search-input');
+        if (input) input.focus();
+      }, 300);
+    }
 
-async function copyQuotation() {
-  const text = document.getElementById('quotation-text').textContent;
-  const btn = document.getElementById('copy-btn');
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    const ta = Object.assign(document.createElement('textarea'), {
-      value:text, style:'position:fixed;opacity:0'
+    function closeComboModal() {
+      document.getElementById('combo-modal').classList.remove('visible');
+      document.body.style.overflow = '';
+      comboState = {
+        attraction: null,
+        pax: { adults: 0, children: 0, seniors: 0 },
+        selectedTransfer: null,
+        selectedRates: [],
+        selectedAddons: [],
+        searchResults: [],
+        searchQuery: '',
+        isSearching: false
+      };
+    }
+
+    function renderComboModal() {
+      const body = document.getElementById('combo-modal-body');
+      const attr = comboState.attraction;
+      const pax = comboState.pax;
+      if (!attr) return;
+      const adultTotal = pax.adults * attr.adultPrice;
+      const childTotal = pax.children * (attr.childPrice || 0);
+      const seniorTotal = pax.seniors * (attr.seniorPrice || 0);
+      const attractionTotal = adultTotal + childTotal + seniorTotal;
+      let breakdownHtml = '';
+      if (pax.adults > 0) breakdownHtml += `<span>${pax.adults} A × ฿${attr.adultPrice.toLocaleString()}</span>`;
+      if (pax.children > 0 && attr.childPrice) breakdownHtml +=
+        `<span>${pax.children} C × ฿${attr.childPrice.toLocaleString()}</span>`;
+      if (pax.seniors > 0 && attr.seniorPrice) breakdownHtml +=
+        `<span>${pax.seniors} S × ฿${attr.seniorPrice.toLocaleString()}</span>`;
+      body.innerHTML =
+        `<div class="combo-attraction-info"><div class="label">🎟️ Selected Attraction</div><div class="name">${escHtml(attr.name)}</div><div class="pax-summary">${breakdownHtml}<span style="font-weight:700;color:var(--accent);margin-left:8px;">= ฿${attractionTotal.toLocaleString()}</span></div></div><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;">🚗 Search &amp; Select Transfer</div><div class="combo-search-bar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="combo-search-input" placeholder="Search transfers (e.g. 'airport', 'hotel', 'phuket')…" oninput="handleComboSearch(this.value)"><span id="combo-search-spinner" class="spinner" style="display:none;width:14px;height:14px;border-width:2px;flex-shrink:0;"></span></div><div class="combo-search-results" id="combo-search-results"><div class="combo-empty">🔍 Type to search for transfers to bundle with this attraction.</div></div>${comboState.selectedTransfer ? `<div style="margin-top:12px;padding:12px 16px;background:var(--accent-dim);border:1px solid rgba(232,197,71,0.2);border-radius:8px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;color:var(--muted);">Selected Transfer</div><div style="font-weight:600;color:var(--text);">${escHtml(comboState.selectedTransfer.name)}</div><div style="font-size:12px;color:var(--muted);">${comboState.selectedRates.length ? comboState.selectedRates.map(r => `${r.vehicle} (฿${r.price.toLocaleString()})`).join(', ') : 'Select rates below'}</div></div><button class="btn btn-danger-ghost btn-sm" onclick="clearComboTransfer()">✕ Remove</button></div></div>` : ''}`;
+      updateComboAddButton();
+    }
+
+    function updateComboAddButton() {
+      const btn = document.getElementById('combo-add-btn');
+      if (comboState.selectedTransfer && comboState.selectedRates.length) {
+        btn.disabled = false;
+      } else {
+        btn.disabled = true;
+      }
+    }
+
+    let comboSearchTimeout = null;
+
+    async function handleComboSearch(query) {
+      comboState.searchQuery = query;
+      const spinner = document.getElementById('combo-search-spinner');
+      const resultsContainer = document.getElementById('combo-search-results');
+      clearTimeout(comboSearchTimeout);
+      if (!query || query.length < 2) {
+        resultsContainer.innerHTML =
+          `<div class="combo-empty">🔍 Type at least 2 characters to search for transfers.</div>`;
+        return;
+      }
+      spinner.style.display = 'inline-block';
+      comboSearchTimeout = setTimeout(async () => {
+        try {
+          const params = new URLSearchParams({ q: query, type: 'transfer', limit: '20' });
+          const r = await apiFetch(`/quotation/api/catalog-search?${params.toString()}`);
+          spinner.style.display = 'none';
+          if (!r) {
+            resultsContainer.innerHTML = `<div class="combo-empty">⚠️ Search failed. Please try again.</div>`;
+            return;
+          }
+          const data = await r.json();
+          comboState.searchResults = data.error ? [] : data;
+          renderComboSearchResults();
+        } catch (e) {
+          spinner.style.display = 'none';
+          resultsContainer.innerHTML = `<div class="combo-empty">⚠️ Error searching. Please try again.</div>`;
+        }
+      }, 300);
+    }
+
+    function renderComboSearchResults() {
+      const container = document.getElementById('combo-search-results');
+      const results = comboState.searchResults;
+      if (!results || results.length === 0) {
+        container.innerHTML = `<div class="combo-empty">No transfers found. Try a different search term.</div>`;
+        return;
+      }
+      let html = '';
+      results.forEach(item => {
+        const rates = item.raw?.rates || [];
+        const priceFrom = rates.length ? Math.min(...rates.map(r => r.price_thb)) : null;
+        const priceStr = priceFrom ? `from ฿${priceFrom.toLocaleString()}` : '';
+        const isSelected = comboState.selectedTransfer && comboState.selectedTransfer.id === item.id;
+        html +=
+          `<div class="combo-result-item ${isSelected ? 'selected' : ''}" onclick="selectComboTransfer(${item.id})" style="${isSelected ? 'border-color:var(--accent);background:var(--accent-dim);' : ''}"><div class="result-name">${escHtml(item.name)}</div><div class="result-meta"><span class="badge">${escHtml(item.city || 'N/A')}</span>${item.supplier ? `<span class="badge">${escHtml(item.supplier)}</span>` : ''}${priceStr ? `<span style="color:var(--accent);font-weight:600;">${priceStr}</span>` : ''}</div>${isSelected ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">${renderComboTransferRates(item)}</div>` : ''}</div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    // Combo transfer rates with multi-select
+    function renderComboTransferRates(transferItem) {
+      const rates = transferItem.raw?.rates || [];
+      const privateRates = rates.filter(r => r.rate_type === 'Private');
+      const sicRates = rates.filter(r => r.rate_type === 'SIC');
+      let html = `<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;">Select one or more rates:</div>`;
+      if (privateRates.length) {
+        const byVehicle = {};
+        privateRates.forEach(r => {
+          const veh = r.vehicle || 'N/A';
+          if (!byVehicle[veh]) byVehicle[veh] = [];
+          byVehicle[veh].push(r);
+        });
+        html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:6px;">`;
+        for (const [vehicle, rows] of Object.entries(byVehicle)) {
+          const bestPrice = Math.min(...rows.map(r => r.price_thb));
+          const paxInfo = rows.map(r => r.pax_range).filter(Boolean).join(', ');
+          const isSelected = comboState.selectedRates.some(r =>
+            r.vehicle === vehicle && r.rateType === 'Private' && r.price === bestPrice
+          );
+          html +=
+            `<div class="transfer-rate-option ${isSelected ? 'selected' : ''}" style="padding:8px 10px;" onclick="event.stopPropagation();selectComboRate(${transferItem.id},'Private','${escHtml(vehicle)}',${bestPrice},'${escHtml(paxInfo)}')"><div class="vehicle" style="font-size:12px;">${escHtml(vehicle)}</div><div class="pax-info" style="font-size:10px;">${paxInfo || 'All pax'}</div><div class="price" style="font-size:12px;">฿${bestPrice.toLocaleString()}</div></div>`;
+        }
+        html += `</div>`;
+      }
+      if (sicRates.length) {
+        const adults = sicRates.find(r => r.pax_category === 'Adult');
+        const children = sicRates.find(r => r.pax_category === 'Child');
+        html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;">`;
+        if (adults) {
+          const isSelected = comboState.selectedRates.some(r =>
+            r.rateType === 'SIC' && r.vehicle === 'Adult' && r.price === adults.price_thb
+          );
+          html +=
+            `<div class="transfer-rate-option ${isSelected ? 'selected' : ''}" style="padding:8px 10px;" onclick="event.stopPropagation();selectComboRate(${transferItem.id},'SIC','Adult',${adults.price_thb},'')"><div class="vehicle" style="font-size:12px;">Adult</div><div class="price" style="font-size:12px;">฿${adults.price_thb.toLocaleString()}</div></div>`;
+        }
+        if (children) {
+          const isSelected = comboState.selectedRates.some(r =>
+            r.rateType === 'SIC' && r.vehicle === 'Child' && r.price === children.price_thb
+          );
+          html +=
+            `<div class="transfer-rate-option ${isSelected ? 'selected' : ''}" style="padding:8px 10px;" onclick="event.stopPropagation();selectComboRate(${transferItem.id},'SIC','Child',${children.price_thb},'')"><div class="vehicle" style="font-size:12px;">Child</div><div class="price" style="font-size:12px;">฿${children.price_thb.toLocaleString()}</div></div>`;
+        }
+        html += `</div>`;
+      }
+      return html;
+    }
+
+    function selectComboTransfer(transferId) {
+      const transfer = comboState.searchResults.find(r => r.id === transferId);
+      if (!transfer) return;
+      if (comboState.selectedTransfer && comboState.selectedTransfer.id === transferId) {
+        comboState.selectedTransfer = null;
+        comboState.selectedRates = [];
+      } else {
+        comboState.selectedTransfer = transfer;
+        comboState.selectedRates = [];
+      }
+      renderComboModal();
+      renderComboSearchResults();
+      updateComboAddButton();
+    }
+
+    function selectComboRate(transferId, rateType, vehicle, price, paxInfo) {
+      // Toggle selection for this rate
+      const idx = comboState.selectedRates.findIndex(r =>
+        r.rateType === rateType && r.vehicle === vehicle && r.price === price
+      );
+      if (idx >= 0) {
+        comboState.selectedRates.splice(idx, 1);
+      } else {
+        comboState.selectedRates.push({ rateType, vehicle, paxInfo, price });
+      }
+      renderComboModal();
+      renderComboSearchResults();
+      updateComboAddButton();
+    }
+
+    function clearComboTransfer() {
+      comboState.selectedTransfer = null;
+      comboState.selectedRates = [];
+      renderComboModal();
+      renderComboSearchResults();
+      updateComboAddButton();
+    }
+
+    function confirmComboAdd() {
+      if (!comboState.attraction || !comboState.selectedTransfer || !comboState.selectedRates.length) {
+        alert('Please select both an attraction pax and at least one transfer rate.');
+        return;
+      }
+      const attr = comboState.attraction;
+      const pax = comboState.pax;
+      const transfer = comboState.selectedTransfer;
+      const rates = comboState.selectedRates;
+      const adultTotal = pax.adults * attr.adultPrice;
+      const childTotal = pax.children * (attr.childPrice || 0);
+      const seniorTotal = pax.seniors * (attr.seniorPrice || 0);
+      const attractionTotal = adultTotal + childTotal + seniorTotal;
+      const breakdown = [];
+      if (pax.adults > 0) breakdown.push({ label: `${pax.adults} x Adult (฿${attr.adultPrice.toLocaleString()})`,
+        subtotal: adultTotal });
+      if (pax.children > 0 && attr.childPrice) breakdown.push({ label: `${pax.children} x Child (฿${attr.childPrice
+          .toLocaleString()})`, subtotal: childTotal });
+      if (pax.seniors > 0 && attr.seniorPrice) breakdown.push({ label: `${pax.seniors} x Senior (฿${attr.seniorPrice
+          .toLocaleString()})`, subtotal: seniorTotal });
+      const transferTotal = rates.reduce((sum, r) => sum + r.price, 0);
+      const totalPrice = attractionTotal + transferTotal;
+      const rateDetails = rates.map(r => ({
+        vehicle: r.vehicle,
+        rateType: r.rateType,
+        price: r.price,
+        paxInfo: r.paxInfo
+      }));
+      const cartItem = {
+        type: 'attraction_bundle',
+        name: `${attr.supplier} - ${attr.name} + Transfer`,
+        totalPrice: totalPrice,
+        addons: [],
+        meta: {
+          supplier: attr.supplier,
+          city: transfer.city || 'Attraction',
+          paxSummary: pax,
+          transferName: transfer.name
+        },
+        attractionDetails: {
+          name: attr.name,
+          pricing: { total: attractionTotal, breakdown: breakdown },
+          pax: pax,
+          raw: attr.raw
+        },
+        transferDetails: {
+          name: transfer.name,
+          rates: rateDetails,
+          addons: []
+        }
+      };
+      cart.push(cartItem);
+      renderCart();
+      updateCartTotals();
+      const row = document.querySelector(`.activity-row[data-activity-id="${attr.activityId}"]`);
+      if (row) {
+        const btn = row.querySelector('.btn-with-transfer');
+        if (btn) {
+          btn.classList.add('added');
+          btn.textContent = '✓ Added';
+          setTimeout(() => {
+            btn.classList.remove('added');
+            btn.textContent = '🚗 With Transfer';
+          }, 2000);
+        }
+      }
+      closeComboModal();
+    }
+
+    // ============================================================
+    // CART
+    // ============================================================
+    function cartItemKindLabel(type) {
+      return {
+        transfer: 'Transfer',
+        attraction: 'Attraction Ticket',
+        attraction_bundle: 'Attraction + Transfer Bundle',
+        transfer_bundle: 'Transfer + Bundle'
+      } [type] || 'Attraction';
+    }
+
+    function describeCartItemMeta(item) {
+      const meta = item.meta || {};
+      const pax = meta.paxSummary || { adults: 0, children: 0, seniors: 0 };
+      if (item.type === 'attraction') {
+        return `${meta.supplier || 'Attraction'} · ${pax.adults}A/${pax.children}C/${pax.seniors}S`;
+      }
+      if (item.type === 'attraction_bundle') {
+        return `${meta.supplier || 'Attraction'} + ${meta.transferName || 'Transfer'} · ${pax.adults}A/${pax.children}C/${pax.seniors}S`;
+      }
+      if (item.type === 'transfer') {
+        return [meta.destination, meta.serviceType, meta.rateType, meta.vehicle].filter(Boolean).join(' · ');
+      }
+      return '';
+    }
+
+    function renderCartItemBreakdown(item) {
+      let html = '';
+      const attrPricing = item.attractionDetails?.pricing || item.pricing;
+      if (attrPricing?.breakdown?.length) {
+        html +=
+          `<div class="cart-breakdown-section"><div class="breakdown-title"><span>🎟️ ${item.attractionDetails?.name || 'Attraction'}</span><span class="total">฿${attrPricing.total.toLocaleString()}</span></div>`;
+        attrPricing.breakdown.forEach(line => {
+          html +=
+            `<div class="breakdown-row"><span class="label">${escHtml(line.label)}</span><span class="amount">฿${line.subtotal.toLocaleString()}</span></div>`;
+        });
+        html += `</div>`;
+      }
+      const transfer = item.transferDetails;
+      if (transfer && (transfer.rates || transfer.vehicle)) {
+        if (transfer.rates) {
+          const total = transfer.rates.reduce((s, r) => s + r.price, 0) +
+            (transfer.addons || []).reduce((s, a) => s + (a.price || 0), 0);
+          html +=
+            `<div class="cart-breakdown-section" style="margin-top:6px;"><div class="breakdown-title" style="color:#22d3ee;"><span>🚗 ${transfer.name || 'Transfer'}</span><span class="total">฿${total.toLocaleString()}</span></div>`;
+          transfer.rates.forEach(r => {
+            html +=
+              `<div class="breakdown-row"><span class="label">${escHtml(r.vehicle)} (${r.rateType})</span><span class="amount">฿${r.price.toLocaleString()}</span></div>`;
+          });
+          (transfer.addons || []).forEach(addon => {
+            html +=
+              `<div class="breakdown-row" style="color:var(--muted);"><span class="label">+ ${escHtml(addon.name)}</span><span class="amount">฿${(addon.price || 0).toLocaleString()}</span></div>`;
+          });
+          html += `</div>`;
+        } else {
+          const rateName = transfer.vehicle || transfer.rateType || 'Transfer';
+          const ratePrice = transfer.price || 0;
+          const addons = transfer.addons || [];
+          html +=
+            `<div class="cart-breakdown-section" style="margin-top:6px;"><div class="breakdown-title" style="color:#22d3ee;"><span>🚗 ${transfer.name || 'Transfer'}</span><span class="total">฿${(ratePrice + addons.reduce((acc, a) => acc + (a.price || 0), 0)).toLocaleString()}</span></div><div class="breakdown-row"><span class="label">${escHtml(rateName)}</span><span class="amount">฿${ratePrice.toLocaleString()}</span></div>`;
+          addons.forEach(addon => {
+            html +=
+              `<div class="breakdown-row" style="color:var(--muted);"><span class="label">+ ${escHtml(addon.name)}</span><span class="amount">฿${(addon.price || 0).toLocaleString()}</span></div>`;
+          });
+          html += `</div>`;
+        }
+      }
+      return html;
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const count = document.getElementById('cart-count');
+      if (!cart.length) {
+        container.innerHTML =
+          `<div style="text-align:center;color:var(--muted2);font-size:13px;padding:40px 0;">No items added yet.<br>Search for transfers or attraction tickets and add them here.</div>`;
+        count.textContent = '0 items';
+        document.getElementById('generate-btn').disabled = true;
+        return;
+      }
+      count.textContent = `${cart.length} item${cart.length > 1 ? 's' : ''}`;
+      document.getElementById('generate-btn').disabled = false;
+      container.innerHTML = cart.map((item, idx) => {
+        const usd = thbToUsd(item.totalPrice);
+        return `<div class="cart-item"><div class="cart-item-top"><div><span class="cart-item-kind cart-item-kind-${item.type}">${cartItemKindLabel(item.type)}</span><div class="cart-item-name">${escHtml(item.name)}</div></div><button class="cart-item-remove" onclick="removeFromCart(${idx})" title="Remove">✕</button></div><div class="cart-item-details"><span>${escHtml(describeCartItemMeta(item))}</span></div>${renderCartItemBreakdown(item)}<div class="cart-item-price" style="margin-top:10px; display:flex; justify-content:space-between; align-items:baseline; border-top:1px solid var(--border); padding-top:8px;"><span style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:600;">Subtotal</span><div>฿${item.totalPrice.toLocaleString()}${usd ? `<span class="usd">≈ $${usd}</span>` : ''}</div></div></div>`;
+      }).join('');
+    }
+
+    function removeFromCart(idx) { cart.splice(idx, 1);
+      renderCart();
+      updateCartTotals(); }
+
+    function clearCart() { cart = [];
+      renderCart();
+      updateCartTotals(); }
+
+    function cartSubtotal(items) { return items.reduce((sum, item) => sum + (item.totalPrice || 0), 0); }
+
+    function cartGrandTotal(items, commissionPercent) {
+      const subtotal = cartSubtotal(items);
+      if (commissionPercent === 0) return subtotal;
+      return subtotal + (subtotal * (commissionPercent / 100));
+    }
+
+    function updateCartTotals() {
+      const comm = parseFloat(document.getElementById('commission-input').value) || 0;
+      const total = cartGrandTotal(cart, comm);
+      const usd = thbToUsd(total);
+      document.getElementById('cart-total').innerHTML =
+        `฿${total.toLocaleString()}${usd ? `<span class="usd">≈ $${usd}</span>` : ''}`;
+    }
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+    // ============================================================
+    // QUOTATION MODAL
+    // ============================================================
+    function showModal() {
+      if (!cart.length) return;
+      renderQuotationText();
+      document.getElementById('quotation-modal').classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('quotation-modal').classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+
+    function buildQuotationText() {
+      const today = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Bangkok'
+      });
+      const comm = parseFloat(document.getElementById('commission-input').value) || 0;
+      const usdRate = getUsdRate();
+      const subtotal = cartSubtotal(cart);
+      const grandTotal = cartGrandTotal(cart, comm);
+      const div = '─'.repeat(30);
+      const lines = [`*Vayo Aura — Service Quotation*`, `Date: ${today}`,
+        `USD Rate: 1 USD = ฿${usdRate.toFixed(2)}`, div, ''
+      ];
+      cart.forEach((item, i) => {
+        const itemUsd = thbToUsd(item.totalPrice);
+        lines.push(`*${i + 1}. ${item.name}*`);
+        lines.push(`   ${cartItemKindLabel(item.type)} · ${describeCartItemMeta(item)}`);
+        const pricing = item.attractionDetails?.pricing || item.pricing;
+        if (pricing?.breakdown?.length) {
+          pricing.breakdown.forEach(line => {
+            lines.push(`   ${line.label}: ฿${line.subtotal.toLocaleString()}`);
+          });
+        }
+        const transfer = item.transferDetails;
+        if (transfer && transfer.rates) {
+          transfer.rates.forEach(r => {
+            lines.push(`   Transfer (${r.vehicle}): ฿${r.price.toLocaleString()}`);
+          });
+        } else if (transfer && transfer.price) {
+          lines.push(`   Transfer (${transfer.vehicle || transfer.rateType}): ฿${transfer.price.toLocaleString()}`);
+        }
+        lines.push(`   Subtotal: ฿${item.totalPrice.toLocaleString()}`);
+        if (itemUsd) lines.push(`   ≈ $${itemUsd} USD`);
+        lines.push('');
+      });
+      const grandUsd = thbToUsd(grandTotal);
+      lines.push(div);
+      lines.push(`Subtotal: ฿${subtotal.toLocaleString()}`);
+      if (comm > 0) {
+        lines.push(`Commission (${comm}%): ฿${(subtotal * (comm / 100)).toLocaleString()}`);
+      }
+      lines.push(`*GRAND TOTAL: ฿${grandTotal.toLocaleString()}*`);
+      if (grandUsd) lines.push(`*≈ $${grandUsd} USD*`);
+      lines.push(div);
+      lines.push('');
+      return lines.join('\n');
+    }
+
+    function renderQuotationText() { document.getElementById('quotation-text').textContent = buildQuotationText(); }
+
+    async function copyQuotation() {
+      const text = document.getElementById('quotation-text').textContent;
+      const btn = document.getElementById('copy-btn');
+      try { await navigator.clipboard.writeText(text); } catch {
+        const ta = Object.assign(document.createElement('textarea'), { value: text, style: 'position:fixed;opacity:0' });
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => btn.textContent = 'Copy to Clipboard', 2200);
+    }
+
+    function exportToExcel() {
+      if (!cart.length) return;
+      const today = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Bangkok'
+      });
+      const fileDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+      const comm = parseFloat(document.getElementById('commission-input').value) || 0;
+      const subtotal = cartSubtotal(cart);
+      const grandTotal = cartGrandTotal(cart, comm);
+      const describe = (it) => {
+        let d = `[${cartItemKindLabel(it.type)}] ${it.name}`;
+        const meta = describeCartItemMeta(it);
+        if (meta) d += ` — ${meta}`;
+        return d;
+      };
+      const usdVal = (thb) => { const u = parseFloat(thbToUsd(thb)); return isFinite(u) ? u : ''; };
+      const aoa = [
+        ['Vayo Aura — Service Quotation'],
+        ['Date', today],
+        [],
+        ['Service', 'Price (THB)', 'Price (USD)']
+      ];
+      cart.forEach((it) => aoa.push([describe(it), it.totalPrice, usdVal(it.totalPrice)]));
+      aoa.push([]);
+      aoa.push(['Subtotal', subtotal, usdVal(subtotal)]);
+      if (comm > 0) aoa.push([`Commission (${comm}%)`, subtotal * (comm / 100), '']);
+      aoa.push(['GRAND TOTAL', grandTotal, usdVal(grandTotal)]);
+      const filename = `VIKRAM_Quotation_${fileDate}.xlsx`;
+      const btn = document.getElementById('export-btn');
+      if (typeof XLSX !== 'undefined') {
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        ws['!cols'] = [{ wch: 60 }, { wch: 14 }, { wch: 14 }];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Quotation');
+        XLSX.writeFile(wb, filename);
+      } else {
+        exportCsvFallback(aoa, filename.replace(/\.xlsx$/, '.csv'));
+      }
+      if (btn) {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '✓ Exported!';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      }
+    }
+
+    function exportCsvFallback(aoa, filename) {
+      const esc = (v) => {
+        const s = (v == null ? '' : String(v));
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const csv = '\uFEFF' + aoa.map(row => row.map(esc).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    loadFx();
+    loadUnifiedFilterOptions();
+    document.getElementById('search-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault();
+        doSearch(); }
     });
-    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-    document.body.removeChild(ta);
-  }
-  btn.textContent = '✓ Copied!';
-  setTimeout(() => btn.textContent = 'Copy to Clipboard', 2200);
-}
-
-// ── EXCEL EXPORT ──────────────────────────────────────────────────────────────
-function exportToExcel() {
-  if (!cart.length) return;
-
-  const today = new Date().toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok'
-  });
-  const fileDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
-  const comm = parseFloat(document.getElementById('commission-input').value) || 0;
-
-  const subtotal = cartSubtotal(cart);
-  const commissionAmount = comm === 0 ? subtotal : subtotal + (subtotal / (comm / 100));
-  const grandTotal = roundToNearestHalf(commissionAmount);
-
-  const describe = (it) => {
-    let d = `[${cartItemKindLabel(it.type)}] ${it.name}`;
-    const meta = describeCartItemMeta(it);
-    if (meta) d += ` — ${meta}`;
-    if (it.addons && it.addons.length) d += ` + ${it.addons.map(a => a.name).join(', ')}`;
-    return d;
-  };
-  const usdVal = (thb) => { const u = parseFloat(thbToUsd(thb)); return isFinite(u) ? u : ''; };
-
-  const aoa = [
-    ['Vayo Aura — Service Quotation'],
-    ['Date', today],
-    [],
-    ['Service', 'Price (THB)', 'Price (USD)'],
-  ];
-  cart.forEach((it) => aoa.push([describe(it), it.totalPrice, usdVal(it.totalPrice)]));
-  aoa.push([]);
-  aoa.push(['Subtotal', subtotal, usdVal(subtotal)]);
-  if (comm > 0) aoa.push([`Commission (${comm}%)`, subtotal / (comm / 100), '']);
-  aoa.push(['GRAND TOTAL', grandTotal, usdVal(grandTotal)]);
-
-  const filename = `VIKRAM_Quotation_${fileDate}.xlsx`;
-  const btn = document.getElementById('export-btn');
-
-  if (typeof XLSX !== 'undefined') {
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = [{ wch: 60 }, { wch: 14 }, { wch: 14 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Quotation');
-    XLSX.writeFile(wb, filename);
-  } else {
-    exportCsvFallback(aoa, filename.replace(/\.xlsx$/, '.csv'));
-  }
-
-  if (btn) {
-    const orig = btn.innerHTML;
-    btn.innerHTML = '✓ Exported!';
-    setTimeout(() => { btn.innerHTML = orig; }, 2000);
-  }
-}
-
-function exportCsvFallback(aoa, filename) {
-  const esc = (v) => {
-    const s = (v == null ? '' : String(v));
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  const csv = '\uFEFF' + aoa.map(row => row.map(esc).join(',')).join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-function escHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-loadFx();
-loadUnifiedFilterOptions();
-
-document.getElementById('search-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
+    document.addEventListener('click', (e) => {
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth <= 820 && sidebar.classList.contains('open')) {
+        if (!sidebar.contains(e.target) && !e.target.closest('.sidebar-handle')) {
+          sidebar.classList.remove('open');
+        }
+      }
+    });
+    updateActiveFilters();
     doSearch();
-  }
-});
-
-document.addEventListener('click', (e) => {
-  const sidebar = document.getElementById('sidebar');
-  if (window.innerWidth <= 820 && sidebar.classList.contains('open')) {
-    if (!sidebar.contains(e.target) && !e.target.closest('.sidebar-handle')) {
-      sidebar.classList.remove('open');
-    }
-  }
-});
-
-updateActiveFilters();
-doSearch();
-</script>
+  </script>
 </body>
+
 </html>
