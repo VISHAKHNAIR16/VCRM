@@ -879,10 +879,6 @@
       -webkit-appearance: none;
     }
 
-    .activity-row-right .pax-input-group input[type="number"] {
-      -moz-appearance: textfield;
-    }
-
     .activity-row-right .action-buttons {
       display: flex;
       gap: 6px;
@@ -1646,6 +1642,85 @@
       color: var(--green);
     }
 
+    /* --- NEW: stepper buttons for pax --- */
+    .pax-input-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px 4px;
+    }
+
+    .pax-input-group label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      min-width: 14px;
+      text-align: center;
+    }
+
+    .pax-input-group input {
+      width: 34px;
+      padding: 4px 0;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+    }
+
+    .pax-input-group input::-webkit-inner-spin-button,
+    .pax-input-group input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .pax-stepper-btn {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1;
+      cursor: pointer;
+      transition: all .12s ease;
+      user-select: none;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .pax-stepper-btn:hover {
+      background: var(--accent-dim);
+      border-color: rgba(232, 197, 71, 0.3);
+      color: var(--accent);
+    }
+
+    .pax-stepper-btn:active {
+      transform: scale(0.92);
+    }
+
+    .pax-stepper-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+      background: var(--surface2);
+      border-color: var(--border);
+      color: var(--muted2);
+    }
+
     @media(max-width:820px) {
       :root {
         --sidebar-width: 320px
@@ -1730,12 +1805,18 @@
       }
 
       .activity-row-right .pax-input-group {
-        padding: 4px 6px;
+        padding: 2px 4px;
       }
 
       .activity-row-right .pax-input-group input {
-        width: 32px;
+        width: 30px;
         font-size: 12px;
+      }
+
+      .pax-stepper-btn {
+        width: 22px;
+        height: 22px;
+        font-size: 13px;
       }
 
       .transfer-rate-grid {
@@ -1893,8 +1974,8 @@
     let comboState = {
       attraction: null,
       pax: { adults: 0, children: 0, seniors: 0 },
-      selectedTransfer: null, // the transfer service object
-      selectedRates: [], // array of selected rate objects for the combo
+      selectedTransfer: null,
+      selectedRates: [],
       selectedAddons: [],
       searchResults: [],
       searchQuery: '',
@@ -2413,7 +2494,38 @@
       const hasChild = childPrice !== null && childPrice !== undefined && childPrice !== '';
       const hasSenior = seniorPrice !== null && seniorPrice !== undefined && seniorPrice !== '';
       const activityId = `act_${supplier}_${idx}_${Date.now()}`;
-      return `<div class="activity-row" data-activity-id="${activityId}"><div class="activity-row-left"><div class="activity-name">${escHtml(name)}</div>${remarks ? `<div class="activity-remarks">${escHtml(remarks)}</div>` : ''}<div class="activity-prices"><span class="price-item"><strong>Adult</strong> <span class="price-value">฿${Number(adultPrice).toLocaleString()}</span></span>${hasChild ? `<span class="price-item"><strong>Child</strong> <span class="price-value">฿${Number(childPrice).toLocaleString()}</span></span>` : `<span class="price-item"><strong>Child</strong> <span class="price-na">—</span></span>`}${hasSenior ? `<span class="price-item"><strong>Senior</strong> <span class="price-value">฿${Number(seniorPrice).toLocaleString()}</span></span>` : `<span class="price-item"><strong>Senior</strong> <span class="price-na">—</span></span>`}</div></div><div class="activity-row-right"><div class="pax-input-group"><label>A</label><input type="number" class="pax-adult" value="0" min="0" step="1" data-activity="${activityId}"></div>${hasChild ? `<div class="pax-input-group"><label>C</label><input type="number" class="pax-child" value="0" min="0" step="1" data-activity="${activityId}"></div>` : ''}${hasSenior ? `<div class="pax-input-group"><label>S</label><input type="number" class="pax-senior" value="0" min="0" step="1" data-activity="${activityId}"></div>` : ''}<div class="action-buttons"><button class="btn-ticket-only" data-activity="${activityId}" onclick="addAttractionTicketOnly('${activityId}','${escHtml(supplier)}','${escHtml(name)}',${adultPrice},${childPrice || 'null'},${seniorPrice || 'null'})">🎫 Tickets Only</button><button class="btn-with-transfer" data-activity="${activityId}" onclick="openComboModal('${activityId}','${escHtml(supplier)}','${escHtml(name)}',${adultPrice},${childPrice || 'null'},${seniorPrice || 'null'})">🚗 With Transfer</button></div></div></div>`;
+      return `<div class="activity-row" data-activity-id="${activityId}"><div class="activity-row-left"><div class="activity-name">${escHtml(name)}</div>${remarks ? `<div class="activity-remarks">${escHtml(remarks)}</div>` : ''}<div class="activity-prices"><span class="price-item"><strong>Adult</strong> <span class="price-value">฿${Number(adultPrice).toLocaleString()}</span></span>${hasChild ? `<span class="price-item"><strong>Child</strong> <span class="price-value">฿${Number(childPrice).toLocaleString()}</span></span>` : `<span class="price-item"><strong>Child</strong> <span class="price-na">—</span></span>`}${hasSenior ? `<span class="price-item"><strong>Senior</strong> <span class="price-value">฿${Number(seniorPrice).toLocaleString()}</span></span>` : `<span class="price-item"><strong>Senior</strong> <span class="price-na">—</span></span>`}</div></div><div class="activity-row-right"><div class="pax-input-group"><label>A</label><button class="pax-stepper-btn" onclick="adjustPax(this, -1, 'adult')" type="button">−</button><input type="number" class="pax-adult" value="0" min="0" step="1" data-activity="${activityId}"><button class="pax-stepper-btn" onclick="adjustPax(this, 1, 'adult')" type="button">+</button></div>${hasChild ? `<div class="pax-input-group"><label>C</label><button class="pax-stepper-btn" onclick="adjustPax(this, -1, 'child')" type="button">−</button><input type="number" class="pax-child" value="0" min="0" step="1" data-activity="${activityId}"><button class="pax-stepper-btn" onclick="adjustPax(this, 1, 'child')" type="button">+</button></div>` : ''}${hasSenior ? `<div class="pax-input-group"><label>S</label><button class="pax-stepper-btn" onclick="adjustPax(this, -1, 'senior')" type="button">−</button><input type="number" class="pax-senior" value="0" min="0" step="1" data-activity="${activityId}"><button class="pax-stepper-btn" onclick="adjustPax(this, 1, 'senior')" type="button">+</button></div>` : ''}<div class="action-buttons"><button class="btn-ticket-only" data-activity="${activityId}" onclick="addAttractionTicketOnly('${activityId}','${escHtml(supplier)}','${escHtml(name)}',${adultPrice},${childPrice || 'null'},${seniorPrice || 'null'})">🎫 Tickets Only</button><button class="btn-with-transfer" data-activity="${activityId}" onclick="openComboModal('${activityId}','${escHtml(supplier)}','${escHtml(name)}',${adultPrice},${childPrice || 'null'},${seniorPrice || 'null'})">🚗 With Transfer</button></div></div></div>`;
+    }
+
+    // ============================================================
+    // PAX STEPPER HANDLER
+    // ============================================================
+    function adjustPax(btn, delta, type) {
+      const group = btn.closest('.pax-input-group');
+      if (!group) return;
+      const input = group.querySelector('input');
+      if (!input) return;
+      let current = parseInt(input.value, 10) || 0;
+      let next = current + delta;
+      if (next < 0) next = 0;
+      if (next > 99) next = 99;
+      input.value = next;
+      // Trigger any change listeners if needed (none currently, but good practice)
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      // Update button disabled states
+      updateStepperButtons(group);
+    }
+
+    function updateStepperButtons(group) {
+      const input = group.querySelector('input');
+      if (!input) return;
+      const val = parseInt(input.value, 10) || 0;
+      const btns = group.querySelectorAll('.pax-stepper-btn');
+      if (btns.length < 2) return;
+      const minusBtn = btns[0];
+      const plusBtn = btns[1];
+      if (minusBtn) minusBtn.disabled = (val <= 0);
+      if (plusBtn) plusBtn.disabled = (val >= 99);
     }
 
     // ============================================================
@@ -2473,6 +2585,8 @@
           if (adultInput) adultInput.value = 0;
           if (childInput) childInput.value = 0;
           if (seniorInput) seniorInput.value = 0;
+          // reset stepper button states
+          row.querySelectorAll('.pax-input-group').forEach(g => updateStepperButtons(g));
         }, 1500);
       }
     }
@@ -2539,11 +2653,18 @@
       };
     }
 
+    // ============================================================
+    // FIX: preserve scroll position inside combo modal
+    // ============================================================
     function renderComboModal() {
       const body = document.getElementById('combo-modal-body');
       const attr = comboState.attraction;
       const pax = comboState.pax;
       if (!attr) return;
+      
+      // Store current scroll position of the modal body before re-rendering
+      const savedScrollTop = body.scrollTop;
+      
       const adultTotal = pax.adults * attr.adultPrice;
       const childTotal = pax.children * (attr.childPrice || 0);
       const seniorTotal = pax.seniors * (attr.seniorPrice || 0);
@@ -2555,8 +2676,27 @@
       if (pax.seniors > 0 && attr.seniorPrice) breakdownHtml +=
         `<span>${pax.seniors} S × ฿${attr.seniorPrice.toLocaleString()}</span>`;
       body.innerHTML =
-        `<div class="combo-attraction-info"><div class="label">🎟️ Selected Attraction</div><div class="name">${escHtml(attr.name)}</div><div class="pax-summary">${breakdownHtml}<span style="font-weight:700;color:var(--accent);margin-left:8px;">= ฿${attractionTotal.toLocaleString()}</span></div></div><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;">🚗 Search &amp; Select Transfer</div><div class="combo-search-bar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="combo-search-input" placeholder="Search transfers (e.g. 'airport', 'hotel', 'phuket')…" oninput="handleComboSearch(this.value)"><span id="combo-search-spinner" class="spinner" style="display:none;width:14px;height:14px;border-width:2px;flex-shrink:0;"></span></div><div class="combo-search-results" id="combo-search-results"><div class="combo-empty">🔍 Type to search for transfers to bundle with this attraction.</div></div>${comboState.selectedTransfer ? `<div style="margin-top:12px;padding:12px 16px;background:var(--accent-dim);border:1px solid rgba(232,197,71,0.2);border-radius:8px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;color:var(--muted);">Selected Transfer</div><div style="font-weight:600;color:var(--text);">${escHtml(comboState.selectedTransfer.name)}</div><div style="font-size:12px;color:var(--muted);">${comboState.selectedRates.length ? comboState.selectedRates.map(r => `${r.vehicle} (฿${r.price.toLocaleString()})`).join(', ') : 'Select rates below'}</div></div><button class="btn btn-danger-ghost btn-sm" onclick="clearComboTransfer()">✕ Remove</button></div></div>` : ''}`;
+        `<div class="combo-attraction-info"><div class="label">🎟️ Selected Attraction</div><div class="name">${escHtml(attr.name)}</div><div class="pax-summary">${breakdownHtml}<span style="font-weight:700;color:var(--accent);margin-left:8px;">= ฿${attractionTotal.toLocaleString()}</span></div></div><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;">🚗 Search &amp; Select Transfer</div><div class="combo-search-bar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="combo-search-input" placeholder="Search transfers (e.g. 'airport', 'hotel', 'phuket')…" oninput="handleComboSearch(this.value)"><span id="combo-search-spinner" class="spinner" style="display:none;width:14px;height:14px;border-width:2px;flex-shrink:0;"></span></div><div class="combo-search-results" id="combo-search-results"><div class="combo-empty">🔍 Type to search for transfers to bundle with this attraction.</div></div><div id="combo-selected-summary">${renderComboSelectedSummaryHtml()}</div>`;
+      
+      // Restore scroll position after re-rendering
+      requestAnimationFrame(() => {
+        body.scrollTop = savedScrollTop;
+      });
+      
       updateComboAddButton();
+    }
+
+    // Renders just the "Selected Transfer" summary block's inner HTML (no wrapper div)
+    function renderComboSelectedSummaryHtml() {
+      if (!comboState.selectedTransfer) return '';
+      return `<div style="margin-top:12px;padding:12px 16px;background:var(--accent-dim);border:1px solid rgba(232,197,71,0.2);border-radius:8px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;color:var(--muted);">Selected Transfer</div><div style="font-weight:600;color:var(--text);">${escHtml(comboState.selectedTransfer.name)}</div><div style="font-size:12px;color:var(--muted);">${comboState.selectedRates.length ? comboState.selectedRates.map(r => `${r.vehicle} (฿${r.price.toLocaleString()})`).join(', ') : 'Select rates below'}</div></div><button class="btn btn-danger-ghost btn-sm" onclick="clearComboTransfer()">✕ Remove</button></div></div>`;
+    }
+
+    // Updates ONLY the selected-transfer summary block in place, without touching
+    // (and therefore without destroying/recreating) the scrollable search-results list.
+    function updateComboSelectedSummary() {
+      const el = document.getElementById('combo-selected-summary');
+      if (el) el.innerHTML = renderComboSelectedSummaryHtml();
     }
 
     function updateComboAddButton() {
@@ -2600,9 +2740,16 @@
       }, 300);
     }
 
+    // ============================================================
+    // FIX: preserve scroll position in combo search results
+    // ============================================================
     function renderComboSearchResults() {
       const container = document.getElementById('combo-search-results');
       const results = comboState.searchResults;
+      
+      // Store current scroll position of the results container
+      const savedScrollTop = container ? container.scrollTop : 0;
+      
       if (!results || results.length === 0) {
         container.innerHTML = `<div class="combo-empty">No transfers found. Try a different search term.</div>`;
         return;
@@ -2617,6 +2764,11 @@
           `<div class="combo-result-item ${isSelected ? 'selected' : ''}" onclick="selectComboTransfer(${item.id})" style="${isSelected ? 'border-color:var(--accent);background:var(--accent-dim);' : ''}"><div class="result-name">${escHtml(item.name)}</div><div class="result-meta"><span class="badge">${escHtml(item.city || 'N/A')}</span>${item.supplier ? `<span class="badge">${escHtml(item.supplier)}</span>` : ''}${priceStr ? `<span style="color:var(--accent);font-weight:600;">${priceStr}</span>` : ''}</div>${isSelected ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">${renderComboTransferRates(item)}</div>` : ''}</div>`;
       });
       container.innerHTML = html;
+      
+      // Restore scroll position after re-rendering
+      requestAnimationFrame(() => {
+        if (container) container.scrollTop = savedScrollTop;
+      });
     }
 
     // Combo transfer rates with multi-select
@@ -2677,7 +2829,10 @@
         comboState.selectedTransfer = transfer;
         comboState.selectedRates = [];
       }
-      renderComboModal();
+      // Update just the summary + results list in place — do NOT call
+      // renderComboModal() here, as it rebuilds the whole body (including the
+      // scrollable results container) and resets scroll to the top.
+      updateComboSelectedSummary();
       renderComboSearchResults();
       updateComboAddButton();
     }
@@ -2692,7 +2847,7 @@
       } else {
         comboState.selectedRates.push({ rateType, vehicle, paxInfo, price });
       }
-      renderComboModal();
+      updateComboSelectedSummary();
       renderComboSearchResults();
       updateComboAddButton();
     }
@@ -2700,7 +2855,7 @@
     function clearComboTransfer() {
       comboState.selectedTransfer = null;
       comboState.selectedRates = [];
-      renderComboModal();
+      updateComboSelectedSummary();
       renderComboSearchResults();
       updateComboAddButton();
     }
@@ -2876,11 +3031,11 @@
     function cartGrandTotal(items, commissionPercent) {
       const subtotal = cartSubtotal(items);
       if (commissionPercent === 0) return subtotal;
-      return subtotal + (subtotal * (commissionPercent / 100));
+      return (subtotal / (commissionPercent / 100));
     }
 
     function updateCartTotals() {
-      const comm = parseFloat(document.getElementById('commission-input').value) || 0;
+      const comm = parseFloat(document.getElementById('commission-input').value) || 100;
       const total = cartGrandTotal(cart, comm);
       const usd = thbToUsd(total);
       document.getElementById('cart-total').innerHTML =
@@ -2911,7 +3066,7 @@
         year: 'numeric',
         timeZone: 'Asia/Bangkok'
       });
-      const comm = parseFloat(document.getElementById('commission-input').value) || 0;
+      const comm = parseFloat(document.getElementById('commission-input').value) || 100;
       const usdRate = getUsdRate();
       const subtotal = cartSubtotal(cart);
       const grandTotal = cartGrandTotal(cart, comm);
@@ -3052,6 +3207,12 @@
     });
     updateActiveFilters();
     doSearch();
+
+    // Initialize stepper button states on any pax input after results render
+    const observer = new MutationObserver(() => {
+      document.querySelectorAll('.pax-input-group').forEach(g => updateStepperButtons(g));
+    });
+    observer.observe(document.getElementById('results-list'), { childList: true, subtree: true });
   </script>
 </body>
 
