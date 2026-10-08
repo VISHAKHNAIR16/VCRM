@@ -473,6 +473,108 @@
       color: var(--muted2);
     }
 
+    /* ==== NEW: PRICING MODE SELECTOR ==== */
+    .pricing-mode-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pricing-mode-row > label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .pricing-mode-row select {
+      flex: 1;
+      min-width: 140px;
+      padding: 6px 28px 6px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6880'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .pricing-mode-row select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .pricing-inputs {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pricing-inputs.visible {
+      display: flex;
+    }
+
+    .pricing-inputs label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .pricing-inputs input {
+      width: 80px;
+      padding: 6px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .pricing-inputs input:focus {
+      border-color: var(--accent)
+    }
+
+    .pricing-inputs .markup-total {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(232, 197, 71, 0.25);
+      border-radius: 6px;
+      padding: 6px 12px;
+      white-space: nowrap;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .pricing-inputs .markup-total .label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--muted);
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .pricing-inputs .markup-total .value {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
     .sidebar-total {
       display: flex;
       justify-content: space-between;
@@ -1924,9 +2026,40 @@
       <div class="sidebar-footer">
         <div class="usd-rate-row"><label>USD Rate</label><input type="number" id="usd-rate-input" value="34.00" min="0"
             step="0.01" oninput="updateCartTotals()"><span class="hint">THB/USD</span></div>
-        <div class="commission-row"><label>Commission</label><input type="number" id="commission-input" value="0"
-            min="0" max="100" step="0.5" oninput="updateCartTotals()"><label
-            style="font-size:12px;color:var(--muted2)">%</label></div>
+
+        <!-- ============ NEW: PRICING MODE SELECTOR ============ -->
+        <div class="pricing-mode-row">
+          <label>Pricing</label>
+          <select id="pricing-mode" onchange="onPricingModeChange()">
+            <option value="">— None —</option>
+            <option value="commission">Commission %</option>
+            <option value="markup">Per Person Markup</option>
+          </select>
+        </div>
+
+        <!-- Commission % inputs (shown when 'commission' selected) -->
+        <div class="pricing-inputs" id="commission-inputs">
+          <label>Commission</label>
+          <input type="number" id="commission-input" value="0" min="0" max="100" step="0.5"
+            oninput="updateCartTotals()">
+          <label style="font-size:12px;color:var(--muted2)">%</label>
+        </div>
+
+        <!-- Per Person Markup inputs (shown when 'markup' selected) -->
+        <div class="pricing-inputs" id="markup-inputs">
+          <label>Markup</label>
+          <input type="number" id="markup-per-person" value="0" min="0" step="1" placeholder="THB"
+            oninput="updateCartTotals()">
+          <label>× Pax</label>
+          <input type="number" id="markup-pax-count" value="0" min="0" step="1" placeholder="0"
+            oninput="updateCartTotals()">
+          <div class="markup-total" id="markup-total-display">
+            <span class="label">Total Markup</span>
+            <span class="value" id="markup-total-value">฿0</span>
+          </div>
+        </div>
+        <!-- ============ END NEW ============ -->
+
         <div class="sidebar-total"><span class="label">Total</span><span class="amount" id="cart-total">฿0</span></div>
         <div class="sidebar-actions"><button class="btn btn-danger-ghost btn-sm"
             onclick="clearCart()">Clear</button><button class="btn btn-primary" onclick="showModal()" id="generate-btn"
@@ -1993,6 +2126,41 @@
     function getUsdRate() { return parseFloat(document.getElementById('usd-rate-input').value) || 34.00; }
 
     function thbToUsd(thb) { const rate = getUsdRate(); return (rate && thb) ? (thb / rate).toFixed(2) : null; }
+
+    // ============================================================
+    // NEW: PRICING MODE (commission vs per-person markup)
+    // ============================================================
+    function getPricingMode() {
+      return document.getElementById('pricing-mode').value || '';
+    }
+
+    function getCommissionPercent() {
+      if (getPricingMode() !== 'commission') return 0;
+      const v = parseFloat(document.getElementById('commission-input').value);
+      return isFinite(v) && v > 0 ? v : 0;
+    }
+
+    function getMarkupConfig() {
+      if (getPricingMode() !== 'markup') return { perPerson: 0, pax: 0, total: 0 };
+      const perPerson = parseFloat(document.getElementById('markup-per-person').value) || 0;
+      const pax = parseFloat(document.getElementById('markup-pax-count').value) || 0;
+      const total = perPerson * pax;
+      return { perPerson, pax, total };
+    }
+
+    function onPricingModeChange() {
+      const mode = getPricingMode();
+      document.getElementById('commission-inputs').classList.toggle('visible', mode === 'commission');
+      document.getElementById('markup-inputs').classList.toggle('visible', mode === 'markup');
+      // Reset the inactive mode's inputs to 0 so they don't leak into calculations
+      if (mode === 'commission') {
+        document.getElementById('markup-per-person').value = 0;
+        document.getElementById('markup-pax-count').value = 0;
+      } else if (mode === 'markup') {
+        document.getElementById('commission-input').value = 0;
+      }
+      updateCartTotals();
+    }
 
     // ============================================================
     // FX
@@ -2330,6 +2498,7 @@
       const cartItem = {
         type: 'transfer',
         name: item.name,
+        displayName: item.name,
         totalPrice: totalPrice,
         addons: state.selectedAddons || [],
         meta: {
@@ -2510,9 +2679,7 @@
       if (next < 0) next = 0;
       if (next > 99) next = 99;
       input.value = next;
-      // Trigger any change listeners if needed (none currently, but good practice)
       input.dispatchEvent(new Event('change', { bubbles: true }));
-      // Update button disabled states
       updateStepperButtons(group);
     }
 
@@ -2559,6 +2726,7 @@
       const cartItem = {
         type: 'attraction',
         name: `${supplier} - ${name}`,
+        displayName: name,
         totalPrice: total,
         addons: [],
         meta: {
@@ -2585,7 +2753,6 @@
           if (adultInput) adultInput.value = 0;
           if (childInput) childInput.value = 0;
           if (seniorInput) seniorInput.value = 0;
-          // reset stepper button states
           row.querySelectorAll('.pax-input-group').forEach(g => updateStepperButtons(g));
         }, 1500);
       }
@@ -2653,16 +2820,12 @@
       };
     }
 
-    // ============================================================
-    // FIX: preserve scroll position inside combo modal
-    // ============================================================
     function renderComboModal() {
       const body = document.getElementById('combo-modal-body');
       const attr = comboState.attraction;
       const pax = comboState.pax;
       if (!attr) return;
       
-      // Store current scroll position of the modal body before re-rendering
       const savedScrollTop = body.scrollTop;
       
       const adultTotal = pax.adults * attr.adultPrice;
@@ -2678,7 +2841,6 @@
       body.innerHTML =
         `<div class="combo-attraction-info"><div class="label">🎟️ Selected Attraction</div><div class="name">${escHtml(attr.name)}</div><div class="pax-summary">${breakdownHtml}<span style="font-weight:700;color:var(--accent);margin-left:8px;">= ฿${attractionTotal.toLocaleString()}</span></div></div><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;">🚗 Search &amp; Select Transfer</div><div class="combo-search-bar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="combo-search-input" placeholder="Search transfers (e.g. 'airport', 'hotel', 'phuket')…" oninput="handleComboSearch(this.value)"><span id="combo-search-spinner" class="spinner" style="display:none;width:14px;height:14px;border-width:2px;flex-shrink:0;"></span></div><div class="combo-search-results" id="combo-search-results"><div class="combo-empty">🔍 Type to search for transfers to bundle with this attraction.</div></div><div id="combo-selected-summary">${renderComboSelectedSummaryHtml()}</div>`;
       
-      // Restore scroll position after re-rendering
       requestAnimationFrame(() => {
         body.scrollTop = savedScrollTop;
       });
@@ -2686,14 +2848,11 @@
       updateComboAddButton();
     }
 
-    // Renders just the "Selected Transfer" summary block's inner HTML (no wrapper div)
     function renderComboSelectedSummaryHtml() {
       if (!comboState.selectedTransfer) return '';
       return `<div style="margin-top:12px;padding:12px 16px;background:var(--accent-dim);border:1px solid rgba(232,197,71,0.2);border-radius:8px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;color:var(--muted);">Selected Transfer</div><div style="font-weight:600;color:var(--text);">${escHtml(comboState.selectedTransfer.name)}</div><div style="font-size:12px;color:var(--muted);">${comboState.selectedRates.length ? comboState.selectedRates.map(r => `${r.vehicle} (฿${r.price.toLocaleString()})`).join(', ') : 'Select rates below'}</div></div><button class="btn btn-danger-ghost btn-sm" onclick="clearComboTransfer()">✕ Remove</button></div></div>`;
     }
 
-    // Updates ONLY the selected-transfer summary block in place, without touching
-    // (and therefore without destroying/recreating) the scrollable search-results list.
     function updateComboSelectedSummary() {
       const el = document.getElementById('combo-selected-summary');
       if (el) el.innerHTML = renderComboSelectedSummaryHtml();
@@ -2740,14 +2899,10 @@
       }, 300);
     }
 
-    // ============================================================
-    // FIX: preserve scroll position in combo search results
-    // ============================================================
     function renderComboSearchResults() {
       const container = document.getElementById('combo-search-results');
       const results = comboState.searchResults;
       
-      // Store current scroll position of the results container
       const savedScrollTop = container ? container.scrollTop : 0;
       
       if (!results || results.length === 0) {
@@ -2765,13 +2920,11 @@
       });
       container.innerHTML = html;
       
-      // Restore scroll position after re-rendering
       requestAnimationFrame(() => {
         if (container) container.scrollTop = savedScrollTop;
       });
     }
 
-    // Combo transfer rates with multi-select
     function renderComboTransferRates(transferItem) {
       const rates = transferItem.raw?.rates || [];
       const privateRates = rates.filter(r => r.rate_type === 'Private');
@@ -2829,16 +2982,12 @@
         comboState.selectedTransfer = transfer;
         comboState.selectedRates = [];
       }
-      // Update just the summary + results list in place — do NOT call
-      // renderComboModal() here, as it rebuilds the whole body (including the
-      // scrollable results container) and resets scroll to the top.
       updateComboSelectedSummary();
       renderComboSearchResults();
       updateComboAddButton();
     }
 
     function selectComboRate(transferId, rateType, vehicle, price, paxInfo) {
-      // Toggle selection for this rate
       const idx = comboState.selectedRates.findIndex(r =>
         r.rateType === rateType && r.vehicle === vehicle && r.price === price
       );
@@ -2891,6 +3040,7 @@
       const cartItem = {
         type: 'attraction_bundle',
         name: `${attr.supplier} - ${attr.name} + Transfer`,
+        displayName: `${attr.name} + Transfer`,
         totalPrice: totalPrice,
         addons: [],
         meta: {
@@ -3028,16 +3178,35 @@
 
     function cartSubtotal(items) { return items.reduce((sum, item) => sum + (item.totalPrice || 0), 0); }
 
+    // ============================================================
+    // NEW: Grand total now supports commission % OR per-person markup
+    // ============================================================
     function cartGrandTotal(items, commissionPercent) {
       const subtotal = cartSubtotal(items);
-      if (commissionPercent === 0) return subtotal;
-      return (subtotal / (commissionPercent / 100));
+      const mode = getPricingMode();
+
+      if (mode === 'commission' && commissionPercent > 0) {
+        // Original formula: subtotal / (commission% / 100)
+        return subtotal / (commissionPercent / 100);
+      }
+      if (mode === 'markup') {
+        const { total: markupTotal } = getMarkupConfig();
+        return subtotal + markupTotal;
+      }
+      // No mode selected → no commission, no markup
+      return subtotal;
     }
 
     function updateCartTotals() {
-      const comm = parseFloat(document.getElementById('commission-input').value) || 100;
-      const total = cartGrandTotal(cart, comm);
+      const commissionPercent = getCommissionPercent();
+      const total = cartGrandTotal(cart, commissionPercent);
       const usd = thbToUsd(total);
+
+      // Update markup display
+      const markup = getMarkupConfig();
+      const markupDisplay = document.getElementById('markup-total-value');
+      if (markupDisplay) markupDisplay.textContent = `฿${markup.total.toLocaleString()}`;
+
       document.getElementById('cart-total').innerHTML =
         `฿${total.toLocaleString()}${usd ? `<span class="usd">≈ $${usd}</span>` : ''}`;
     }
@@ -3059,6 +3228,9 @@
       document.body.style.overflow = '';
     }
 
+    // ============================================================
+    // NEW: buildQuotationText handles commission OR markup lines
+    // ============================================================
     function buildQuotationText() {
       const today = new Date().toLocaleDateString('en-GB', {
         day: '2-digit',
@@ -3066,18 +3238,20 @@
         year: 'numeric',
         timeZone: 'Asia/Bangkok'
       });
-      const comm = parseFloat(document.getElementById('commission-input').value) || 100;
+      const mode = getPricingMode();
+      const commissionPercent = getCommissionPercent();
+      const markup = getMarkupConfig();
       const usdRate = getUsdRate();
       const subtotal = cartSubtotal(cart);
-      const grandTotal = cartGrandTotal(cart, comm);
+      const grandTotal = cartGrandTotal(cart, commissionPercent);
       const div = '─'.repeat(30);
       const lines = [`*Vayo Aura — Service Quotation*`, `Date: ${today}`,
         `USD Rate: 1 USD = ฿${usdRate.toFixed(2)}`, div, ''
       ];
       cart.forEach((item, i) => {
         const itemUsd = thbToUsd(item.totalPrice);
-        lines.push(`*${i + 1}. ${item.name}*`);
-        lines.push(`   ${cartItemKindLabel(item.type)} · ${describeCartItemMeta(item)}`);
+        const quoteName = item.displayName || item.attractionDetails?.name || item.name;
+        lines.push(`*${i + 1}. ${quoteName}*`);
         const pricing = item.attractionDetails?.pricing || item.pricing;
         if (pricing?.breakdown?.length) {
           pricing.breakdown.forEach(line => {
@@ -3099,8 +3273,10 @@
       const grandUsd = thbToUsd(grandTotal);
       lines.push(div);
       lines.push(`Subtotal: ฿${subtotal.toLocaleString()}`);
-      if (comm > 0) {
-        lines.push(`Commission (${comm}%): ฿${(subtotal * (comm / 100)).toLocaleString()}`);
+      if (mode === 'commission' && commissionPercent > 0) {
+        lines.push(`Commission (${commissionPercent}%): ฿${(subtotal * (commissionPercent / 100)).toLocaleString()}`);
+      } else if (mode === 'markup' && markup.total > 0) {
+        lines.push(`Per Person Markup (฿${markup.perPerson.toLocaleString()} × ${markup.pax} pax): ฿${markup.total.toLocaleString()}`);
       }
       lines.push(`*GRAND TOTAL: ฿${grandTotal.toLocaleString()}*`);
       if (grandUsd) lines.push(`*≈ $${grandUsd} USD*`);
@@ -3125,6 +3301,9 @@
       setTimeout(() => btn.textContent = 'Copy to Clipboard', 2200);
     }
 
+    // ============================================================
+    // NEW: exportToExcel handles commission OR markup
+    // ============================================================
     function exportToExcel() {
       if (!cart.length) return;
       const today = new Date().toLocaleDateString('en-GB', {
@@ -3134,14 +3313,13 @@
         timeZone: 'Asia/Bangkok'
       });
       const fileDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
-      const comm = parseFloat(document.getElementById('commission-input').value) || 0;
+      const mode = getPricingMode();
+      const commissionPercent = getCommissionPercent();
+      const markup = getMarkupConfig();
       const subtotal = cartSubtotal(cart);
-      const grandTotal = cartGrandTotal(cart, comm);
+      const grandTotal = cartGrandTotal(cart, commissionPercent);
       const describe = (it) => {
-        let d = `[${cartItemKindLabel(it.type)}] ${it.name}`;
-        const meta = describeCartItemMeta(it);
-        if (meta) d += ` — ${meta}`;
-        return d;
+        return it.displayName || it.attractionDetails?.name || it.name;
       };
       const usdVal = (thb) => { const u = parseFloat(thbToUsd(thb)); return isFinite(u) ? u : ''; };
       const aoa = [
@@ -3153,7 +3331,11 @@
       cart.forEach((it) => aoa.push([describe(it), it.totalPrice, usdVal(it.totalPrice)]));
       aoa.push([]);
       aoa.push(['Subtotal', subtotal, usdVal(subtotal)]);
-      if (comm > 0) aoa.push([`Commission (${comm}%)`, subtotal * (comm / 100), '']);
+      if (mode === 'commission' && commissionPercent > 0) {
+        aoa.push([`Commission (${commissionPercent}%)`, subtotal * (commissionPercent / 100), '']);
+      } else if (mode === 'markup' && markup.total > 0) {
+        aoa.push([`Per Person Markup (฿${markup.perPerson.toLocaleString()} × ${markup.pax} pax)`, markup.total, '']);
+      }
       aoa.push(['GRAND TOTAL', grandTotal, usdVal(grandTotal)]);
       const filename = `VIKRAM_Quotation_${fileDate}.xlsx`;
       const btn = document.getElementById('export-btn');
@@ -3208,7 +3390,6 @@
     updateActiveFilters();
     doSearch();
 
-    // Initialize stepper button states on any pax input after results render
     const observer = new MutationObserver(() => {
       document.querySelectorAll('.pax-input-group').forEach(g => updateStepperButtons(g));
     });
