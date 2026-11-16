@@ -105,17 +105,13 @@ def image_to_base64_enhanced(
     force_reload: bool = False
 ) -> str:
     """
-    Load, optimize, enhance and cache images as base64 data URIs.
-    Enhanced version with better quality and sharpness for stamps/logos.
-    
-    Args:
-        filename: Image filename in assets directory
-        max_width: Maximum width in pixels (maintains aspect ratio)
-        quality: JPEG quality (1-100, higher = better quality, larger file)
-        enhance_contrast: Apply contrast enhancement for better clarity
-        apply_sharpen: Apply sharpening filter for better definition
-        force_reload: Bypass cache and reload image
-    
+    Load and cache images as base64 data URIs without degrading quality.
+
+    max_width is the *display* width. The image is only downscaled when it is
+    larger than 4x that (keeps it sharp in print). Transparent images stay
+    lossless PNG. quality / enhance_contrast / apply_sharpen / force_reload are
+    kept only so existing callers don't break; they no longer affect output.
+
     Returns:
         Data URI string for embedding in HTML, or empty string on failure
     """
@@ -129,50 +125,24 @@ def image_to_base64_enhanced(
     
     try:
         with Image.open(path) as img:
-            # Convert to RGB if necessary
-            original_mode = img.mode
-            if img.mode not in ('RGB', 'L'):
-                if img.mode == 'RGBA':
-                    background = Image.new('RGB', img.size, (255, 255, 255))
-                    background.paste(img, mask=img.split()[3])
-                    img = background
-                else:
-                    img = img.convert('RGB')
-            
-            # Apply enhancements for better clarity (especially for stamps)
-            if enhance_contrast:
-                enhancer = ImageEnhance.Contrast(img)
-                img = enhancer.enhance(1.2)  # 20% contrast boost
-            
-            if apply_sharpen and filename.lower().find('stamp') >= 0:
-                # Stronger sharpening for stamps
-                img = img.filter(ImageFilter.UnsharpMask(radius=1.5, percent=150, threshold=3))
-            elif apply_sharpen:
-                # Gentle sharpening for logos
-                img = img.filter(ImageFilter.UnsharpMask(radius=1.0, percent=100, threshold=2))
-            
-            # Resize if image is larger than max_width
-            if img.width > max_width:
-                ratio = max_width / img.width
-                new_size = (max_width, int(img.height * ratio))
-                # Use LANCZOS for high-quality downsampling
-                img = img.resize(new_size, Image.Resampling.LANCZOS)
-            
-            # Save with appropriate compression
+            has_alpha = img.mode in ("RGBA", "LA") or "transparency" in img.info
+            img = img.convert("RGBA" if has_alpha else "RGB")
+
+            # Only downscale very large files (4x the display size keeps it sharp in print)
+            limit = max_width * 4
+            if img.width > limit:
+                img = img.resize((limit, int(img.height * limit / img.width)),
+                                 Image.Resampling.LANCZOS)
+
             buffer = io.BytesIO()
-            
-            # Use JPEG for photos, PNG for graphics with transparency
-            use_jpeg = filename.lower().endswith(('.jpg', '.jpeg')) or original_mode != 'RGBA'
-            
-            if use_jpeg:
-                # Higher quality for stamps and logos
-                img.save(buffer, format='JPEG', quality=quality, optimize=True, subsampling=0)
-                mime_type = 'image/jpeg'
+            if has_alpha or filename.lower().endswith(".png"):
+                img.save(buffer, format="PNG", optimize=True)      # lossless
+                mime_type = "image/png"
             else:
-                img.save(buffer, format='PNG', optimize=True)
-                mime_type = 'image/png'
-            
-            data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                img.save(buffer, format="JPEG", quality=95, subsampling=0)
+                mime_type = "image/jpeg"
+
+            data = base64.b64encode(buffer.getvalue()).decode("utf-8")
             return f"data:{mime_type};base64,{data}"
             
     except Exception as e:
@@ -369,7 +339,6 @@ def _html_to_pdf(
                 presentational_hints=True,
                 zoom=zoom,
                 optimize_size=optimize_options,
-                resolution=350 if not optimize_for_speed else 300,  # Higher resolution for better quality
             )
         )
         log.info("PDF generated successfully: %d bytes (optimization: %s)", 

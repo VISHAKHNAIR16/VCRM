@@ -65,12 +65,13 @@ body {
 /* Main Details */
 .main-details-container { margin-bottom: 10px; }
 .main-details { display: flex; gap: 12px; }
-.left-column { flex: 1; }
-.right-column { flex: 0 0 250px; }
+.left-column { flex: 1; min-width: 0; }            /* min-width added */
+.right-column { flex: 0 0 250px; min-width: 0; }   /* min-width added */
 
 .booking-info {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* NEW: column can't grow with content */
 }
 
 .booking-info td {
@@ -83,10 +84,13 @@ body {
   font-weight: 600;
   color: #555;
   padding-right: 10px;
-  white-space: nowrap;
+  white-space: normal; /* was nowrap */
 }
 
-.booking-info td:last-child { word-break: break-word; }
+.booking-info td:last-child {
+  word-wrap: break-word; /* was: word-break: break-word (invalid) */
+  overflow-wrap: anywhere;
+}
 
 /* Room Details */
 .room-details-box {
@@ -147,8 +151,11 @@ body {
   margin: 10px 0;
 }
 
+.stay-dates { table-layout: fixed; } /* NEW */
+
 .book-payable td, .stay-dates td { padding: 4px 0; }
-.stay-dates td:first-child { font-weight: 600; width: 30%; white-space: nowrap; }
+.stay-dates td:nth-child(odd)  { font-weight: 600; width: 16%; }
+.stay-dates td:nth-child(even) { overflow-wrap: anywhere; word-wrap: break-word; }
 
 /* Footer */
 .voucher-footer {
@@ -182,7 +189,7 @@ body {
 .company-logo {
   width: 100%;
   height: 100%;
-  object-fit: fill;
+  object-fit: contain; /* was fill (stretched the logo) */
   display: block;
 }
 
@@ -429,3 +436,11 @@ body {
   text-overflow: ellipsis;
 }
 
+/* ── Generic overflow protection ── */
+.book-payable td, .remarks-content, .policy-box p, .meeting-body p,
+.room-detail-item span:last-child {
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+.room-detail-item { gap: 8px; }
+.room-detail-item span:last-child { max-width: 60%; }
